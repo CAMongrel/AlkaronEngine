@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5D9925C0-B945-489E-B7B8-787840FDA259}</ProjectGuid>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <UseMSBuildEngine>true</UseMSBuildEngine>
+    <OutputType>Library</OutputType>
+    <RootNamespace>AlkaronEngine</RootNamespace>
+    <AssemblyName>AlkaronEngine</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile158</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AlkaronCoreGame.cs" />
+    <Compile Include="Graphics\IRenderConfiguration.cs" />
+    <Compile Include="Graphics\RenderManager.cs" />
+    <Compile Include="Graphics\Texture.cs" />
+    <Compile Include="Input\InputManager.cs" />
+    <Compile Include="Scene\SceneManager.cs" />
+    <Compile Include="Scene\BaseScene.cs" />
+    <Compile Include="Gui\MouseCursor.cs" />
+    <Compile Include="Gui\UIBaseComponent.cs" />
+    <Compile Include="Gui\UIBaseComponentList.cs" />
+    <Compile Include="Gui\UIButton.cs" />
+    <Compile Include="Gui\UIImage.cs" />
+    <Compile Include="Gui\UILabel.cs" />
+    <Compile Include="Gui\UIWindow.cs" />
+    <Compile Include="Gui\UIWindowManager.cs" />
+    <Compile Include="Input\PointerType.cs" />
+    <Compile Include="Gui\Rendering\FontRenderer.cs" />
+    <Compile Include="Util\Log.cs" />
+    <Compile Include="Util\MathHelper.cs" />
+    <Compile Include="Util\Performance.cs" />
+    <Compile Include="Util\RectangleF.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.2.99.1-Beta\lib\portable-net40+sl50+win+wpa81+wp80+MonoAndroid10+MonoTouch10\MonoGame.Framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+</Project>
