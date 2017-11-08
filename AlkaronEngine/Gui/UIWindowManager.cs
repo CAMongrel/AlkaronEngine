@@ -162,5 +162,10 @@ namespace AlkaronEngine.Gui
 
          return false;
       }
+
+      internal static bool PointerWheelChanged(Vector2 position)
+      {
+         return false;
+      }
    }
 }

@@ -2,7 +2,7 @@
 using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace AlkaronEngine.Graphics3D
+namespace AlkaronEngine.Graphics3D.Geometry
 {
    public class StaticMesh
    {

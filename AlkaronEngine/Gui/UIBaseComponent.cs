@@ -749,7 +749,7 @@ namespace AlkaronEngine.Gui
             }
          }
 
-         return true;
+         return false;
       }
 
       protected internal virtual bool PointerUp(Vector2 position, PointerType pointerType)
@@ -773,7 +773,7 @@ namespace AlkaronEngine.Gui
             }
          }
 
-         return true;
+         return false;
       }
 
       protected internal virtual bool PointerMoved(Vector2 position)
@@ -797,7 +797,7 @@ namespace AlkaronEngine.Gui
             }
          }
 
-         return true;
+         return false;
       }
 
       protected void CaptureInput()

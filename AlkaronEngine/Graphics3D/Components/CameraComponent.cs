@@ -1,7 +1,8 @@
 ﻿using System;
+using AlkaronEngine.Input;
 using Microsoft.Xna.Framework;
 
-namespace AlkaronEngine.Graphics3D
+namespace AlkaronEngine.Graphics3D.Components
 {
    public class CameraComponent : BaseComponent
    {
@@ -42,11 +43,44 @@ namespace AlkaronEngine.Graphics3D
          UpdateMatrices();
       }
 
+      public void ZoomIn(float absoluteDelta)
+      {
+         Vector3 camVector = Center - LookAt;
+         float length = camVector.Length() - absoluteDelta;
+         camVector.Normalize();
+         Center = LookAt + camVector * length;
+      }
+
+      public void ZoomOut(float absoluteDelta)
+      {
+         Vector3 camVector = Center - LookAt;
+         float length = camVector.Length() + absoluteDelta;
+         camVector.Normalize();
+         Center = LookAt + camVector * length;
+      }
+
       private void UpdateMatrices()
       {
          ViewMatrix = Matrix.CreateLookAt(Center, LookAt, UpVector);
          ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60.0f),
                                                                 ScreenSize.X / ScreenSize.Y, NearClip, FarClip);
+      }
+
+      public virtual void PointerDown(Vector2 position, PointerType pointerType)
+      {
+      }
+
+      public virtual void PointerUp(Vector2 position, PointerType pointerType)
+      {
+      }
+
+      public virtual void PointerMoved(Vector2 position)
+      {
+      }
+
+      public virtual void PointerWheelChanged(Vector2 position)
+      {
+         
       }
    }
 }

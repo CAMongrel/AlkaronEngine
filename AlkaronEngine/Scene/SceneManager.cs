@@ -63,6 +63,7 @@ namespace AlkaronEngine.Scene
          InputManager.OnPointerPressed += PointerPressed;
          InputManager.OnPointerReleased += PointerReleased;
          InputManager.OnPointerMoved += PointerMoved;
+         InputManager.OnPointerWheelChanged += InputManager_OnPointerWheelChanged;
 
          CurrentScene = null;
          NextScene = null;
@@ -174,6 +175,17 @@ namespace AlkaronEngine.Scene
             if (CurrentScene != null)
             {
                CurrentScene.PointerMoved(scaledPosition);
+            }
+         }
+      }
+
+      void InputManager_OnPointerWheelChanged(Vector2 position, Input.PointerType pointerType)
+      {
+         lock(lockObj)
+         {
+            if (CurrentScene != null)
+            {
+               CurrentScene.PointerWheelChanged(position);
             }
          }
       }

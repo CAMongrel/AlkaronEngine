@@ -9,6 +9,7 @@ namespace AlkaronEngine.Input
       MiddleMouse,
       RightMouse,
       Touch,
+      Wheel,
    }
 }
 

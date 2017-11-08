@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics.Contracts;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Graphics3D.Components;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace AlkaronEngine.Scene
 {
@@ -13,7 +15,7 @@ namespace AlkaronEngine.Scene
    {
       public static Color StandardBackgroundColor = new Color(0x7F, 0x00, 0x00);
 
-      public MouseCursor MouseCursor { get; set; }
+      public Gui.MouseCursor MouseCursor { get; set; }
 
       public IRenderConfiguration RenderConfig { get; private set; } 
 
@@ -24,6 +26,10 @@ namespace AlkaronEngine.Scene
       public RenderManager RenderManager { get; private set; }
 
       public CameraComponent CurrentCamera { get; set; }
+
+      private bool isMouseCaptured;
+      private Vector2 lastMousePos;
+      private bool mouseCursorWasVisible;
 
       public BaseScene()
       {
@@ -41,6 +47,9 @@ namespace AlkaronEngine.Scene
       public virtual void Init(IRenderConfiguration setRenderConfig)
       {
          Contract.Requires(setRenderConfig != null);
+
+         mouseCursorWasVisible = false;
+         isMouseCaptured = false;
 
          RenderConfig = setRenderConfig;
          ContentManager = new ContentManager(AlkaronCoreGame.Core.Content.ServiceProvider, "Content");
@@ -65,12 +74,12 @@ namespace AlkaronEngine.Scene
       protected virtual void Init3D()
       {
          // Create default camera
-         CurrentCamera = new CameraComponent(new Vector3(0, 0, 15),
-                                             Vector3.Up,
-                                             Vector3.Zero,
-                                             RenderConfig.ScreenSize,
-                                             0.1f,
-                                             500.0f);
+         CurrentCamera = new ArcBallCameraComponent(new Vector3(0, 0, 15),
+                                                  Vector3.Up,
+                                                  Vector3.Zero,
+                                                  RenderConfig.ScreenSize,
+                                                  0.1f,
+                                                  500.0f);
          SceneGraph.AddComponent(CurrentCamera);
       }
 
@@ -116,17 +125,62 @@ namespace AlkaronEngine.Scene
 
       public virtual void PointerDown(Vector2 position, PointerType pointerType)
       {
-         UIWindowManager.PointerDown(position, pointerType);
+         bool res = UIWindowManager.PointerDown(position, pointerType);
+         if (res == false)
+         {
+            // Event was not handled by UI
+            if (MouseCursor != null)
+            {
+               mouseCursorWasVisible = MouseCursor.IsVisible;
+               MouseCursor.IsVisible = false;
+            }
+            isMouseCaptured = true;
+
+            lastMousePos = position;
+
+            CurrentCamera?.PointerDown(position, pointerType);
+         }
       }
 
       public virtual void PointerUp(Vector2 position, PointerType pointerType)
       {
-         UIWindowManager.PointerUp(position, pointerType);
+         bool res = UIWindowManager.PointerUp(position, pointerType);
+         if (res == false)
+         {
+            // Event was not handled by UI
+            if (MouseCursor != null)
+            {
+               MouseCursor.IsVisible = mouseCursorWasVisible;
+            }
+            isMouseCaptured = false;
+
+            CurrentCamera?.PointerUp(position, pointerType);
+         }
       }
 
       public virtual void PointerMoved(Vector2 position)
       {
-         UIWindowManager.PointerMoved(position);
+         bool res = UIWindowManager.PointerMoved(position);
+         if (res == false)
+         {
+            // Event was not handled by UI
+            if (isMouseCaptured)
+            {
+               CurrentCamera?.PointerMoved(position);
+
+               Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
+            }
+         }
+      }
+
+      public virtual void PointerWheelChanged(Vector2 position)
+      {
+         bool res = UIWindowManager.PointerWheelChanged(position);
+         if (res == false)
+         {
+            // Event was not handled by UI
+            CurrentCamera?.PointerWheelChanged(position);
+         }
       }
    }
 }

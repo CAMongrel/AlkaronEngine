@@ -1,11 +1,11 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 
-namespace AlkaronEngine.Graphics3D
+namespace AlkaronEngine.Graphics3D.Components
 {
    public abstract class BaseComponent
    {
-      public Vector3 Center { get; private set; }
+      public Vector3 Center { get; protected set; }
 
       public bool CanBeRendered { get; protected set; }
 

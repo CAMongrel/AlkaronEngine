@@ -4,6 +4,8 @@ using AlkaronEngine.Gui;
 using Microsoft.Xna.Framework.Graphics;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D.Geometry;
+using AlkaronEngine.Graphics3D.Components;
 
 namespace AlkTestGame
 {

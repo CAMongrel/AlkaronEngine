@@ -11,10 +11,12 @@ namespace AlkaronEngine.Input
    {
       private Vector2 prevMousePos;
       private MouseState prevMouseState;
+      private int prevWheelValue;
 
       public event PointerEvent OnPointerMoved;
       public event PointerEvent OnPointerPressed;
       public event PointerEvent OnPointerReleased;
+      public event PointerEvent OnPointerWheelChanged;
 
       private IRenderConfiguration renderConfig;
 
@@ -30,6 +32,9 @@ namespace AlkaronEngine.Input
 
          renderConfig = setRenderConfig;
          prevMousePos = new Vector2 (-1, -1);
+
+         MouseState mouseState = Mouse.GetState();
+         prevWheelValue = mouseState.ScrollWheelValue;
       }
 
       public void UpdateInput(GameTime gameTime)
@@ -81,6 +86,15 @@ namespace AlkaronEngine.Input
          if (mouseState.RightButton == ButtonState.Released && prevMouseState.RightButton == ButtonState.Pressed)
          {
             OnPointerReleased?.Invoke(scaledPosition, PointerType.RightMouse);
+         }
+
+         // Mouse wheel
+         int newWheelValue = mouseState.ScrollWheelValue;
+         int curWheelDelta = newWheelValue - prevWheelValue;
+         prevWheelValue = newWheelValue;
+         if (curWheelDelta != 0)
+         {
+            OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel);
          }
 
          prevMouseState = mouseState;

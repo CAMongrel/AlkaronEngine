@@ -1,8 +1,9 @@
 ﻿using System;
+using AlkaronEngine.Graphics3D.Geometry;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace AlkaronEngine.Graphics3D
+namespace AlkaronEngine.Graphics3D.Components
 {
    public class StaticMeshComponent : BaseComponent
    {
