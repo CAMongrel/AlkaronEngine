@@ -93,6 +93,7 @@
     <Compile Include="Graphics3D\Geometry\StaticMesh.cs" />
     <Compile Include="Graphics3D\Geometry\StaticMeshCube.cs" />
     <Compile Include="Graphics3D\Components\ArcBallCameraComponent.cs" />
+    <Compile Include="Graphics3D\Components\FlyCameraComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui\Input\" />

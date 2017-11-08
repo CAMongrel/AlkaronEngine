@@ -74,9 +74,7 @@ namespace AlkaronEngine.Scene
       protected virtual void Init3D()
       {
          // Create default camera
-         CurrentCamera = new ArcBallCameraComponent(new Vector3(0, 0, 15),
-                                                  Vector3.Up,
-                                                  Vector3.Zero,
+         CurrentCamera = new FlyCameraComponent(new Vector3(0, 0, 15),
                                                   RenderConfig.ScreenSize,
                                                   0.1f,
                                                   500.0f);
