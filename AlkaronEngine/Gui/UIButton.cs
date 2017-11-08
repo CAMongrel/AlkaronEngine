@@ -1,100 +1,148 @@
-#region Using directives
-using AlkaronEngine.Graphics;
+﻿using System;
+using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
+using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-#endregion
 
 namespace AlkaronEngine.Gui
 {
-   internal class UIButton : UILabel
+   public enum UIButtonStyle
+   {
+      // No specific style, will only show the text and nothing else
+      None,
+      // Completely custom design. If Draw() is not overridden, this will only 
+      // show the sub-components (if any) and the background color (if set).
+      Custom,
+      // Shows the text and a border. If the button is pressed, a simple pressed
+      // effect is displayed.
+      Flat,
+   }
+
+   public class UIButton : UILabel
    {
       #region Variables
-      private Graphics.Texture backgroundNotClicked;
-      private Graphics.Texture backgroundClicked;
       protected bool isPressed;
       #endregion
 
-      #region Events
-      public event OnPointerDownInside OnMouseDownInside;
-      public event OnPointerUpInside OnMouseUpInside;
-      #endregion
+      #region Properties
+      public UIButtonStyle ButtonStyle { get; set; }
+      public Color BorderColor { get; set; }
+      public int BorderWidth { get; set; }
 
-      #region Constructor
-      public UIButton (IRenderConfiguration renderConfig, string setText, SpriteFont setFont, 
-         Graphics.Texture releaseButtonTexture, Graphics.Texture pressedButtonTexture)
-         : base(renderConfig, setText, setFont)
+      public int Padding { get; set; }
+
+      public override Vector2 PreferredSize
       {
-         if (releaseButtonTexture == null)
+         get
          {
-            throw new ArgumentNullException(nameof(releaseButtonTexture));
+            Vector2 resultSize = base.PreferredSize;
+
+            // Add padding
+            resultSize.X += Padding * 2;
+            resultSize.Y += Padding * 2;
+
+            return resultSize;
          }
-         if (pressedButtonTexture == null)
-         {
-            throw new ArgumentNullException(nameof(pressedButtonTexture));
-         }
-
-         isPressed = false;
-
-         backgroundClicked = pressedButtonTexture;
-         backgroundNotClicked = releaseButtonTexture;
-
-         Width = backgroundNotClicked.Width;
-         Height = backgroundNotClicked.Width;
       }
       #endregion
 
-      #region Render
-      public override void Draw()
+      #region Events
+      public event OnPointerDownInside OnPointerDownInside;
+      public event OnPointerUpInside OnPointerUpInside;
+      public event OnPointerUpOutside OnPointerUpOutside;
+      #endregion
+
+      #region ctor
+      public UIButton(IRenderConfiguration setRenderConfig, string setText, SpriteFont setFont, UIButtonStyle setButtonStyle = UIButtonStyle.None)
+         : base(setRenderConfig, setText, setFont, null)
       {
-         Graphics.Texture background = null;
-         if (isPressed)
-         {
-            background = backgroundClicked;
-         }
-         else
-         {
-            background = backgroundNotClicked;
-         }
+         Padding = 5;
+         ButtonStyle = setButtonStyle;
+         isPressed = false;
+         BorderColor = Color.Black;
+         BorderWidth = 1;
+      }
+      #endregion
 
-         if (background == null)
-         {
-            return;
-         }
-
-         Vector2 screenPos = ScreenPosition;
-
-         Color col = Color.FromNonPremultiplied (new Vector4 (Vector3.One, CompositeAlpha));
-         background.RenderOnScreen (screenPos.X, screenPos.Y, Width, Height, col);
-
+      #region Draw
+      protected override void Draw()
+      {
          base.Draw();
+
+         switch (ButtonStyle)
+         {
+            case UIButtonStyle.None:
+               {
+                  if (isPressed)
+                  {
+                     Color pressedColor = Color.FromNonPremultiplied(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
+                     Vector2 screenPos = ScreenPosition;
+                     RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
+                     Graphics2D.Texture.FillRectangle(renderConfig, rect, pressedColor);
+                  }
+               }
+               break;
+
+            case UIButtonStyle.Custom:
+               // Nothing to do here
+               break;
+
+            case UIButtonStyle.Flat:
+               {
+                  Vector2 screenPos = ScreenPosition;
+                  RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
+
+                  if (isPressed)
+                  {
+                     Color pressedColor = Color.FromNonPremultiplied(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
+                     Graphics2D.Texture.FillRectangle(renderConfig, rect, pressedColor);
+                  }
+
+                  Color borderColor = Color.FromNonPremultiplied(new Vector4(BorderColor.ToVector3(), CompositeAlpha));
+                  Graphics2D.Texture.RenderRectangle(renderConfig, rect, borderColor, BorderWidth);
+               }
+               break;
+         }
       }
       #endregion
 
       #region MouseDown
-      public override bool PointerDown (Vector2 position, PointerType pointerType)
+      protected internal override bool PointerDown(Vector2 position, PointerType pointerType)
       {
-         if (!base.PointerDown (position, pointerType))
+         if (!base.PointerDown(position, pointerType))
+         {
             return false;
+         }
 
+         CaptureInput();
          isPressed = true;
 
-         OnMouseDownInside?.Invoke(position);
+         OnPointerDownInside?.Invoke(this, position);
 
          return true;
       }
       #endregion
 
       #region MouseUp
-      public override bool PointerUp (Vector2 position, PointerType pointerType)
+      protected internal override bool PointerUp(Vector2 position, PointerType pointerType)
       {
-         if (!base.PointerUp (position, pointerType))
+         if (!base.PointerUp(position, pointerType))
+         {
             return false;
+         }
 
+         ReleaseInput();
          isPressed = false;
 
-         OnMouseUpInside?.Invoke(position);
+         if (HitTest(position) == true)
+         {
+            OnPointerUpInside?.Invoke(this, position);
+         } else
+         {
+            OnPointerUpOutside?.Invoke(this, position);
+         }
 
          return true;
       }

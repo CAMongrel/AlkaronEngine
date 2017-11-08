@@ -1,4 +1,4 @@
-﻿using AlkaronEngine.Graphics;
+﻿using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
@@ -9,18 +9,20 @@ namespace AlkaronEngine.Scene
 {
    public class SceneManager : IRenderConfiguration
    {
+      private object lockObj = new object();
+
       public BaseScene CurrentScene { get; private set; }
       public BaseScene NextScene { get; set; }
 
       public GraphicsDevice GraphicsDevice { get; private set; }
       public InputManager InputManager { get; private set; }
-      public RenderManager RenderManager { get; private set; }
+      public PrimitiveRenderManager RenderManager { get; private set; }
 
       public virtual Vector2 Scale
       {
          get
          {
-            return new Vector2(1, 1);
+            return new Vector2(1.0f, 1.0f);
          }
       }
 
@@ -56,37 +58,70 @@ namespace AlkaronEngine.Scene
          }
          GraphicsDevice = setGraphicsDevice;
 
-         RenderManager = new RenderManager(this);
+         RenderManager = new PrimitiveRenderManager(this);
          InputManager = new InputManager(this);
+         InputManager.OnPointerPressed += PointerPressed;
+         InputManager.OnPointerReleased += PointerReleased;
+         InputManager.OnPointerMoved += PointerMoved;
 
          CurrentScene = null;
          NextScene = null;
       }
 
+      public void Shutdown()
+      {
+         lock (lockObj)
+         { 
+            NextScene = null;
+
+            CurrentScene?.Close();
+            CurrentScene = null;
+         }
+      }
+
+      public void ClientSizeChanged()
+      {
+         lock (lockObj)
+         {
+            CurrentScene?.ClientSizeChanged();
+
+            ScreenQuad.RenderConfigDidUpdate();
+         }
+      }
+
       public void Update(GameTime gameTime)
       {
          Performance.Push("Game loop");
+
          InputManager.UpdateInput(gameTime);
 
-         if (NextScene != null)
+         lock (lockObj)
          {
-            if (CurrentScene != null)
+            if (NextScene != null)
             {
-               CurrentScene.Close();
+               if (CurrentScene != null)
+               {
+                  CurrentScene.Close();
+               }
+
+               CurrentScene = NextScene;
+               if (CurrentScene != null)
+               {
+                  CurrentScene.Init(this);
+               }
+
+               NextScene = null;
             }
 
-            CurrentScene = NextScene;
             if (CurrentScene != null)
             {
-               CurrentScene.Init();
+               if (CurrentScene.MouseCursor != null)
+               {
+                  CurrentScene.MouseCursor.Position = InputManager.MousePosition;
+               }
+
+               CurrentScene.Update(gameTime);
             }
-
-            NextScene = null;
-         }
-
-         if (CurrentScene != null)
-         {
-            CurrentScene.Update(gameTime);
          }
 
          Performance.Pop();
@@ -95,15 +130,16 @@ namespace AlkaronEngine.Scene
       public void Draw(GameTime gameTime)
       {
          Performance.Push("Render loop");
-         if (CurrentScene != null)
-         {
-            GraphicsDevice.Clear(CurrentScene.BackgroundColor);
 
-            CurrentScene.Draw(gameTime);
-         }
-         else
+         lock (lockObj)
          {
-            GraphicsDevice.Clear(BaseScene.StandardBackgroundColor);
+            if (CurrentScene != null)
+            {
+               CurrentScene.Draw(gameTime);
+            } else
+            {
+               GraphicsDevice.Clear(BaseScene.StandardBackgroundColor);
+            }
          }
 
          Performance.Pop();
@@ -111,25 +147,34 @@ namespace AlkaronEngine.Scene
 
       public void PointerPressed(Vector2 scaledPosition, PointerType pointerType)
       {
-         if (CurrentScene != null)
+         lock (lockObj)
          {
-            CurrentScene.PointerDown(scaledPosition, pointerType);
+            if (CurrentScene != null)
+            {
+               CurrentScene.PointerDown(scaledPosition, pointerType);
+            }
          }
       }
 
       public void PointerReleased(Vector2 scaledPosition, PointerType pointerType)
       {
-         if (CurrentScene != null)
+         lock (lockObj)
          {
-            CurrentScene.PointerUp(scaledPosition, pointerType);
+            if (CurrentScene != null)
+            {
+               CurrentScene.PointerUp(scaledPosition, pointerType);
+            }
          }
       }
 
-      public void PointerMoved(Vector2 scaledPosition)
+      public void PointerMoved(Vector2 scaledPosition, PointerType pointerType)
       {
-         if (CurrentScene != null)
+         lock (lockObj)
          {
-            CurrentScene.PointerMoved(scaledPosition);
+            if (CurrentScene != null)
+            {
+               CurrentScene.PointerMoved(scaledPosition);
+            }
          }
       }
    }

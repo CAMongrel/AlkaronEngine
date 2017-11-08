@@ -12,7 +12,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using RectangleF = AlkaronEngine.Util.RectangleF;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 
-namespace AlkaronEngine.Graphics
+namespace AlkaronEngine.Graphics2D
 {
    public class Texture : IDisposable
    {
@@ -39,6 +39,19 @@ namespace AlkaronEngine.Graphics
       public static Texture SingleWhite { get; internal set; }
       #endregion
 
+      #region Properties
+      public Texture2D NativeTexture
+      {
+         get { return nativeTexture; }
+         set
+         {
+            nativeTexture = value;
+            Width = nativeTexture.Width;
+            Height = nativeTexture.Height;
+         }
+      }
+      #endregion
+
       #region Constructor
 
       public Texture(IRenderConfiguration setRenderConfig, int width, int height, byte[] data = null)
@@ -60,6 +73,23 @@ namespace AlkaronEngine.Graphics
 
          nativeTexture = new Texture2D(renderConfig.GraphicsDevice, width, height, false, SurfaceFormat.Color);
          SetData(data);
+      }
+
+      public Texture(IRenderConfiguration setRenderConfig, Texture2D setNativeTexture)
+      {
+         if (setRenderConfig == null)
+         {
+            throw new ArgumentNullException(nameof(setRenderConfig));
+         }
+         if (setNativeTexture == null)
+         {
+            throw new ArgumentNullException(nameof(setNativeTexture));
+         }
+         renderConfig = setRenderConfig;
+
+         nativeTexture = setNativeTexture;
+         Width = nativeTexture.Width;
+         Height = nativeTexture.Height;
       }
 
       #endregion
@@ -126,27 +156,38 @@ namespace AlkaronEngine.Graphics
             nativeTexture.SetData<Color>(0, new Rectangle(0, 0, this.Width, this.Height), data, 0, data.Length);
          }
       }
+
+      public void SetData (byte [] data, Rectangle rectToWrite)
+      {
+         if (data == null)
+         {
+            return;
+         }
+
+         nativeTexture.SetData<byte> (0, rectToWrite, data, 0, data.Length);
+      }
+
       #endregion
 
       #region RenderOnScreen
 
-      internal void RenderOnScreen(float x, float y)
+      public void RenderOnScreen(float x, float y)
       {
          RenderOnScreen(x, y, Color.White);
       }
 
-      internal void RenderOnScreen(float x, float y, Color color)
+      public void RenderOnScreen(float x, float y, Color color, float rotation = 0.0f)
       {
          RenderOnScreen(new RectangleF(0, 0, (float)this.Width, (float)this.Height),
-            new RectangleF(x, y, (float)this.Width, (float)this.Height), color);
+                        new RectangleF(x, y, (float)this.Width, (float)this.Height), color, rotation);
       }
 
-      internal void RenderOnScreen(RectangleF display_rect)
+      public void RenderOnScreen(RectangleF display_rect)
       {
          RenderOnScreen(display_rect, false, false);
       }
 
-      internal void RenderOnScreen(RectangleF display_rect, bool flipX, bool flipY)
+      public void RenderOnScreen(RectangleF display_rect, bool flipX, bool flipY, float rotation = 0.0f)
       {
          RectangleF sourceRect = new RectangleF(
                                     flipX ? (float)this.Width : 0,
@@ -156,44 +197,44 @@ namespace AlkaronEngine.Graphics
 
          RenderOnScreen(sourceRect,
             new RectangleF(display_rect.X, display_rect.Y, display_rect.Width, display_rect.Height),
-            Color.White, flipX, flipY);
+            Color.White, rotation, flipX, flipY);
       }
 
-      internal void RenderOnScreen(float x, float y, float width, float height)
+      public void RenderOnScreen(float x, float y, float width, float height, float rotation = 0.0f)
       {
-         RenderOnScreen(x, y, width, height, Color.White);
+         RenderOnScreen(x, y, width, height, Color.White, rotation);
       }
 
-      internal void RenderOnScreen(float x, float y, float width, float height, Color color)
+      public void RenderOnScreen(float x, float y, float width, float height, Color color, float rotation = 0.0f)
       {
          RenderOnScreen(new RectangleF(0, 0, (float)this.Width, (float)this.Height),
-            new RectangleF(x, y, width, height), color);
+                        new RectangleF(x, y, width, height), color, rotation);
       }
 
-      internal void RenderOnScreen(RectangleF sourceRect, RectangleF destRect)
+      public void RenderOnScreen(RectangleF sourceRect, RectangleF destRect, float rotation = 0.0f)
       {
-         RenderOnScreen(sourceRect, destRect, Color.White);
+         RenderOnScreen(sourceRect, destRect, Color.White, rotation);
       }
 
-      internal void RenderOnScreen(RectangleF sourceRect, RectangleF destRect, Color col, bool flipX = false, bool flipY = false)
+      public void RenderOnScreen(RectangleF sourceRect, RectangleF destRect, Color col, float rotation, bool flipX = false, bool flipY = false)
       {
          Vector2 Scale = renderConfig.Scale;
          Vector2 ScaledOffset = renderConfig.ScaledOffset;
 
-         Rectangle srcRect = new Rectangle((int)sourceRect.X, (int)sourceRect.Y, (int)sourceRect.Width, (int)sourceRect.Height);
-         Vector2 position = new Vector2(ScaledOffset.X + destRect.X * Scale.X,
-                               ScaledOffset.Y + destRect.Y * Scale.Y);
          Vector2 scale = new Vector2(flipX ? -Scale.X : Scale.X, flipY ? -Scale.Y : Scale.Y);
          scale = new Vector2(Scale.X, Scale.Y);
          scale.X *= destRect.Width / sourceRect.Width;
          scale.Y *= destRect.Height / sourceRect.Height;
 
-         renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
-         renderConfig.RenderManager.SpriteBatch.Draw(nativeTexture, position, srcRect, col, 0, Vector2.Zero, scale, SpriteEffects.None, 1.0f);
-         renderConfig.RenderManager.SpriteBatch.End();
+         float radRotation = rotation * ((float)Math.PI / 180.0f);
+
+         ScreenQuad.RenderQuad(new Vector2(destRect.X, destRect.Y), 
+                               new Vector2(destRect.Width, destRect.Height), 
+                               col, radRotation, this.nativeTexture,
+                               renderConfig);
       }
 
-      internal static void RenderRectangle(IRenderConfiguration renderConfig, RectangleF destRect, Color col, int BorderWidth = 1)
+      public static void RenderRectangle(IRenderConfiguration renderConfig, RectangleF destRect, Color col, int BorderWidth = 1)
       {
          if (renderConfig == null)
          {
@@ -217,6 +258,27 @@ namespace AlkaronEngine.Graphics
          renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, topRect, singleRect, col);
          renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, rightRect, singleRect, col);
          renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, bottomRect, singleRect, col);
+         renderConfig.RenderManager.SpriteBatch.End();
+      }
+
+      public static void FillRectangle(IRenderConfiguration renderConfig, RectangleF destRect, Color col)
+      {
+         if (renderConfig == null)
+         {
+            throw new ArgumentNullException(nameof(renderConfig));
+         }
+
+         Vector2 Scale = renderConfig.Scale;
+         Vector2 ScaledOffset = renderConfig.ScaledOffset;
+
+         destRect = new RectangleF(ScaledOffset.X + (int)(destRect.X * Scale.X), ScaledOffset.Y + (int)(destRect.Y * Scale.Y),
+            (int)(destRect.Width * Scale.X), (int)(destRect.Height * Scale.Y));
+
+         Rectangle singleRect = new Rectangle(0, 0, 1, 1);
+         Rectangle destinationRect = new Rectangle((int)destRect.X, (int)destRect.Y, (int)destRect.Width, (int)destRect.Height);
+
+         renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
+         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, destinationRect, singleRect, col);
          renderConfig.RenderManager.SpriteBatch.End();
       }
 

@@ -10,7 +10,12 @@ namespace AlkaronEngine.Gui
 {
    internal static class UIWindowManager
    {
+      private static object lockObj = new object();
+
       private static List<UIWindow> windows;
+
+      internal static UIBaseComponent HoverComponent { get; private set; }
+      internal static UIBaseComponent CapturedComponent { get; private set; }
 
       static UIWindowManager()
       {
@@ -25,7 +30,9 @@ namespace AlkaronEngine.Gui
       internal static void RemoveWindow(UIWindow window)
       {
          if (window == null)
+         { 
             return;
+         }
 
          if (windows.Contains(window))
          {
@@ -37,6 +44,17 @@ namespace AlkaronEngine.Gui
       internal static void Clear()
       {
          windows.Clear();
+      }
+
+      /// <summary>
+      /// Calls PerformLayout for all windows
+      /// </summary>
+      internal static void PerformLayout()
+      { 
+         for (int i = 0; i < windows.Count; i++)
+         {
+            windows[i].PerformLayout();
+         }
       }
 
       internal static void Update(GameTime gameTime)
@@ -57,9 +75,19 @@ namespace AlkaronEngine.Gui
          for (int i = 0; i < windows.Count; i++)
          {
             if (windows[i].Visible == false)
+            { 
                continue;
+            }
 
             windows[i].InternalRender();
+         }
+      }
+
+      internal static void CaptureComponent(UIBaseComponent component)
+      {
+         lock (lockObj)
+         { 
+            CapturedComponent = component;
          }
       }
 
@@ -67,11 +95,15 @@ namespace AlkaronEngine.Gui
       {
          for (int i = windows.Count - 1; i >= 0; i--)
          {
-            if (!WinWarCS.Util.MathHelper.InsideRect(position, new Rectangle((int)windows[i].X, (int)windows[i].Y, (int)windows[i].Width, (int)windows[i].Height)))
+            if (windows[i].HitTest(position) == false)
+            { 
                continue;
+            }
 
             if (windows[i].PointerDown(position, pointerType))
+            {
                return true;
+            }
          }
 
          return false;
@@ -79,13 +111,26 @@ namespace AlkaronEngine.Gui
 
       internal static bool PointerUp(Vector2 position, PointerType pointerType)
       {
+         lock (lockObj)
+         {
+            if (CapturedComponent != null)
+            {
+               Vector2 relPosition = position - CapturedComponent.ScreenPosition;
+               return CapturedComponent.PointerUp(relPosition, pointerType);
+            }
+         }
+
          for (int i = windows.Count - 1; i >= 0; i--)
          {
-            if (!WinWarCS.Util.MathHelper.InsideRect(position, new Rectangle((int)windows[i].X, (int)windows[i].Y, (int)windows[i].Width, (int)windows[i].Height)))
+            if (windows[i].HitTest(position) == false)
+            {
                continue;
+            }
 
             if (windows[i].PointerUp(position, pointerType))
+            {
                return true;
+            }
          }
 
          return false;
@@ -93,13 +138,26 @@ namespace AlkaronEngine.Gui
 
       internal static bool PointerMoved(Vector2 position)
       {
+         lock (lockObj)
+         {
+            if (CapturedComponent != null)
+            {
+               Vector2 relPosition = position - CapturedComponent.ScreenPosition;
+               return CapturedComponent.PointerMoved(relPosition);
+            }
+         }
+
          for (int i = windows.Count - 1; i >= 0; i--)
          {
-            if (!WinWarCS.Util.MathHelper.InsideRect(position, new Rectangle((int)windows[i].X, (int)windows[i].Y, (int)windows[i].Width, (int)windows[i].Height)))
+            if (windows[i].HitTest(position) == false)
+            {
                continue;
+            }
 
             if (windows[i].PointerMoved(position))
+            {
                return true;
+            }
          }
 
          return false;

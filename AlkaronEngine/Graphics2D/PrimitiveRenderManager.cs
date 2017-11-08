@@ -5,15 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AlkaronEngine.Graphics
+namespace AlkaronEngine.Graphics2D
 {
-   public class RenderManager
+   public class PrimitiveRenderManager
    {
       private IRenderConfiguration renderConfig;
 
       public SpriteBatch SpriteBatch { get; private set; }
 
-      internal RenderManager(IRenderConfiguration setRenderConfig)
+      public PrimitiveRenderManager(IRenderConfiguration setRenderConfig)
       {
          if (setRenderConfig == null)
          {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AlkaronEngine.Graphics
+namespace AlkaronEngine.Graphics2D
 {
    public interface IRenderConfiguration
    {
@@ -18,6 +18,6 @@ namespace AlkaronEngine.Graphics
 
       bool RequiresPowerOfTwoTextures { get; }
 
-      RenderManager RenderManager { get; }
+      PrimitiveRenderManager RenderManager { get; }
    }
 }

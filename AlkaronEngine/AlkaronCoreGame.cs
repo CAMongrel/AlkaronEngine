@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using AlkaronEngine.Scene;
-using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics2D;
 
 namespace AlkaronEngine
 {
@@ -13,6 +13,8 @@ namespace AlkaronEngine
    /// </summary>
    public class AlkaronCoreGame : Game
    {
+      internal static AlkaronCoreGame Core;
+
       protected GraphicsDeviceManager graphics;
 
       public SceneManager SceneManager { get; protected set; }
@@ -21,12 +23,21 @@ namespace AlkaronEngine
                              int setPreferredBackbufferHeight = 720,
                              string setContentFolder = "Content")
       {
+         Core = this;
+
          graphics = new GraphicsDeviceManager(this);
          graphics.PreferredBackBufferWidth = setPreferredBackbufferWidth;
          graphics.PreferredBackBufferHeight = setPreferredBackbufferHeight;
          graphics.ApplyChanges();
 
          Content.RootDirectory = setContentFolder;
+      }
+
+      protected void SetWindowSize(int width, int height)
+      {
+         graphics.PreferredBackBufferWidth = width;
+         graphics.PreferredBackBufferHeight = height;
+         graphics.ApplyChanges();
       }
 
       /// <summary>
@@ -40,7 +51,18 @@ namespace AlkaronEngine
          base.Initialize();
 
          SceneManager = new SceneManager(GraphicsDevice);
-         Graphics.Texture.SingleWhite = new Graphics.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
+         ScreenQuad.Initialize(SceneManager);
+         Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      protected override void OnExiting(object sender, EventArgs args)
+      {
+         base.OnExiting(sender, args);
+
+         SceneManager?.Shutdown();
       }
 
       /// <summary>

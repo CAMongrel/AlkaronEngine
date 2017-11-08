@@ -1,4 +1,4 @@
-using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics2D;
 using System;
 
 namespace AlkaronEngine.Gui
@@ -13,13 +13,23 @@ namespace AlkaronEngine.Gui
          Width = renderConfig.ScreenSize.X;
          Height = renderConfig.ScreenSize.Y;
 
-         UIWindowManager.AddWindow(this);
+         WidthSizeMode = UISizeMode.Fit;
+         HeightSizeMode = UISizeMode.Fit;
+      }
+      #endregion
+
+      #region Show
+      public void Show()
+      {
+			UIWindowManager.AddWindow(this);
       }
       #endregion
 
       #region Close
       public void Close()
       {
+         ClearComponents();
+
          UIWindowManager.RemoveWindow(this);
       }
 
@@ -29,28 +39,9 @@ namespace AlkaronEngine.Gui
       #endregion
 
       #region Render
-      public override void Draw()
+      protected override void Draw()
       {
          base.Draw();
-      }
-      #endregion
-
-      #region Unit testing
-      internal static void TestWindow()
-      {
-         throw new NotImplementedException();
-         /*UIWindow wnd = null;
-
-         TestGame.Start("TestWindow",
-             delegate
-             {
-                 UIResource tr = new UIResource("Main Menu Text");
-                 wnd = Window.FromUIResource(tr);
-             },
-             delegate
-             {
-                 wnd.Render();
-             });*/
       }
       #endregion
    }

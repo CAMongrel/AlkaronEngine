@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace WinWarCS.Util
 {
-	class MathHelper
+	class MathHelperDeprecated
 	{
 		internal static bool InsideRect(int x, int y, Rectangle rect)
 		{

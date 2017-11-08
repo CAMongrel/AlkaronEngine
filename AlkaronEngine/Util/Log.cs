@@ -27,7 +27,7 @@ namespace AlkaronEngine.Util
 
    public interface ILogWriter
    {
-      void WriteLine(string line);
+      void WriteLine(string line, params object[] args);
    }
 
    public static class Log
@@ -51,27 +51,27 @@ namespace AlkaronEngine.Util
          }
       }
 
-      internal static void Write(LogType type, LogSeverity severity, string message)
+      public static void Write(LogType type, LogSeverity severity, string message, bool forced = false)
       {
          LogInternal(type, severity, message);
       }
 
-      internal static void Status(string message)
+      public static void Status(string message)
       {
          LogInternal(LogType.Generic, LogSeverity.Status, message);
       }
 
-      internal static void Warning(string message)
+      public static void Warning(string message)
       {
          LogInternal(LogType.Generic, LogSeverity.Warning, message);
       }
 
-      internal static void Error(string message)
+      public static void Error(string message)
       {
          LogInternal(LogType.Generic, LogSeverity.Error, message);
       }
 
-      internal static void Forced(string message)
+      public static void Forced(string message)
       {
          LogInternal(LogType.Game, LogSeverity.Status, message, true);
       }

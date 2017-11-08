@@ -1,6 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
-using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics2D;
 
 namespace AlkaronEngine.Gui
 {

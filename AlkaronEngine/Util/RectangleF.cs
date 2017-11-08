@@ -1,6 +1,6 @@
 ﻿namespace AlkaronEngine.Util
 {
-   struct RectangleF
+   public struct RectangleF
    {
       public static RectangleF Empty = new RectangleF(0, 0, 0, 0);
 

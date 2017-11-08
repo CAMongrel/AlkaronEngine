@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics2D;
 
 namespace AlkaronEngine.Input
 {
