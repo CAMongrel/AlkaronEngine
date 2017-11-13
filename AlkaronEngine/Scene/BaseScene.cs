@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.Components;
@@ -74,6 +75,11 @@ namespace AlkaronEngine.Scene
       protected virtual void Init3D()
       {
          // Create default camera
+         CreateDefaultCamera();
+      }
+
+      protected virtual void CreateDefaultCamera()
+      {
          CurrentCamera = new FlyCameraComponent(new Vector3(0, 0, 15),
                                                   RenderConfig.ScreenSize,
                                                   0.1f,

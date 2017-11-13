@@ -85,7 +85,6 @@
     <Compile Include="Graphics3D\RenderManager.cs" />
     <Compile Include="Graphics3D\SceneGraph.cs" />
     <Compile Include="Graphics3D\EffectRenderPass.cs" />
-    <Compile Include="Graphics3D\ComponentRenderProxy.cs" />
     <Compile Include="Graphics3D\EffectLibrary.cs" />
     <Compile Include="Graphics3D\Components\BaseComponent.cs" />
     <Compile Include="Graphics3D\Components\CameraComponent.cs" />
@@ -94,12 +93,15 @@
     <Compile Include="Graphics3D\Geometry\StaticMeshCube.cs" />
     <Compile Include="Graphics3D\Components\ArcBallCameraComponent.cs" />
     <Compile Include="Graphics3D\Components\FlyCameraComponent.cs" />
+    <Compile Include="Graphics3D\RenderProxies\BaseRenderProxy.cs" />
+    <Compile Include="Graphics3D\RenderProxies\StaticMeshComponentRenderProxy.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui\Input\" />
     <Folder Include="Graphics3D\" />
     <Folder Include="Graphics3D\Components\" />
     <Folder Include="Graphics3D\Geometry\" />
+    <Folder Include="Graphics3D\RenderProxies\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

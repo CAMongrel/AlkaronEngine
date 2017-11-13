@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -10,12 +11,12 @@ namespace AlkaronEngine.Graphics3D
    {
       public Effect Effect { get; private set; }
 
-      private List<ComponentRenderProxy> proxies;
+      private List<BaseRenderProxy> proxies;
 
       public EffectRenderPass(Effect setEffect)
       {
          Effect = setEffect;
-         proxies = new List<ComponentRenderProxy>();
+         proxies = new List<BaseRenderProxy>();
       }
 
       public void Clear()
@@ -23,7 +24,7 @@ namespace AlkaronEngine.Graphics3D
          proxies.Clear();
       }
 
-      public void AddProxy(ComponentRenderProxy proxy)
+      public void AddProxy(BaseRenderProxy proxy)
       {
          proxies.Add(proxy);
       }
@@ -32,10 +33,7 @@ namespace AlkaronEngine.Graphics3D
       {
          for (int i = 0; i < proxies.Count; i++)
          {
-            Effect.Parameters["WorldViewProj"].SetValue(proxies[i].WorldMatrix * renderManager.ViewMatrix * renderManager.ProjectionMatrix);
-            Effect.CurrentTechnique.Passes[0].Apply();
-
-            proxies[i].Render(renderConfig);
+            proxies[i].Render(renderConfig, renderManager);
          }
       }
    }

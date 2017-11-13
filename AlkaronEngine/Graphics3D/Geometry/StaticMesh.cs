@@ -6,9 +6,9 @@ namespace AlkaronEngine.Graphics3D.Geometry
 {
    public class StaticMesh
    {
-      public VertexBuffer VertexBuffer { get; protected set; }
-      public PrimitiveType PrimitiveType { get; protected set; }
-      public int PrimitiveCount { get; protected set; }
+      public VertexBuffer VertexBuffer { get; set; }
+      public PrimitiveType PrimitiveType { get; set; }
+      public int PrimitiveCount { get; set; }
 
       protected IRenderConfiguration renderConfig;
 

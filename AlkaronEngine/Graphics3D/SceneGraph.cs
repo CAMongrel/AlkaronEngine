@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Graphics3D.Components;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -40,7 +41,7 @@ namespace AlkaronEngine.Graphics3D
                continue;
             }
 
-            ComponentRenderProxy proxy = Components[i].Draw(gameTime, renderManager);
+            BaseRenderProxy proxy = Components[i].Draw(gameTime, renderManager);
             if (renderPassDict.ContainsKey(proxy.Effect) == false)
             {
                EffectRenderPass pass = renderManager.CreateRenderPassForEffect(proxy.Effect);

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using AlkaronEngine.Graphics3D.Geometry;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -7,24 +9,24 @@ namespace AlkaronEngine.Graphics3D.Components
 {
    public class StaticMeshComponent : BaseComponent
    {
-      public StaticMesh StaticMesh { get; set; }
+      public List<StaticMesh> StaticMeshes { get; set; }
 
-      private ComponentRenderProxy cachedProxy;
+      private StaticMeshComponentRenderProxy cachedProxy;
 
       public StaticMeshComponent(Vector3 setCenter)
          : base(setCenter)
       {
          CanBeRendered = true;
          cachedProxy = null;
+         StaticMeshes = new List<StaticMesh>();
       }
 
-      public override ComponentRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
+      public override BaseRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
       {
          if (cachedProxy == null)
          {
-            cachedProxy = new ComponentRenderProxy(renderManager.EffectLibrary.EffectByName("StaticMesh"),
-                                                   StaticMesh.VertexBuffer, StaticMesh.PrimitiveType,
-                                                   StaticMesh.PrimitiveCount);
+            cachedProxy = new StaticMeshComponentRenderProxy(renderManager.EffectLibrary.EffectByName("StaticMesh"),
+                                                             this);
          }
 
          cachedProxy.WorldMatrix = Matrix.CreateTranslation(Center);

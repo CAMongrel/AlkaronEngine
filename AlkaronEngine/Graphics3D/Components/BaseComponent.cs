@@ -1,4 +1,5 @@
 ﻿using System;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Graphics3D.Components
@@ -20,7 +21,7 @@ namespace AlkaronEngine.Graphics3D.Components
          //
       }
 
-      public virtual ComponentRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
+      public virtual BaseRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
       {
          return null;
       }
