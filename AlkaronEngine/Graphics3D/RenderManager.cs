@@ -35,7 +35,8 @@ namespace AlkaronEngine.Graphics3D
          BasicEffect eff = new BasicEffect(renderConfig.GraphicsDevice);
          eff.FogEnabled = false;
          eff.LightingEnabled = false;
-         eff.VertexColorEnabled = true;
+         eff.VertexColorEnabled = false;
+         eff.TextureEnabled = true;
          /*eff.World = Matrix.Identity;
          eff.View = Matrix.CreateLookAt(new Vector3(0, 0, 15), Vector3.Zero, Vector3.Up);
          eff.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), renderConfig.GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);*/

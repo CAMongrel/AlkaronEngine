@@ -30,6 +30,13 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
          for (int i = 0; i < Component.StaticMeshes.Count; i++)
          {
             StaticMesh mesh = Component.StaticMeshes[i];
+
+            if (mesh.DiffuseTexture != null)
+            {
+               Effect.Parameters["Texture"].SetValue(mesh.DiffuseTexture);
+               Effect.CurrentTechnique.Passes[0].Apply();
+            }
+
             renderConfig.GraphicsDevice.SetVertexBuffer(mesh.VertexBuffer);
             renderConfig.GraphicsDevice.DrawPrimitives(mesh.PrimitiveType, 0, mesh.PrimitiveCount);
          }
