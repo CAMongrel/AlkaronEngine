@@ -29,7 +29,9 @@ namespace AlkaronEngine.Graphics3D.Components
                                                              this);
          }
 
-         cachedProxy.WorldMatrix = Matrix.CreateTranslation(Center);
+         cachedProxy.WorldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) * 
+            Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) * 
+            Matrix.CreateTranslation(Center);
 
          return cachedProxy;
       }

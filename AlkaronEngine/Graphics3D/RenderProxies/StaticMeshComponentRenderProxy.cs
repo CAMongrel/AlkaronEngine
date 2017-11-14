@@ -24,6 +24,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
       {
          base.Render(renderConfig, renderManager);
 
+         renderConfig.GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicWrap;
+
          Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewMatrix * renderManager.ProjectionMatrix);
          Effect.CurrentTechnique.Passes[0].Apply();
 
