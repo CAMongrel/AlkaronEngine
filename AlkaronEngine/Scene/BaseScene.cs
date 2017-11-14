@@ -113,6 +113,8 @@ namespace AlkaronEngine.Scene
 
       public virtual void Draw(GameTime gameTime)
       {
+         RenderConfig.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
          // Render 3D
          SceneGraph.Draw(gameTime, RenderManager);       // SceneGraph.Draw() only creates the RenderProxies
          // Clear only the depth and stencil buffer

@@ -28,6 +28,7 @@ namespace AlkaronEngine
          graphics = new GraphicsDeviceManager(this);
          graphics.PreferredBackBufferWidth = setPreferredBackbufferWidth;
          graphics.PreferredBackBufferHeight = setPreferredBackbufferHeight;
+         graphics.PreferredDepthStencilFormat = DepthFormat.Depth24;
          graphics.ApplyChanges();
 
          Content.RootDirectory = setContentFolder;
