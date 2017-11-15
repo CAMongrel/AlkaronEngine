@@ -12,10 +12,13 @@ namespace AlkaronEngine.Graphics3D.Geometry
 
       public Texture2D DiffuseTexture { get; set; }
 
+      public bool IsCollisionOnly { get; set; }
+
       protected IRenderConfiguration renderConfig;
 
       public StaticMesh(IRenderConfiguration setRenderConfig)
       {
+         IsCollisionOnly = false;
          renderConfig = setRenderConfig;
          DiffuseTexture = null;
       }

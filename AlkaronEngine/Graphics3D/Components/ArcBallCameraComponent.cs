@@ -61,11 +61,11 @@ namespace AlkaronEngine.Graphics3D.Components
 
          if (position.X < 0)
          {
-            ZoomIn(1.0f);
+            Zoom(-1.0f * SpeedModifier);
          }
          else if (position.X > 0)
          {
-            ZoomOut(1.0f);
+            Zoom(1.0f * SpeedModifier);
          }
       }
    }

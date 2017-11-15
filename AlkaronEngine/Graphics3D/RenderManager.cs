@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Components;
+using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,6 +15,7 @@ namespace AlkaronEngine.Graphics3D
 
       private List<EffectRenderPass> renderPasses;
 
+      public Vector3 CameraLocation { get; private set; }
       public Matrix ViewMatrix { get; private set; }
       public Matrix ProjectionMatrix { get; private set; }
 
@@ -32,11 +34,9 @@ namespace AlkaronEngine.Graphics3D
 
       private void CreateEffectLibrary()
       {
-         BasicEffect eff = new BasicEffect(renderConfig.GraphicsDevice);
+         AlphaTestEffect eff = new AlphaTestEffect(renderConfig.GraphicsDevice);
          eff.FogEnabled = false;
-         eff.LightingEnabled = false;
          eff.VertexColorEnabled = false;
-         eff.TextureEnabled = true;
          /*eff.World = Matrix.Identity;
          eff.View = Matrix.CreateLookAt(new Vector3(0, 0, 15), Vector3.Zero, Vector3.Up);
          eff.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), renderConfig.GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);*/
@@ -70,30 +70,44 @@ namespace AlkaronEngine.Graphics3D
 
       public void UpdateMatricesFromCameraComponent(CameraComponent camera)
       {
+         CameraLocation = camera.Center;
          ViewMatrix = camera.ViewMatrix;
          ProjectionMatrix = camera.ProjectionMatrix;
       }
 
       public void Draw(GameTime gameTime)
       {
+         Performance.Push("RenderManager.Draw");
+
+         Performance.Push("RenderManager.Draw (Set RenderTarget)");
          // Render scene to texture
          renderConfig.GraphicsDevice.SetRenderTarget(renderTarget);
+         Performance.Pop();
 
          // Perform rendering
-         renderConfig.GraphicsDevice.Clear(Color.LightGreen);
+         Performance.Push("RenderManager.Draw (Clear)");
+         renderConfig.GraphicsDevice.Clear(Color.Black);
+         Performance.Pop();
 
-         RenderPasses();
+         Performance.Push("RenderManager.Draw (DrawRenderPasses)");
+         DrawRenderPasses();
+         Performance.Pop();
 
          // Reset renderTarget
+         Performance.Push("RenderManager.Draw (SetRenderTarget)");
          renderConfig.GraphicsDevice.SetRenderTarget(null);
+         Performance.Pop();
 
          // Draw renderTarget to screen
+         Performance.Push("RenderManager.Draw (RenderQuad)");
          ScreenQuad.RenderQuad(Vector2.Zero, renderConfig.ScreenSize,
                                Color.White, 0.0f, renderTarget,
                                renderConfig);
+         Performance.Pop();
+         Performance.Pop();
       }
 
-      private void RenderPasses()
+      private void DrawRenderPasses()
       {
          for (int i = 0; i < renderPasses.Count; i++)
          {
@@ -106,9 +120,10 @@ namespace AlkaronEngine.Graphics3D
          renderPasses.Clear();
       }
 
-      public EffectRenderPass CreateRenderPassForEffect(Effect effect)
+      public EffectRenderPass CreateAndAddRenderPassForEffect(Effect effect, bool performDepthSorting)
       {
          EffectRenderPass renderPass = new EffectRenderPass(effect);
+         renderPass.PerformDepthSorting = performDepthSorting;
          renderPasses.Add(renderPass);
          return renderPass;
       }

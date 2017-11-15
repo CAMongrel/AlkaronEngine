@@ -17,12 +17,16 @@ namespace AlkaronEngine.Graphics3D.Components
       public Matrix ViewMatrix { get; private set; }
       public Matrix ProjectionMatrix { get; private set; }
 
+      public float SpeedModifier { get; set; }
+
       public CameraComponent(Vector3 setCenter, Vector3 setUpVector, 
                              Vector3 setLookAt,
                              Vector2 setScreenSize,
                              float setNearClip, float setFarClip)
          : base(setCenter)
       {
+         SpeedModifier = 1.0f;
+
          UpVector = setUpVector;
          LookAt = setLookAt;
 
@@ -43,15 +47,7 @@ namespace AlkaronEngine.Graphics3D.Components
          UpdateMatrices();
       }
 
-      public void ZoomIn(float absoluteDelta)
-      {
-         Vector3 camVector = Center - LookAt;
-         float length = camVector.Length() - absoluteDelta;
-         camVector.Normalize();
-         Center = LookAt + camVector * length;
-      }
-
-      public void ZoomOut(float absoluteDelta)
+      public void Zoom(float absoluteDelta)
       {
          Vector3 camVector = Center - LookAt;
          float length = camVector.Length() + absoluteDelta;

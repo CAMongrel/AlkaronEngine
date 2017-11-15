@@ -31,6 +31,10 @@ namespace AlkaronEngine.Graphics3D
 
       public void Draw(GameTime gameTime, RenderManager renderManager)
       {
+         bool performDepthSorting = false;
+
+         Vector3 cameraWorldLocation = renderManager.CameraLocation;
+
          renderManager.ClearRenderPasses();
          Dictionary<Effect, EffectRenderPass> renderPassDict = new Dictionary<Effect, EffectRenderPass>();
 
@@ -44,7 +48,11 @@ namespace AlkaronEngine.Graphics3D
             BaseRenderProxy proxy = Components[i].Draw(gameTime, renderManager);
             if (renderPassDict.ContainsKey(proxy.Effect) == false)
             {
-               EffectRenderPass pass = renderManager.CreateRenderPassForEffect(proxy.Effect);
+               EffectRenderPass pass = renderManager.CreateAndAddRenderPassForEffect(proxy.Effect, performDepthSorting);
+               if (pass.PerformDepthSorting)
+               {
+                  pass.WorldOriginForDepthSorting = cameraWorldLocation;
+               }
                renderPassDict.Add(proxy.Effect, pass);
             }
 

@@ -5,6 +5,7 @@ using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.Components;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
+using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -113,20 +114,32 @@ namespace AlkaronEngine.Scene
 
       public virtual void Draw(GameTime gameTime)
       {
+         Performance.Push("BaseScene.Draw");
+
          RenderConfig.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
          // Render 3D
-         SceneGraph.Draw(gameTime, RenderManager);       // SceneGraph.Draw() only creates the RenderProxies
-         // Clear only the depth and stencil buffer
-         Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
+         Performance.Push("BaseScene.Draw (SceneGraph)");
          RenderManager.UpdateMatricesFromCameraComponent(CurrentCamera);
+         SceneGraph.Draw(gameTime, RenderManager);       // SceneGraph.Draw() only creates the RenderProxies
+         Performance.Pop();
+         Performance.Push("BaseScene.Draw (Render3D)");
+         // Clear only the depth and stencil buffer
+         Performance.Push("BaseScene.Draw (Render3D - Initial clear)");
+         Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
+         Performance.Pop();
          RenderManager.Draw(gameTime);
+         Performance.Pop();
 
          // Render 2D
+         Performance.Push("BaseScene.Draw (Render2D)");
          // Clear depth buffer and stencil again for 2D rendering
          Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
          UIWindowManager.Draw(gameTime);
          MouseCursor?.Render(gameTime);
+         Performance.Pop();
+
+         Performance.Pop();
       }
 
       public virtual void PointerDown(Vector2 position, PointerType pointerType)

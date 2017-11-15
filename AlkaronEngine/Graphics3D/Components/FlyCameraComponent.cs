@@ -52,7 +52,7 @@ namespace AlkaronEngine.Graphics3D.Components
       {
          base.PointerWheelChanged(position);
 
-         Vector3 camVec = LookAt - Center;
+         Vector3 camVec = (LookAt - Center) * SpeedModifier;
          if (position.X < 0)
          {
             Center += camVec;
