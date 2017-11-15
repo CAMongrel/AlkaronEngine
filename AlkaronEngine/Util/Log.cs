@@ -13,7 +13,7 @@ namespace AlkaronEngine.Util
       AI = 4,
       Performance = 8,
       Game = Generic | AI,
-      All = Generic | Resources | AI | Performance,
+      All = Game | Resources | Performance,
    }
 
    public enum LogSeverity
@@ -32,7 +32,7 @@ namespace AlkaronEngine.Util
 
    public static class Log
    {
-      public static LogType Type = LogType.Game;
+      public static LogType Type = LogType.All;
       public static LogSeverity Severity = LogSeverity.Debug;
 
       public static ILogWriter LogWriter;
