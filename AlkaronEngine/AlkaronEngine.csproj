@@ -84,7 +84,7 @@
     <Compile Include="Util\RectangleF.cs" />
     <Compile Include="Graphics3D\RenderManager.cs" />
     <Compile Include="Graphics3D\SceneGraph.cs" />
-    <Compile Include="Graphics3D\EffectRenderPass.cs" />
+    <Compile Include="Graphics3D\RenderPass.cs" />
     <Compile Include="Graphics3D\EffectLibrary.cs" />
     <Compile Include="Graphics3D\Components\BaseComponent.cs" />
     <Compile Include="Graphics3D\Components\CameraComponent.cs" />
@@ -94,7 +94,9 @@
     <Compile Include="Graphics3D\Components\ArcBallCameraComponent.cs" />
     <Compile Include="Graphics3D\Components\FlyCameraComponent.cs" />
     <Compile Include="Graphics3D\RenderProxies\BaseRenderProxy.cs" />
-    <Compile Include="Graphics3D\RenderProxies\StaticMeshComponentRenderProxy.cs" />
+    <Compile Include="Graphics2D\Material.cs" />
+    <Compile Include="Graphics3D\RenderProxies\StaticMeshRenderProxy.cs" />
+    <Compile Include="Graphics2D\MaterialLibrary.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui\Input\" />

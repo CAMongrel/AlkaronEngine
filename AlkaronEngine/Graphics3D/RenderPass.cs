@@ -8,9 +8,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D
 {
-   public class EffectRenderPass
+   public class RenderPass
    {
-      public Effect Effect { get; private set; }
+      public Material Material { get; private set; }
 
       public bool PerformDepthSorting { get; set; }
 
@@ -18,11 +18,11 @@ namespace AlkaronEngine.Graphics3D
 
       private List<BaseRenderProxy> proxies;
 
-      public EffectRenderPass(Effect setEffect)
+      public RenderPass(Material setMaterial)
       {
          WorldOriginForDepthSorting = Vector3.Zero;
-         PerformDepthSorting = false;
-         Effect = setEffect;
+         PerformDepthSorting = setMaterial.RequiresOrderingBackToFront;
+         Material = setMaterial;
          proxies = new List<BaseRenderProxy>();
       }
 
@@ -70,6 +70,8 @@ namespace AlkaronEngine.Graphics3D
          Performance.PushAggregate("Setup");
          Performance.PushAggregate("SetVertexBuffer");
          Performance.PushAggregate("DrawPrimitives");
+
+         Material.SetupEffectForRenderPass(this);
 
          for (int i = 0; i < proxies.Count; i++)
          {

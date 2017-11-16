@@ -9,31 +9,53 @@ namespace AlkaronEngine.Graphics3D.Components
 {
    public class StaticMeshComponent : BaseComponent
    {
+      private List<StaticMeshRenderProxy> cachedProxies;
       public List<StaticMesh> StaticMeshes { get; set; }
-
-      private StaticMeshComponentRenderProxy cachedProxy;
 
       public StaticMeshComponent(Vector3 setCenter)
          : base(setCenter)
       {
          CanBeRendered = true;
-         cachedProxy = null;
          StaticMeshes = new List<StaticMesh>();
+         cachedProxies = new List<StaticMeshRenderProxy>();
       }
 
-      public override BaseRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
+      private StaticMeshRenderProxy GetRenderProxy(StaticMesh mesh)
       {
-         if (cachedProxy == null)
+         for (int i = 0; i < cachedProxies.Count; i++)
          {
-            cachedProxy = new StaticMeshComponentRenderProxy(renderManager.EffectLibrary.EffectByName("StaticMesh"),
-                                                             this);
+            if (cachedProxies[i].StaticMesh == mesh)
+            {
+               return cachedProxies[i];
+            }
          }
 
-         cachedProxy.WorldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) * 
-            Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) * 
+         StaticMeshRenderProxy cachedProxy = new StaticMeshRenderProxy(mesh);
+         cachedProxies.Add(cachedProxy);
+         return cachedProxy;
+      }
+
+      public override BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
+      {
+         if (StaticMeshes.Count == 0)
+         {
+            return null;
+         }
+
+         Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+            Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
             Matrix.CreateTranslation(Center);
 
-         return cachedProxy;
+         for (int i = 0; i < StaticMeshes.Count; i++)
+         {
+            StaticMesh mesh = StaticMeshes[i];
+
+            StaticMeshRenderProxy proxy = GetRenderProxy(mesh);
+            proxy.WorldMatrix = worldMatrix;
+            proxy.Material = mesh.Material;
+         }
+
+         return cachedProxies.ToArray();
       }
    }
 }

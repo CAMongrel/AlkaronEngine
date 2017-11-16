@@ -7,12 +7,12 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 {
    public abstract class BaseRenderProxy
    {
-      public Effect Effect { get; private set; }
+      public Material Material { get; set; }
       public Matrix WorldMatrix { get; set; }
 
-      public BaseRenderProxy(Effect setEffect)
+      public BaseRenderProxy()
       {
-         Effect = setEffect;
+         Material = null;
          WorldMatrix = Matrix.Identity;
       }
 

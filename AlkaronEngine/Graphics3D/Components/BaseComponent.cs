@@ -30,7 +30,7 @@ namespace AlkaronEngine.Graphics3D.Components
          Center = newCenter;
       }
 
-      public virtual BaseRenderProxy Draw(GameTime gameTime, RenderManager renderManager)
+      public virtual BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
       {
          return null;
       }

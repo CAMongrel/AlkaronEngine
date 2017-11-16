@@ -1,11 +1,14 @@
 ﻿using System;
 using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D.Geometry
 {
    public class StaticMesh
    {
+      public Material Material { get; set; }
+
       public VertexBuffer VertexBuffer { get; set; }
       public PrimitiveType PrimitiveType { get; set; }
       public int PrimitiveCount { get; set; }
@@ -21,6 +24,7 @@ namespace AlkaronEngine.Graphics3D.Geometry
          IsCollisionOnly = false;
          renderConfig = setRenderConfig;
          DiffuseTexture = null;
+         Material = null;
       }
    }
 }

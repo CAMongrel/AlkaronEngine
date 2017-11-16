@@ -13,7 +13,7 @@ namespace AlkaronEngine.Graphics3D
       private RenderTarget2D renderTarget;
       private IRenderConfiguration renderConfig;
 
-      private List<EffectRenderPass> renderPasses;
+      private List<RenderPass> renderPasses;
 
       public Vector3 CameraLocation { get; private set; }
       public Matrix ViewMatrix { get; private set; }
@@ -21,15 +21,19 @@ namespace AlkaronEngine.Graphics3D
 
       public EffectLibrary EffectLibrary { get; private set; }
 
+      public MaterialLibrary MaterialLibrary { get; private set; }
+
       public RenderManager(IRenderConfiguration setRenderConfig)
       {
-         renderPasses = new List<EffectRenderPass>();
+         renderPasses = new List<RenderPass>();
          renderConfig = setRenderConfig;
 
          EffectLibrary = new EffectLibrary();
+         MaterialLibrary = new MaterialLibrary();
 
          CreateRenderTarget();
          CreateEffectLibrary();
+         CreateMaterialLibrary();
       }
 
       private void CreateEffectLibrary()
@@ -41,6 +45,10 @@ namespace AlkaronEngine.Graphics3D
          eff.View = Matrix.CreateLookAt(new Vector3(0, 0, 15), Vector3.Zero, Vector3.Up);
          eff.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), renderConfig.GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);*/
          EffectLibrary.AddEffect("StaticMesh", eff);
+      }
+
+      private void CreateMaterialLibrary()
+      {
       }
 
       private void CreateRenderTarget()
@@ -120,10 +128,9 @@ namespace AlkaronEngine.Graphics3D
          renderPasses.Clear();
       }
 
-      public EffectRenderPass CreateAndAddRenderPassForEffect(Effect effect, bool performDepthSorting)
+      public RenderPass CreateAndAddRenderPassForMaterial(Material material)
       {
-         EffectRenderPass renderPass = new EffectRenderPass(effect);
-         renderPass.PerformDepthSorting = performDepthSorting;
+         RenderPass renderPass = new RenderPass(material);
          renderPasses.Add(renderPass);
          return renderPass;
       }

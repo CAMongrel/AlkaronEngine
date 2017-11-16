@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Components;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
@@ -31,12 +32,10 @@ namespace AlkaronEngine.Graphics3D
 
       public void Draw(GameTime gameTime, RenderManager renderManager)
       {
-         bool performDepthSorting = false;
-
          Vector3 cameraWorldLocation = renderManager.CameraLocation;
 
          renderManager.ClearRenderPasses();
-         Dictionary<Effect, EffectRenderPass> renderPassDict = new Dictionary<Effect, EffectRenderPass>();
+         Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
 
          for (int i = 0; i < Components.Count; i++)
          {
@@ -45,19 +44,31 @@ namespace AlkaronEngine.Graphics3D
                continue;
             }
 
-            BaseRenderProxy proxy = Components[i].Draw(gameTime, renderManager);
-            if (renderPassDict.ContainsKey(proxy.Effect) == false)
+            BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
+            if (proxies == null)
             {
-               EffectRenderPass pass = renderManager.CreateAndAddRenderPassForEffect(proxy.Effect, performDepthSorting);
-               if (pass.PerformDepthSorting)
-               {
-                  pass.WorldOriginForDepthSorting = cameraWorldLocation;
-               }
-               renderPassDict.Add(proxy.Effect, pass);
+               continue;
             }
 
-            EffectRenderPass passToUse = renderPassDict[proxy.Effect];
-            passToUse.AddProxy(proxy);
+            for (int p = 0; p < proxies.Length; p++)
+            {
+               BaseRenderProxy proxy = proxies[p];
+               RenderPass passToUse = null;
+
+               if (renderPassDict.ContainsKey(proxy.Material) == false)
+               {
+                  passToUse = renderManager.CreateAndAddRenderPassForMaterial(proxy.Material);
+                  renderPassDict.Add(proxy.Material, passToUse);
+               }
+               else
+               {
+                  passToUse = renderPassDict[proxy.Material];
+               }
+
+               passToUse.WorldOriginForDepthSorting = cameraWorldLocation;
+
+               passToUse.AddProxy(proxy);
+            }
          }
       }
    }
