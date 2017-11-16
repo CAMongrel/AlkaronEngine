@@ -114,6 +114,8 @@ namespace AlkaronEngine.Scene
 
       public virtual void Draw(GameTime gameTime)
       {
+         long start = System.Diagnostics.Stopwatch.GetTimestamp();
+
          Performance.Push("BaseScene.Draw");
 
          RenderConfig.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -140,6 +142,11 @@ namespace AlkaronEngine.Scene
          Performance.Pop();
 
          Performance.Pop();
+
+         long end = System.Diagnostics.Stopwatch.GetTimestamp();
+         double deltaSeconds = (double)(end - start) / (double)System.Diagnostics.Stopwatch.Frequency;
+
+         Console.WriteLine("Draw time " + deltaSeconds + " seconds (Avg FPS: " + (int)(1.0 / deltaSeconds) + ")");
       }
 
       public virtual void PointerDown(Vector2 position, PointerType pointerType)

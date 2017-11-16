@@ -44,6 +44,11 @@ namespace AlkaronEngine.Graphics3D
                continue;
             }
 
+            if (renderManager.CameraFrustum.Contains(Components[i].BoundingBox) == ContainmentType.Disjoint)
+            {
+               continue;
+            }
+
             BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
             if (proxies == null)
             {
@@ -53,6 +58,7 @@ namespace AlkaronEngine.Graphics3D
             for (int p = 0; p < proxies.Length; p++)
             {
                BaseRenderProxy proxy = proxies[p];
+
                RenderPass passToUse = null;
 
                if (renderPassDict.ContainsKey(proxy.Material) == false)

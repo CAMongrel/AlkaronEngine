@@ -10,6 +10,8 @@ namespace AlkaronEngine.Graphics3D.Components
       public Vector3 Rotation { get; set; }
       public Vector3 Scale { get; set; }
 
+      public BoundingBox BoundingBox { get; protected set; }
+
       public bool CanBeRendered { get; protected set; }
 
       public BaseComponent(Vector3 setCenter)
@@ -18,6 +20,7 @@ namespace AlkaronEngine.Graphics3D.Components
          Rotation = Vector3.Zero;
          Scale = Vector3.One;
          CanBeRendered = false;
+         BoundingBox = new BoundingBox();
       }
 
       public virtual void Update(GameTime gameTime)

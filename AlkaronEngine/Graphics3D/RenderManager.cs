@@ -18,6 +18,7 @@ namespace AlkaronEngine.Graphics3D
       public Vector3 CameraLocation { get; private set; }
       public Matrix ViewMatrix { get; private set; }
       public Matrix ProjectionMatrix { get; private set; }
+      public BoundingFrustum CameraFrustum { get; private set; }
 
       public EffectLibrary EffectLibrary { get; private set; }
 
@@ -81,6 +82,8 @@ namespace AlkaronEngine.Graphics3D
          CameraLocation = camera.Center;
          ViewMatrix = camera.ViewMatrix;
          ProjectionMatrix = camera.ProjectionMatrix;
+
+         CameraFrustum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
       }
 
       public void Draw(GameTime gameTime)

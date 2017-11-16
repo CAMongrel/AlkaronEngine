@@ -1,6 +1,7 @@
 ﻿using System;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.RenderProxies;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D.Geometry
@@ -18,6 +19,8 @@ namespace AlkaronEngine.Graphics3D.Geometry
       public bool IsCollisionOnly { get; set; }
 
       protected IRenderConfiguration renderConfig;
+
+      public BoundingBox BoundingBox { get; set; }
 
       public StaticMesh(IRenderConfiguration setRenderConfig)
       {
