@@ -9,7 +9,7 @@ namespace AlkaronEngine.Graphics3D.Components
 {
    public class StaticMeshComponent : BaseComponent
    {
-      private List<StaticMesh> staticMeshes;
+      protected List<StaticMesh> staticMeshes;
 
       private BaseRenderProxy[] cachedProxies;
 
@@ -25,11 +25,16 @@ namespace AlkaronEngine.Graphics3D.Components
 
       public override BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
       {
+         if (renderManager.CameraFrustum.Contains(BoundingBox) == ContainmentType.Disjoint)
+         {
+            return null;
+         }
+
          Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
             Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
             Matrix.CreateTranslation(Center);
 
-         BaseRenderProxy[] result = new BaseRenderProxy[staticMeshes.Count];
+         List<BaseRenderProxy> result = new List<BaseRenderProxy>(staticMeshes.Count);
          for (int i = 0; i < staticMeshes.Count; i++)
          {
             StaticMesh mesh = staticMeshes[i];
@@ -40,11 +45,9 @@ namespace AlkaronEngine.Graphics3D.Components
             result[i] = proxy;
          }
 
-         BoundingBox = new BoundingBox(Center + meshesBoundingBox.Min, Center + meshesBoundingBox.Max);
+         cachedProxies = result.ToArray();
 
-         cachedProxies = result;
-
-         return result;
+         return result.ToArray();
       }
 
       private void RebuildBoundingBox()
@@ -57,6 +60,8 @@ namespace AlkaronEngine.Graphics3D.Components
          {
             meshesBoundingBox = BoundingBox.CreateMerged(BoundingBox, staticMeshes[i].BoundingBox);
          }
+
+         BoundingBox = new BoundingBox(Center + meshesBoundingBox.Min, Center + meshesBoundingBox.Max);
       }
 
       public void ClearStaticMeshes()
@@ -70,7 +75,7 @@ namespace AlkaronEngine.Graphics3D.Components
       {
          staticMeshes.Add(mesh);
 
-         meshesBoundingBox = BoundingBox.CreateMerged(BoundingBox, mesh.BoundingBox);
+         RebuildBoundingBox();
       }
 
       public void AddStaticMeshes(IEnumerable<StaticMesh> meshes)

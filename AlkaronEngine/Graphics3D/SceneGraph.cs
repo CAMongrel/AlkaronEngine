@@ -44,13 +44,8 @@ namespace AlkaronEngine.Graphics3D
                continue;
             }
 
-            if (renderManager.CameraFrustum.Contains(Components[i].BoundingBox) == ContainmentType.Disjoint)
-            {
-               continue;
-            }
-
             BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
-            if (proxies == null)
+            if (proxies == null || proxies.Length == 0)
             {
                continue;
             }
