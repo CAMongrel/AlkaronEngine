@@ -97,9 +97,9 @@
     <Compile Include="Graphics2D\Material.cs" />
     <Compile Include="Graphics3D\RenderProxies\StaticMeshRenderProxy.cs" />
     <Compile Include="Graphics2D\MaterialLibrary.cs" />
+    <Compile Include="Input\KeyEventType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Gui\Input\" />
     <Folder Include="Graphics3D\" />
     <Folder Include="Graphics3D\Components\" />
     <Folder Include="Graphics3D\Geometry\" />

@@ -14,12 +14,15 @@ namespace AlkaronEngine.Graphics3D.Components
 
       public bool CanBeRendered { get; protected set; }
 
+      public bool IsDirty { get; protected set; }
+
       public BaseComponent(Vector3 setCenter)
       {
          Center = setCenter;
          Rotation = Vector3.Zero;
          Scale = Vector3.One;
          CanBeRendered = false;
+         IsDirty = true;
          BoundingBox = new BoundingBox();
       }
 
@@ -31,6 +34,7 @@ namespace AlkaronEngine.Graphics3D.Components
       public void SetCenter(Vector3 newCenter, bool performSweep)
       {
          Center = newCenter;
+         IsDirty = true;
       }
 
       public virtual BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
