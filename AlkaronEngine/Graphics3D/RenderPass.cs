@@ -71,7 +71,9 @@ namespace AlkaronEngine.Graphics3D
         /// <returns>The draw.</returns>
         /// <param name="renderConfig">Render config.</param>
         /// <param name="renderManager">Render manager.</param>
-        public int Draw(IRenderConfiguration renderConfig, RenderManager renderManager)
+        public int Draw(IRenderConfiguration renderConfig,
+                        RenderManager renderManager,
+                        int renderCount, int maxRenderCount)
         {
             Performance.PushAggregate("Setup");
             Performance.PushAggregate("SetVertexBuffer");
@@ -79,16 +81,25 @@ namespace AlkaronEngine.Graphics3D
 
             Material.SetupEffectForRenderPass(this);
 
+            int renderedProxies = 0;
             for (int i = 0; i < proxies.Count; i++)
             {
+                if (maxRenderCount != -1 && renderCount > maxRenderCount)
+                {
+                    break;
+                }
+
                 proxies[i].Render(renderConfig, renderManager);
+
+                renderCount++;
+                renderedProxies++;
             }
 
             Performance.PopAggregate("DrawPrimitives");
             Performance.PopAggregate("SetVertexBuffer");
             Performance.PopAggregate("Setup");
 
-            return proxies.Count;
+            return renderedProxies;
         }
     }
 }

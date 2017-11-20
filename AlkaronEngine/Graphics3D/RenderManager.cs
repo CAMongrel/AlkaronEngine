@@ -10,6 +10,8 @@ namespace AlkaronEngine.Graphics3D
 {
     public class RenderManager
     {
+        public int MaxRenderCount;
+
         private int frameCounter;
         private long frameCalcStart;
 
@@ -44,6 +46,8 @@ namespace AlkaronEngine.Graphics3D
 
             frameCounter = 0;
             frameCalcStart = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            MaxRenderCount = -1;
         }
 
         private void CreateEffectLibrary()
@@ -145,7 +149,9 @@ namespace AlkaronEngine.Graphics3D
 
             for (int i = 0; i < renderPasses.Count; i++)
             {
-                componentCount += renderPasses[i].Draw(renderConfig, this);
+                componentCount += renderPasses[i].Draw(renderConfig, this,
+                                                       componentCount, 
+                                                       MaxRenderCount);
             }
 
             RenderedComponentsLastFrame = componentCount;
