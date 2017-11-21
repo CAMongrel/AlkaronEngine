@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using AlkaronEngine.Controllers;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.Components;
@@ -29,13 +30,15 @@ namespace AlkaronEngine.Scene
 
         public CameraComponent CurrentCamera { get; set; }
 
+        public BaseController CurrentController { get; private set; }
+
         private bool isMouseCaptured;
         private Vector2 lastMousePos;
         private bool mouseCursorWasVisible;
 
         public BaseScene()
         {
-
+            CurrentController = null;
         }
 
         public virtual Color BackgroundColor
@@ -164,7 +167,11 @@ namespace AlkaronEngine.Scene
 
                 lastMousePos = position;
 
-                CurrentCamera?.PointerDown(position, pointerType);
+                res = CurrentController?.PointerDown(position, pointerType) ?? false;
+                if (res == false)
+                {
+                    CurrentCamera?.PointerDown(position, pointerType);
+                }
             }
         }
 
@@ -180,7 +187,11 @@ namespace AlkaronEngine.Scene
                 }
                 isMouseCaptured = false;
 
-                CurrentCamera?.PointerUp(position, pointerType);
+                res = CurrentController?.PointerUp(position, pointerType) ?? false;
+                if (res == false)
+                {
+                    CurrentCamera?.PointerUp(position, pointerType);
+                }
             }
         }
 
@@ -192,7 +203,12 @@ namespace AlkaronEngine.Scene
                 // Event was not handled by UI
                 if (isMouseCaptured)
                 {
-                    CurrentCamera?.PointerMoved(position);
+                    res = CurrentController?.PointerMoved(position) ?? false;
+
+                    if (res == false)
+                    {
+                        CurrentCamera?.PointerMoved(position);
+                    }
 
                     Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
                 }
@@ -205,13 +221,27 @@ namespace AlkaronEngine.Scene
             if (res == false)
             {
                 // Event was not handled by UI
-                CurrentCamera?.PointerWheelChanged(position);
+                res = CurrentController?.PointerWheelChanged(position) ?? false;
+                if (res == false)
+                {
+                    CurrentCamera?.PointerWheelChanged(position);
+                }
             }
         }
 
         public virtual bool OnKeyEvent(Keys key, KeyEventType eventType)
         {
-            return false;
+            bool res = UIWindowManager.KeyEvent(key, eventType);
+            if (res == false)
+            {
+                // Event was not handled by UI
+                res = CurrentController?.OnKeyEvent(key, eventType) ?? false;
+                if (res == false)
+                {
+                    CurrentCamera?.OnKeyEvent(key, eventType);
+                }
+            }
+            return res;
         }
     }
 }

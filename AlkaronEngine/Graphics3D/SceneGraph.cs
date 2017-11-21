@@ -8,69 +8,69 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D
 {
-   public class SceneGraph
-   {
-      private List<BaseComponent> Components;
+    public class SceneGraph
+    {
+        private List<BaseComponent> Components;
 
-      public SceneGraph()
-      {
-         Components = new List<BaseComponent>();
-      }
+        public SceneGraph()
+        {
+            Components = new List<BaseComponent>();
+        }
 
-      public void Update(GameTime gameTime)
-      {
-         for (int i = 0; i < Components.Count; i++)
-         {
-            Components[i].Update(gameTime);
-         }
-      }
-
-      public void AddComponent(BaseComponent newComponent)
-      {
-         Components.Add(newComponent);
-      }
-
-      public void Draw(GameTime gameTime, RenderManager renderManager)
-      {
-         Vector3 cameraWorldLocation = renderManager.CameraLocation;
-
-         renderManager.ClearRenderPasses();
-         Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
-
-         for (int i = 0; i < Components.Count; i++)
-         {
-            if (Components[i].CanBeRendered == false)
+        public void Update(GameTime gameTime)
+        {
+            for (int i = 0; i < Components.Count; i++)
             {
-               continue;
+                Components[i].Update(gameTime);
             }
+        }
 
-            BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
-            if (proxies == null || proxies.Length == 0)
+        public void AddComponent(BaseComponent newComponent)
+        {
+            Components.Add(newComponent);
+        }
+
+        public void Draw(GameTime gameTime, RenderManager renderManager)
+        {
+            Vector3 cameraWorldLocation = renderManager.CameraLocation;
+
+            renderManager.ClearRenderPasses();
+            Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
+
+            for (int i = 0; i < Components.Count; i++)
             {
-               continue;
+                if (Components[i].CanBeRendered == false)
+                {
+                    continue;
+                }
+
+                BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
+                if (proxies == null || proxies.Length == 0)
+                {
+                    continue;
+                }
+
+                for (int p = 0; p < proxies.Length; p++)
+                {
+                    BaseRenderProxy proxy = proxies[p];
+
+                    RenderPass passToUse = null;
+
+                    if (renderPassDict.ContainsKey(proxy.Material) == false)
+                    {
+                        passToUse = renderManager.CreateAndAddRenderPassForMaterial(proxy.Material);
+                        renderPassDict.Add(proxy.Material, passToUse);
+                    }
+                    else
+                    {
+                        passToUse = renderPassDict[proxy.Material];
+                    }
+
+                    passToUse.WorldOriginForDepthSorting = cameraWorldLocation;
+
+                    passToUse.AddProxy(proxy);
+                }
             }
-
-            for (int p = 0; p < proxies.Length; p++)
-            {
-               BaseRenderProxy proxy = proxies[p];
-
-               RenderPass passToUse = null;
-
-               if (renderPassDict.ContainsKey(proxy.Material) == false)
-               {
-                  passToUse = renderManager.CreateAndAddRenderPassForMaterial(proxy.Material);
-                  renderPassDict.Add(proxy.Material, passToUse);
-               }
-               else
-               {
-                  passToUse = renderPassDict[proxy.Material];
-               }
-
-               passToUse.WorldOriginForDepthSorting = cameraWorldLocation;
-
-               passToUse.AddProxy(proxy);
-            }
-         }
-      }
-   }
+        }
+    }
 }

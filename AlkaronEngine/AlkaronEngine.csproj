@@ -98,12 +98,19 @@
     <Compile Include="Graphics3D\RenderProxies\StaticMeshRenderProxy.cs" />
     <Compile Include="Graphics2D\MaterialLibrary.cs" />
     <Compile Include="Input\KeyEventType.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\PlayerController.cs" />
+    <Compile Include="Actors\BaseActor.cs" />
+    <Compile Include="Actors\MobActor.cs" />
+    <Compile Include="Actors\StaticMeshActor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics3D\" />
     <Folder Include="Graphics3D\Components\" />
     <Folder Include="Graphics3D\Geometry\" />
     <Folder Include="Graphics3D\RenderProxies\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Actors\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

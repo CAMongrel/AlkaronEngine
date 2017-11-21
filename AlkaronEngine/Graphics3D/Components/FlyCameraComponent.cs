@@ -3,66 +3,81 @@ using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Graphics3D.Components
 {
-   public class FlyCameraComponent : CameraComponent
-   {
-      private Vector2 startPos;
+    public class FlyCameraComponent : CameraComponent
+    {
+        private Vector2 startPos;
 
-      private float yaw;
-      private float pitch;
-      private float roll;
+        private float yaw;
+        private float pitch;
+        private float roll;
 
-      public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
-                             float setNearClip, float setFarClip)
-         : base(setCenter, Vector3.Up, setCenter + Vector3.Forward, setScreenSize,
-                setNearClip, setFarClip)
-      {
-         yaw = 0;
-         pitch = 0;
-         roll = 0;
-      }
+        public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
+                               float setNearClip, float setFarClip)
+           : base(setCenter, Vector3.Up, setCenter + Vector3.Forward, setScreenSize,
+                  setNearClip, setFarClip)
+        {
+            yaw = 0;
+            pitch = 0;
+            roll = 0;
+        }
 
-      public override void PointerDown(Vector2 position, Input.PointerType pointerType)
-      {
-         base.PointerDown(position, pointerType);
+        public override bool PointerDown(Vector2 position, Input.PointerType pointerType)
+        {
+            if (base.PointerDown(position, pointerType))
+            {
+                return true;
+            }
 
-         startPos = position;
-      }
+            startPos = position;
 
-      public override void PointerMoved(Vector2 position)
-      {
-         base.PointerMoved(position);
+            return true;
+        }
 
-         Vector2 delta = position - startPos;
+        public override bool PointerMoved(Vector2 position)
+        {
+            if (base.PointerMoved(position))
+            {
+                return true;
+            }
 
-         yaw -= delta.X;
-         pitch -= delta.Y;
+            Vector2 delta = position - startPos;
 
-         Matrix rotMat = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), MathHelper.ToRadians(roll));
-         Vector3 newPosition = Vector3.Transform(Vector3.Forward, rotMat);
+            yaw -= delta.X;
+            pitch -= delta.Y;
 
-         LookAt = Center + newPosition;
-      }
+            Matrix rotMat = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), MathHelper.ToRadians(roll));
+            Vector3 newPosition = Vector3.Transform(Vector3.Forward, rotMat);
 
-      public override void PointerUp(Vector2 position, Input.PointerType pointerType)
-      {
-         base.PointerUp(position, pointerType);
-      }
+            LookAt = Center + newPosition;
 
-      public override void PointerWheelChanged(Vector2 position)
-      {
-         base.PointerWheelChanged(position);
+            return true;
+        }
 
-         Vector3 camVec = (LookAt - Center) * SpeedModifier;
-         if (position.X < 0)
-         {
-            Center += camVec;
-            LookAt += camVec;
-         }
-         else if (position.X > 0)
-         {
-            Center -= camVec;
-            LookAt -= camVec;
-         }
-      }
-   }
+        public override bool PointerUp(Vector2 position, Input.PointerType pointerType)
+        {
+            return base.PointerUp(position, pointerType);
+        }
+
+        public override bool PointerWheelChanged(Vector2 position)
+        {
+            if (base.PointerWheelChanged(position))
+            {
+                return true;
+            }
+
+            Vector3 camVec = (LookAt - Center) * SpeedModifier;
+            if (position.X < 0)
+            {
+                Center += camVec;
+                LookAt += camVec;
+            }
+            else if (position.X > 0)
+            {
+                Center -= camVec;
+                LookAt -= camVec;
+            }
+
+            return true;
+        }
+    }
 }
