@@ -83,7 +83,6 @@
     <Compile Include="Util\Performance.cs" />
     <Compile Include="Util\RectangleF.cs" />
     <Compile Include="Graphics3D\RenderManager.cs" />
-    <Compile Include="Graphics3D\SceneGraph.cs" />
     <Compile Include="Graphics3D\RenderPass.cs" />
     <Compile Include="Graphics3D\EffectLibrary.cs" />
     <Compile Include="Graphics3D\Geometry\StaticMesh.cs" />
@@ -103,6 +102,7 @@
     <Compile Include="Components\CameraComponent.cs" />
     <Compile Include="Components\FlyCameraComponent.cs" />
     <Compile Include="Components\StaticMeshComponent.cs" />
+    <Compile Include="Scene\SceneGraph.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics3D\" />

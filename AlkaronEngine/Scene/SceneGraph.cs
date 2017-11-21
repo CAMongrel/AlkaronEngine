@@ -5,8 +5,9 @@ using AlkaronEngine.Components;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using AlkaronEngine.Graphics3D;
 
-namespace AlkaronEngine.Graphics3D
+namespace AlkaronEngine.Scene
 {
     public class SceneGraph
     {
