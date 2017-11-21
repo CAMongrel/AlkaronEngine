@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using AlkaronEngine.Actors;
 using AlkaronEngine.Components;
 using AlkaronEngine.Controllers;
 using AlkaronEngine.Graphics2D;
@@ -28,7 +29,7 @@ namespace AlkaronEngine.Scene
 
         public RenderManager RenderManager { get; private set; }
 
-        public CameraComponent CurrentCamera { get; set; }
+        public CameraActor CurrentCamera { get; set; }
 
         public BaseController CurrentController { get; private set; }
 
@@ -84,11 +85,16 @@ namespace AlkaronEngine.Scene
 
         protected virtual void CreateDefaultCamera()
         {
-            CurrentCamera = new FlyCameraComponent(new Vector3(0, 0, 15),
+            CurrentCamera = new CameraActor();
+
+            BaseComponent CurrentCameraComponent = new FlyCameraComponent(new Vector3(0, 0, 15),
                                                      RenderConfig.ScreenSize,
                                                      0.1f,
                                                      500.0f);
-            SceneGraph.AddComponent(CurrentCamera);
+
+            CurrentCamera.AttachedComponents.Add(CurrentCameraComponent);
+
+            SceneGraph.AddActor(CurrentCamera);
         }
 
         public virtual void Close()
@@ -125,7 +131,7 @@ namespace AlkaronEngine.Scene
 
             // Render 3D
             Performance.Push("BaseScene.Draw (SceneGraph)");
-            RenderManager.UpdateMatricesFromCameraComponent(CurrentCamera);
+            RenderManager.UpdateMatricesFromCameraActor(CurrentCamera);
             SceneGraph.Draw(gameTime, RenderManager);       // SceneGraph.Draw() only creates the RenderProxies
             Performance.Pop();
             Performance.Push("BaseScene.Draw (Render3D)");

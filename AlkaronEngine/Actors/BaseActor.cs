@@ -16,7 +16,10 @@ namespace AlkaronEngine.Actors
 
         public virtual void Update(GameTime gameTime)
         {
-            
+            for (int i = 0; i < AttachedComponents.Count; i++)
+            {
+                AttachedComponents[i].Update(gameTime);
+            }
         }
     }
 }

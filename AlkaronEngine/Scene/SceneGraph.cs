@@ -6,34 +6,36 @@ using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Actors;
 
 namespace AlkaronEngine.Scene
 {
     public class SceneGraph
     {
-        private List<BaseComponent> Components;
+        private List<BaseActor> Actors;
 
         public SceneGraph()
         {
-            Components = new List<BaseComponent>();
+            Actors = new List<BaseActor>();
         }
 
         public void Update(GameTime gameTime)
         {
-            for (int i = 0; i < Components.Count; i++)
+            for (int i = 0; i < Actors.Count; i++)
             {
-                Components[i].Update(gameTime);
+                Actors[i].Update(gameTime);
             }
         }
 
-        public void AddComponent(BaseComponent newComponent)
+        public void AddActor(BaseActor newActor)
         {
-            Components.Add(newComponent);
+            Actors.Add(newActor);
         }
 
         public void Draw(GameTime gameTime, RenderManager renderManager)
         {
-            Vector3 cameraWorldLocation = renderManager.CameraLocation;
+            // TODO
+            /*Vector3 cameraWorldLocation = renderManager.CameraLocation;
 
             renderManager.ClearRenderPasses();
             Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
@@ -71,7 +73,7 @@ namespace AlkaronEngine.Scene
 
                     passToUse.AddProxy(proxy);
                 }
-            }
+            }*/
         }
     }
 }

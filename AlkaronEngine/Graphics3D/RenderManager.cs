@@ -5,6 +5,7 @@ using AlkaronEngine.Components;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using AlkaronEngine.Actors;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -90,13 +91,15 @@ namespace AlkaronEngine.Graphics3D
             CreateRenderTarget();
         }
 
-        public void UpdateMatricesFromCameraComponent(CameraComponent camera)
+        public void UpdateMatricesFromCameraActor(CameraActor camera)
         {
-            CameraLocation = camera.Center;
-            ViewMatrix = camera.ViewMatrix;
-            ProjectionMatrix = camera.ProjectionMatrix;
+            CameraComponent camComp = camera.AttachedComponents[0] as CameraComponent;
 
-            CameraFrustum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
+            CameraLocation = camComp.Center;
+            ViewMatrix = camComp.ViewMatrix;
+            ProjectionMatrix = camComp.ProjectionMatrix;
+
+            CameraFrustum = new BoundingFrustum(camComp.ViewMatrix * camComp.ProjectionMatrix);
         }
 
         public void Draw(GameTime gameTime)

@@ -103,6 +103,7 @@
     <Compile Include="Components\FlyCameraComponent.cs" />
     <Compile Include="Components\StaticMeshComponent.cs" />
     <Compile Include="Scene\SceneGraph.cs" />
+    <Compile Include="Actors\CameraActor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics3D\" />
