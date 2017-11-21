@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using AlkaronEngine.Graphics3D.Components;
+using AlkaronEngine.Components;
 using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Actors

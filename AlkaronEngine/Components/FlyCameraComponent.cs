@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 
-namespace AlkaronEngine.Graphics3D.Components
+namespace AlkaronEngine.Components
 {
-    public class ArcBallCameraComponent : CameraComponent
+    public class FlyCameraComponent : CameraComponent
     {
         private Vector2 startPos;
 
@@ -11,11 +11,9 @@ namespace AlkaronEngine.Graphics3D.Components
         private float pitch;
         private float roll;
 
-        public ArcBallCameraComponent(Vector3 setCenter, Vector3 setUpVector,
-                               Vector3 setLookAt,
-                               Vector2 setScreenSize,
+        public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
                                float setNearClip, float setFarClip)
-           : base(setCenter, setUpVector, setLookAt, setScreenSize,
+           : base(setCenter, Vector3.Up, setCenter + Vector3.Forward, setScreenSize,
                   setNearClip, setFarClip)
         {
             yaw = 0;
@@ -47,15 +45,10 @@ namespace AlkaronEngine.Graphics3D.Components
             yaw -= delta.X;
             pitch -= delta.Y;
 
-            Vector3 camVector = Center - LookAt;
-            float distance = camVector.Length();
-
             Matrix rotMat = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), MathHelper.ToRadians(roll));
-            Vector3 newPosition = Vector3.Transform(Vector3.Backward, rotMat);
-            newPosition *= distance;
-            newPosition += LookAt;
+            Vector3 newPosition = Vector3.Transform(Vector3.Forward, rotMat);
 
-            Center = newPosition;
+            LookAt = Center + newPosition;
 
             return true;
         }
@@ -72,13 +65,16 @@ namespace AlkaronEngine.Graphics3D.Components
                 return true;
             }
 
+            Vector3 camVec = (LookAt - Center) * SpeedModifier;
             if (position.X < 0)
             {
-                Zoom(-1.0f * SpeedModifier);
+                Center += camVec;
+                LookAt += camVec;
             }
             else if (position.X > 0)
             {
-                Zoom(1.0f * SpeedModifier);
+                Center -= camVec;
+                LookAt -= camVec;
             }
 
             return true;

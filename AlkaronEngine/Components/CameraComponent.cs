@@ -3,7 +3,7 @@ using AlkaronEngine.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace AlkaronEngine.Graphics3D.Components
+namespace AlkaronEngine.Components
 {
     public class CameraComponent : BaseComponent
     {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using AlkaronEngine.Components;
 using AlkaronEngine.Controllers;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D;
-using AlkaronEngine.Graphics3D.Components;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;

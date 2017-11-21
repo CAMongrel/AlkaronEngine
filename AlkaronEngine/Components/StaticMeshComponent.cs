@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace AlkaronEngine.Graphics3D.Components
+namespace AlkaronEngine.Components
 {
     public class StaticMeshComponent : BaseComponent
     {

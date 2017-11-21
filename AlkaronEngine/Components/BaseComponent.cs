@@ -1,8 +1,9 @@
 ﻿using System;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 
-namespace AlkaronEngine.Graphics3D.Components
+namespace AlkaronEngine.Components
 {
    public abstract class BaseComponent
    {

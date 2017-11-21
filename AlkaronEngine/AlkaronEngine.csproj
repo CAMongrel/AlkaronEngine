@@ -86,13 +86,8 @@
     <Compile Include="Graphics3D\SceneGraph.cs" />
     <Compile Include="Graphics3D\RenderPass.cs" />
     <Compile Include="Graphics3D\EffectLibrary.cs" />
-    <Compile Include="Graphics3D\Components\BaseComponent.cs" />
-    <Compile Include="Graphics3D\Components\CameraComponent.cs" />
-    <Compile Include="Graphics3D\Components\StaticMeshComponent.cs" />
     <Compile Include="Graphics3D\Geometry\StaticMesh.cs" />
     <Compile Include="Graphics3D\Geometry\StaticMeshCube.cs" />
-    <Compile Include="Graphics3D\Components\ArcBallCameraComponent.cs" />
-    <Compile Include="Graphics3D\Components\FlyCameraComponent.cs" />
     <Compile Include="Graphics3D\RenderProxies\BaseRenderProxy.cs" />
     <Compile Include="Graphics2D\Material.cs" />
     <Compile Include="Graphics3D\RenderProxies\StaticMeshRenderProxy.cs" />
@@ -103,14 +98,19 @@
     <Compile Include="Actors\BaseActor.cs" />
     <Compile Include="Actors\MobActor.cs" />
     <Compile Include="Actors\StaticMeshActor.cs" />
+    <Compile Include="Components\ArcBallCameraComponent.cs" />
+    <Compile Include="Components\BaseComponent.cs" />
+    <Compile Include="Components\CameraComponent.cs" />
+    <Compile Include="Components\FlyCameraComponent.cs" />
+    <Compile Include="Components\StaticMeshComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics3D\" />
-    <Folder Include="Graphics3D\Components\" />
     <Folder Include="Graphics3D\Geometry\" />
     <Folder Include="Graphics3D\RenderProxies\" />
     <Folder Include="Controllers\" />
     <Folder Include="Actors\" />
+    <Folder Include="Components\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
