@@ -12,18 +12,12 @@ namespace AlkaronEngine.Components
     {
         protected List<StaticMesh> staticMeshes;
 
-        protected bool rebuildRenderProxyCacheNextDrawCall;
-
-        private BaseRenderProxy[] cachedProxies;
-
         private BoundingBox meshesBoundingBox;
 
         public StaticMeshComponent(Vector3 setCenter)
            : base(setCenter)
         {
-            cachedProxies = null;
             CanBeRendered = true;
-            rebuildRenderProxyCacheNextDrawCall = true;
             staticMeshes = new List<StaticMesh>();
         }
 
@@ -35,13 +29,11 @@ namespace AlkaronEngine.Components
             {
                 RebuildBoundingBox();
 
-                rebuildRenderProxyCacheNextDrawCall = true;
-
                 IsDirty = false;
             }
         }
 
-        public override BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
+        /*public override BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
         {
             if (renderManager.CameraFrustum.Contains(BoundingBox) == ContainmentType.Disjoint)
             {
@@ -71,6 +63,27 @@ namespace AlkaronEngine.Components
             }
 
             return cachedProxies;
+        }*/
+
+        public override List<BaseRenderProxy> CreateRenderProxies()
+        {
+            List<BaseRenderProxy> resultList = base.CreateRenderProxies();
+
+            Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+                   Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
+                   Matrix.CreateTranslation(Center);
+
+            for (int i = 0; i < staticMeshes.Count; i++)
+            {
+                StaticMesh mesh = staticMeshes[i];
+
+                StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
+                proxy.WorldMatrix = worldMatrix;
+                proxy.Material = mesh.Material;
+                resultList.Add(proxy);
+            }
+
+            return resultList;
         }
 
         private void RebuildBoundingBox()

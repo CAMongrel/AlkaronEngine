@@ -12,10 +12,12 @@ namespace AlkaronEngine.Scene
 {
     public class SceneGraph
     {
+        public BaseScene SceneOwner { get; private set; }
         private List<BaseActor> Actors;
 
-        public SceneGraph()
+        public SceneGraph(BaseScene sceneOwner)
         {
+            SceneOwner = sceneOwner;
             Actors = new List<BaseActor>();
         }
 
@@ -30,6 +32,9 @@ namespace AlkaronEngine.Scene
         public void AddActor(BaseActor newActor)
         {
             Actors.Add(newActor);
+            newActor.ActorAddedToSceneGraph(this);
+
+            SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
         }
 
         public void Draw(GameTime gameTime, RenderManager renderManager)

@@ -59,7 +59,7 @@ namespace AlkaronEngine.Scene
 
             RenderConfig = setRenderConfig;
             ContentManager = new ContentManager(AlkaronCoreGame.Core.Content.ServiceProvider, "Content");
-            SceneGraph = new SceneGraph();
+            SceneGraph = new SceneGraph(this);
             RenderManager = new RenderManager(RenderConfig);
 
             Init3D();
@@ -85,14 +85,10 @@ namespace AlkaronEngine.Scene
 
         protected virtual void CreateDefaultCamera()
         {
-            CurrentCamera = new CameraActor();
-
-            BaseComponent CurrentCameraComponent = new FlyCameraComponent(new Vector3(0, 0, 15),
+            CurrentCamera = new CameraActor(new FlyCameraComponent(new Vector3(0, 0, 15),
                                                      RenderConfig.ScreenSize,
                                                      0.1f,
-                                                     500.0f);
-
-            CurrentCamera.AttachedComponents.Add(CurrentCameraComponent);
+                                                     500.0f));
 
             SceneGraph.AddActor(CurrentCamera);
         }

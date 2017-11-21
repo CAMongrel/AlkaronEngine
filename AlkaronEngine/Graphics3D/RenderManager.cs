@@ -6,11 +6,19 @@ using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AlkaronEngine.Actors;
+using AlkaronEngine.Graphics3D.RenderProxies;
 
 namespace AlkaronEngine.Graphics3D
 {
     public class RenderManager
     {
+        private object lockObj;
+
+        /// <summary>
+        /// Needs locking with lockObj ... accessed by multiple threads.
+        /// </summary>
+        private List<BaseRenderProxy> renderProxyStage;
+
         public int MaxRenderCount;
 
         private int frameCounter;
@@ -35,6 +43,9 @@ namespace AlkaronEngine.Graphics3D
 
         public RenderManager(IRenderConfiguration setRenderConfig)
         {
+            lockObj = new Object();
+            renderProxyStage = new List<BaseRenderProxy>();
+
             renderPasses = new List<RenderPass>();
             renderConfig = setRenderConfig;
 
@@ -102,9 +113,52 @@ namespace AlkaronEngine.Graphics3D
             CameraFrustum = new BoundingFrustum(camComp.ViewMatrix * camComp.ProjectionMatrix);
         }
 
+        public void AppendRenderProxies(List<BaseRenderProxy> list)
+        {
+            lock (lockObj)
+            {
+                renderProxyStage.AddRange(list);
+            }
+        }
+
+        private void ApplyRenderProxyStage()
+        {
+            lock (lockObj)
+            {
+                // Apply stage to current process
+
+                Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
+
+                for (int p = 0; p < renderProxyStage.Count; p++)
+                {
+                    BaseRenderProxy proxy = renderProxyStage[p];
+
+                    RenderPass passToUse = null;
+
+                    if (renderPassDict.ContainsKey(proxy.Material) == false)
+                    {
+                        passToUse = CreateAndAddRenderPassForMaterial(proxy.Material);
+                        renderPassDict.Add(proxy.Material, passToUse);
+                    }
+                    else
+                    {
+                        passToUse = renderPassDict[proxy.Material];
+                    }
+
+                    passToUse.WorldOriginForDepthSorting = CameraLocation;
+
+                    passToUse.AddProxy(proxy);
+                }
+
+                renderProxyStage.Clear();
+            }
+        }
+
         public void Draw(GameTime gameTime)
         {
             Performance.Push("RenderManager.Draw");
+
+            ApplyRenderProxyStage();
 
             Performance.Push("RenderManager.Draw (Set RenderTarget)");
             // Render scene to texture

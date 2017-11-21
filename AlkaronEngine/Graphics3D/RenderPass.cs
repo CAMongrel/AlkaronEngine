@@ -76,6 +76,7 @@ namespace AlkaronEngine.Graphics3D
                         int renderCount, int maxRenderCount)
         {
             Performance.PushAggregate("Setup");
+            Performance.PushAggregate("Setup Texture");
             Performance.PushAggregate("SetVertexBuffer");
             Performance.PushAggregate("DrawPrimitives");
 
@@ -97,6 +98,7 @@ namespace AlkaronEngine.Graphics3D
 
             Performance.PopAggregate("DrawPrimitives");
             Performance.PopAggregate("SetVertexBuffer");
+            Performance.PopAggregate("Setup Texture");
             Performance.PopAggregate("Setup");
 
             return renderedProxies;
