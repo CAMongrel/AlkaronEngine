@@ -64,6 +64,8 @@ namespace AlkaronEngine.Scene
 
             Init3D();
             InitUI();
+
+            RenderManager.Start();
         }
 
         internal void ClientSizeChanged()
@@ -95,6 +97,8 @@ namespace AlkaronEngine.Scene
 
         public virtual void Close()
         {
+            RenderManager.Stop();
+
             UIWindowManager.Clear();
 
             ContentManager.Unload();
@@ -111,44 +115,15 @@ namespace AlkaronEngine.Scene
             UIWindowManager.Update(gameTime);
         }
 
-        protected void Clear(Color clearColor, ClearOptions options = ClearOptions.Target,
-                             float clearDepth = 1.0f, int clearStencil = 0)
-        {
-            RenderConfig.GraphicsDevice.Clear(options, clearColor, clearDepth, clearStencil);
-        }
-
         public virtual void Draw(GameTime gameTime)
         {
-            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+            RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);
+            RenderManager.MouseCursor = MouseCursor;
 
-            Performance.Push("BaseScene.Draw");
-
-            RenderConfig.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
-            // Render 3D
-            Performance.Push("BaseScene.Draw (Render3D)");
-            RenderManager.UpdateMatricesFromCameraActor(CurrentCamera);
-            // Clear only the depth and stencil buffer
-            Performance.Push("BaseScene.Draw (Render3D - Initial clear)");
-            Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
-            Performance.Pop();
-            RenderManager.Draw(gameTime);
-            Performance.Pop();
-
-            // Render 2D
-            Performance.Push("BaseScene.Draw (Render2D)");
-            // Clear depth buffer and stencil again for 2D rendering
-            Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
-            UIWindowManager.Draw(gameTime);
-            MouseCursor?.Render(gameTime);
-            Performance.Pop();
-
-            Performance.Pop();
-
-            long end = System.Diagnostics.Stopwatch.GetTimestamp();
-            double deltaSeconds = (double)(end - start) / (double)System.Diagnostics.Stopwatch.Frequency;
-
-            Console.WriteLine("Draw time " + deltaSeconds + " seconds (Avg FPS: " + (int)(1.0 / deltaSeconds) + ")");
+            if (RenderManager.SupportsMultiThreadedRendering == false)
+            {
+                RenderManager.RenderFrame();
+            }
         }
 
         public virtual void PointerDown(Vector2 position, PointerType pointerType)

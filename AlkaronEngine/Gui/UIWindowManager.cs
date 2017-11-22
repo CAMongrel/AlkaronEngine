@@ -66,7 +66,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        internal static void Draw(GameTime gameTime)
+        internal static void Draw()
         {
             Render();
         }

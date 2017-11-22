@@ -131,7 +131,7 @@ namespace AlkaronEngine.Scene
 
         public void Draw(GameTime gameTime)
         {
-            Performance.Push("Render loop");
+            Performance.Push("Render loop on main thread");
 
             lock (lockObj)
             {

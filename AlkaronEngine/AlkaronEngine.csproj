@@ -62,6 +62,7 @@
     <Compile Include="Graphics2D\PrimitiveRenderManager.cs" />
     <Compile Include="Graphics2D\ScreenQuad.cs" />
     <Compile Include="Graphics2D\Texture.cs" />
+    <Compile Include="Graphics3D\ViewTarget.cs" />
     <Compile Include="Gui\Animation\UIAnimation.cs" />
     <Compile Include="Gui\MouseCursor.cs" />
     <Compile Include="Gui\UIBaseComponent.cs" />
@@ -105,14 +106,7 @@
     <Compile Include="Scene\SceneGraph.cs" />
     <Compile Include="Actors\CameraActor.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Graphics3D\" />
-    <Folder Include="Graphics3D\Geometry\" />
-    <Folder Include="Graphics3D\RenderProxies\" />
-    <Folder Include="Controllers\" />
-    <Folder Include="Actors\" />
-    <Folder Include="Components\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
