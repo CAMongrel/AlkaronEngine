@@ -4,24 +4,30 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics2D
 {
-   public class Material
-   {
-      public Effect Effect { get; protected set; }
+    public class Material
+    {
+        public Effect Effect { get; protected set; }
 
-      public bool RequiresOrderingBackToFront { get; set; }
+        public bool RequiresOrderingBackToFront { get; set; }
 
-      public Material()
-      {
-      }
+        public IRenderConfiguration RenderConfig { get; private set; }
 
-      public void SetEffect(Effect newEffect)
-      {
-         Effect = newEffect;
-      }
+        public BlendState BlendState { get; set; }
 
-      public virtual void SetupEffectForRenderPass(RenderPass renderPass)
-      {
+        public Material(IRenderConfiguration renderConfig)
+        {
+            RenderConfig = renderConfig;
+        }
 
-      }
-   }
+        public void SetEffect(Effect newEffect)
+        {
+            Effect = newEffect;
+        }
+
+        public virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        {
+            RenderConfig.GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicWrap;
+            RenderConfig.GraphicsDevice.BlendState = BlendState;
+        }
+    }
 }

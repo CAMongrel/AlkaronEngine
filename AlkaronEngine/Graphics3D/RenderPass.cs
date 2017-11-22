@@ -75,6 +75,12 @@ namespace AlkaronEngine.Graphics3D
                         RenderManager renderManager,
                         int renderCount, int maxRenderCount)
         {
+            BoundingFrustum frustum = renderManager.ViewTarget?.CameraFrustum;
+            if (frustum == null)
+            {
+                return 0;
+            }
+
             Performance.PushAggregate("Setup");
             Performance.PushAggregate("Setup Texture");
             Performance.PushAggregate("SetVertexBuffer");
@@ -90,6 +96,10 @@ namespace AlkaronEngine.Graphics3D
                     break;
                 }
 
+                if (frustum.Contains(proxies[i].BoundingBox) == ContainmentType.Disjoint)
+                {
+                    continue;
+                }
                 proxies[i].Render(renderConfig, renderManager);
 
                 renderCount++;

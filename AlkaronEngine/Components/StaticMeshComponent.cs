@@ -12,8 +12,6 @@ namespace AlkaronEngine.Components
     {
         protected List<StaticMesh> staticMeshes;
 
-        private BoundingBox meshesBoundingBox;
-
         public StaticMeshComponent(Vector3 setCenter)
            : base(setCenter)
         {
@@ -27,43 +25,9 @@ namespace AlkaronEngine.Components
 
             if (IsDirty)
             {
-                RebuildBoundingBox();
-
                 IsDirty = false;
             }
         }
-
-        /*public override BaseRenderProxy[] Draw(GameTime gameTime, RenderManager renderManager)
-        {
-            if (renderManager.CameraFrustum.Contains(BoundingBox) == ContainmentType.Disjoint)
-            {
-                return null;
-            }
-
-            if (rebuildRenderProxyCacheNextDrawCall)
-            {
-                Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
-                   Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
-                   Matrix.CreateTranslation(Center);
-
-                List<BaseRenderProxy> result = new List<BaseRenderProxy>(staticMeshes.Count);
-                for (int i = 0; i < staticMeshes.Count; i++)
-                {
-                    StaticMesh mesh = staticMeshes[i];
-
-                    StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
-                    proxy.WorldMatrix = worldMatrix;
-                    proxy.Material = mesh.Material;
-                    result.Add(proxy);
-                }
-
-                cachedProxies = result.ToArray();
-
-                rebuildRenderProxyCacheNextDrawCall = false;
-            }
-
-            return cachedProxies;
-        }*/
 
         public override List<BaseRenderProxy> CreateRenderProxies()
         {
@@ -80,24 +44,11 @@ namespace AlkaronEngine.Components
                 StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = mesh.Material;
+                proxy.BoundingBox = new BoundingBox(Center + staticMeshes[i].BoundingBox.Min, Center + staticMeshes[i].BoundingBox.Max);
                 resultList.Add(proxy);
             }
 
             return resultList;
-        }
-
-        private void RebuildBoundingBox()
-        {
-            Vector3 min = Vector3.Zero;
-            Vector3 max = Vector3.Zero;
-
-            meshesBoundingBox = new BoundingBox();
-            for (int i = 0; i < staticMeshes.Count; i++)
-            {
-                meshesBoundingBox = BoundingBox.CreateMerged(BoundingBox, staticMeshes[i].BoundingBox);
-            }
-
-            BoundingBox = new BoundingBox(Center + meshesBoundingBox.Min, Center + meshesBoundingBox.Max);
         }
 
         public void ClearStaticMeshes()

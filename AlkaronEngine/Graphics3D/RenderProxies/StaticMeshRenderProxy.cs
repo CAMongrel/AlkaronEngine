@@ -28,9 +28,6 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 
             Performance.StartAppendAggreate("Setup");
 
-            renderConfig.GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicWrap;
-            renderConfig.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-
             StaticMesh.Material.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
             StaticMesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
             Performance.EndAppendAggreate("Setup");

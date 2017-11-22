@@ -5,19 +5,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
-   public abstract class BaseRenderProxy
-   {
-      public Material Material { get; set; }
-      public Matrix WorldMatrix { get; set; }
+    public abstract class BaseRenderProxy
+    {
+        public Material Material { get; set; }
+        public Matrix WorldMatrix { get; set; }
+        public BoundingBox BoundingBox { get; set; }
 
-      public BaseRenderProxy()
-      {
-         Material = null;
-         WorldMatrix = Matrix.Identity;
-      }
+        public BaseRenderProxy()
+        {
+            Material = null;
+            WorldMatrix = Matrix.Identity;
+        }
 
-      public virtual void Render(IRenderConfiguration renderConfig, RenderManager renderManager)
-      {
-      }
-   }
+        public virtual void Render(IRenderConfiguration renderConfig, RenderManager renderManager)
+        {
+        }
+    }
 }

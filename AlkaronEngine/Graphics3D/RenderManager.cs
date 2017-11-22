@@ -124,6 +124,13 @@ namespace AlkaronEngine.Graphics3D
             eff.View = Matrix.CreateLookAt(new Vector3(0, 0, 15), Vector3.Zero, Vector3.Up);
             eff.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), renderConfig.GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);*/
             EffectLibrary.AddEffect("StaticMesh", eff);
+
+            BasicEffect eff2 = new BasicEffect(renderConfig.GraphicsDevice);
+            eff2.FogEnabled = false;
+            eff2.VertexColorEnabled = false;
+            eff2.LightingEnabled = false;
+            eff2.TextureEnabled = true;
+            EffectLibrary.AddEffect("StaticMesh_Translucent", eff2);
         }
 
         private void CreateMaterialLibrary()
@@ -286,9 +293,8 @@ namespace AlkaronEngine.Graphics3D
 
             for (int i = 0; i < renderPasses.Count; i++)
             {
-                componentCount += renderPasses[i].Draw(renderConfig, this,
-                                                       componentCount,
-                                                       MaxRenderCount);
+                componentCount += renderPasses[i].Draw(renderConfig, 
+                    this, componentCount, MaxRenderCount);
             }
 
             RenderedComponentsLastFrame = componentCount;
