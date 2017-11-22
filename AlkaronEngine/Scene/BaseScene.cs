@@ -126,11 +126,8 @@ namespace AlkaronEngine.Scene
             RenderConfig.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             // Render 3D
-            Performance.Push("BaseScene.Draw (SceneGraph)");
-            RenderManager.UpdateMatricesFromCameraActor(CurrentCamera);
-            SceneGraph.Draw(gameTime, RenderManager);       // SceneGraph.Draw() only creates the RenderProxies
-            Performance.Pop();
             Performance.Push("BaseScene.Draw (Render3D)");
+            RenderManager.UpdateMatricesFromCameraActor(CurrentCamera);
             // Clear only the depth and stencil buffer
             Performance.Push("BaseScene.Draw (Render3D - Initial clear)");
             Clear(BackgroundColor, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);

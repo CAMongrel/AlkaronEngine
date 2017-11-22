@@ -36,49 +36,5 @@ namespace AlkaronEngine.Scene
 
             SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
         }
-
-        public void Draw(GameTime gameTime, RenderManager renderManager)
-        {
-            // TODO
-            /*Vector3 cameraWorldLocation = renderManager.CameraLocation;
-
-            renderManager.ClearRenderPasses();
-            Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
-
-            for (int i = 0; i < Components.Count; i++)
-            {
-                if (Components[i].CanBeRendered == false)
-                {
-                    continue;
-                }
-
-                BaseRenderProxy[] proxies = Components[i].Draw(gameTime, renderManager);
-                if (proxies == null || proxies.Length == 0)
-                {
-                    continue;
-                }
-
-                for (int p = 0; p < proxies.Length; p++)
-                {
-                    BaseRenderProxy proxy = proxies[p];
-
-                    RenderPass passToUse = null;
-
-                    if (renderPassDict.ContainsKey(proxy.Material) == false)
-                    {
-                        passToUse = renderManager.CreateAndAddRenderPassForMaterial(proxy.Material);
-                        renderPassDict.Add(proxy.Material, passToUse);
-                    }
-                    else
-                    {
-                        passToUse = renderPassDict[proxy.Material];
-                    }
-
-                    passToUse.WorldOriginForDepthSorting = cameraWorldLocation;
-
-                    passToUse.AddProxy(proxy);
-                }
-            }*/
-        }
     }
 }
