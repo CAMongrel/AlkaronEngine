@@ -108,10 +108,10 @@ namespace AlkaronEngine.Scene
 
         public virtual void Update(GameTime gameTime)
         {
-            // Update 3D
+            // Update 3D graph
             SceneGraph.Update(gameTime);
 
-            // Update 2D
+            // Update 2D UI
             UIWindowManager.Update(gameTime);
         }
 

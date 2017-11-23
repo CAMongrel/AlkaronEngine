@@ -73,12 +73,26 @@ namespace AlkaronEngine.Graphics3D
         /// <param name="renderManager">Render manager.</param>
         public int Draw(IRenderConfiguration renderConfig,
                         RenderManager renderManager,
-                        int renderCount, int maxRenderCount)
+                        int renderCount, 
+                        int maxRenderCount)
         {
             BoundingFrustum frustum = renderManager.ViewTarget?.CameraFrustum;
             if (frustum == null)
             {
                 return 0;
+            }
+
+            if (PerformDepthSorting == true)
+            {
+                Performance.Push("Perform DepthSorting");
+                WorldOriginForDepthSorting = renderManager.ViewTarget?.CameraLocation ?? Vector3.Zero;
+                proxies.Sort((x, y) => 
+                {
+                    float distanceSqr = Vector3.DistanceSquared(x.WorldMatrix.Translation, WorldOriginForDepthSorting);
+                    float distance2Sqr = Vector3.DistanceSquared(y.WorldMatrix.Translation, WorldOriginForDepthSorting);
+                    return distance2Sqr.CompareTo(distanceSqr);
+                });
+                Performance.Pop();
             }
 
             Performance.PushAggregate("Setup");

@@ -11,6 +11,11 @@ namespace AlkaronEngine.Components
         private float pitch;
         private float roll;
 
+        private bool moveForward;
+        private bool moveBackward;
+        private bool strafeLeft;
+        private bool strafeRight;
+
         public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
                                float setNearClip, float setFarClip)
            : base(setCenter, Vector3.Up, setCenter + Vector3.Forward, setScreenSize,
@@ -19,6 +24,25 @@ namespace AlkaronEngine.Components
             yaw = 0;
             pitch = 0;
             roll = 0;
+
+            moveForward = moveBackward = strafeLeft = strafeRight = false;
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            Vector3 camVec = (LookAt - Center) * SpeedModifier * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (moveForward)
+            {
+                Center += camVec;
+                LookAt += camVec;
+            }
+            else if (moveBackward)
+            {
+                Center -= camVec;
+                LookAt -= camVec;
+            }
         }
 
         public override bool PointerDown(Vector2 position, Input.PointerType pointerType)
@@ -78,6 +102,58 @@ namespace AlkaronEngine.Components
             }
 
             return true;
+        }
+
+        public override bool OnKeyEvent(Microsoft.Xna.Framework.Input.Keys key, Input.KeyEventType eventType)
+        {
+            if (eventType == Input.KeyEventType.Pressed)
+            {
+                if (key == Microsoft.Xna.Framework.Input.Keys.W)
+                {
+                    moveForward = true;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.S)
+                {
+                    moveBackward = true;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.A)
+                {
+                    strafeLeft = true;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.D)
+                {
+                    strafeRight = true;
+                    return true;
+                }
+            }
+            if (eventType == Input.KeyEventType.Released)
+            {
+                if (key == Microsoft.Xna.Framework.Input.Keys.W)
+                {
+                    moveForward = false;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.S)
+                {
+                    moveBackward = false;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.A)
+                {
+                    strafeLeft = false;
+                    return true;
+                }
+                if (key == Microsoft.Xna.Framework.Input.Keys.D)
+                {
+                    strafeRight = false;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

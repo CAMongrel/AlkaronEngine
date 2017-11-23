@@ -105,6 +105,9 @@
     <Compile Include="Components\StaticMeshComponent.cs" />
     <Compile Include="Scene\SceneGraph.cs" />
     <Compile Include="Actors\CameraActor.cs" />
+    <Compile Include="Actors\SkeletalMeshActor.cs" />
+    <Compile Include="Components\SkeletalMeshComponent.cs" />
+    <Compile Include="Graphics3D\Geometry\SkeletalMesh.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
