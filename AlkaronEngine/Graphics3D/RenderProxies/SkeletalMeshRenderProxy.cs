@@ -20,7 +20,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             StaticMesh mesh = bone.Mesh;
             if (mesh != null)
             {
-                mesh.Material.Effect.Parameters["WorldViewProj"].SetValue(/*bone.CombinedTransform * */renderManager.ViewTarget.ViewMatrix * 
+                mesh.Material.Effect.Parameters["WorldViewProj"].SetValue(bone.CombinedTransform * renderManager.ViewTarget.ViewMatrix * 
                                                                           renderManager.ViewTarget.ProjectionMatrix);
                 mesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
 

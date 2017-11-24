@@ -122,6 +122,10 @@
     <Compile Include="Components\SkeletalMeshComponent.cs" />
     <Compile Include="Graphics3D\Geometry\SkeletalMesh.cs" />
     <Compile Include="Graphics3D\RenderProxies\SkeletalMeshRenderProxy.cs" />
+    <Compile Include="Actors\BakedSkeletalMeshActor.cs" />
+    <Compile Include="Components\BakedSkeletalMeshComponent.cs" />
+    <Compile Include="Graphics3D\Geometry\BakedSkeletalMesh.cs" />
+    <Compile Include="Graphics3D\RenderProxies\BakedSkeletalMeshRenderProxy.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

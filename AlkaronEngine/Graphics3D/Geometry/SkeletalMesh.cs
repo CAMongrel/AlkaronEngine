@@ -18,7 +18,7 @@ namespace AlkaronEngine.Graphics3D.Geometry
             {
                 if (ParentBone != null)
                 {
-                    return ParentBone.CombinedTransform * Transform;
+                    return Transform * ParentBone.CombinedTransform;
                 }
 
                 return Transform;
