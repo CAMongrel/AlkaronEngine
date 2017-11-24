@@ -1,19 +1,42 @@
 ﻿using System;
 using AlkaronEngine.Graphics2D;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D.Geometry
 {
+    public class SkeletalMeshBone
+    {
+        public int MeshIndex;
+        public SkeletalMeshBone ParentBone;
+        public SkeletalMeshBone[] ChildBones;
+        public Matrix Transform;
+
+        public Matrix CombinedTransform
+        {
+            get
+            {
+                if (ParentBone != null)
+                {
+                    return ParentBone.CombinedTransform * Transform;
+                }
+
+                return Transform;
+            }
+        }
+
+        public StaticMesh Mesh;
+    }
+
     public class SkeletalMesh
     {
         public Material Material { get; set; }
-
-        public VertexBuffer VertexBuffer { get; set; }
-        public PrimitiveType PrimitiveType { get; set; }
-        public int PrimitiveCount { get; set; }
+        public BoundingBox BoundingBox { get; set; }
+        public SkeletalMeshBone RootBone { get; set; }
 
         public SkeletalMesh()
         {
+            
         }
     }
 }
