@@ -9,6 +9,7 @@ using AlkaronEngine.Actors;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using System.Threading;
 using AlkaronEngine.Gui;
+using AlkaronEngine.Graphics3D.Geometry;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -135,6 +136,8 @@ namespace AlkaronEngine.Graphics3D
 
         private void CreateMaterialLibrary()
         {
+            SkeletalMeshMaterial skelMat = new SkeletalMeshMaterial(renderConfig);
+            MaterialLibrary.AddMaterial("SkeletalMesh", skelMat);
         }
 
         private void CreateRenderTarget()

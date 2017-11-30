@@ -1,6 +1,8 @@
 ﻿using System;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Util;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
@@ -13,38 +15,60 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             SkeletalMesh = setSkeletalMesh;
         }
 
-        private void RenderBone(SkeletalMeshBone bone, 
-                                RenderManager renderManager,
-                                Graphics2D.IRenderConfiguration renderConfig)
+        private void RenderMeshPart(SkeletalMeshPart part, 
+                                    RenderManager renderManager,
+                                    Graphics2D.IRenderConfiguration renderConfig)
         {
-            StaticMesh mesh = bone.Mesh;
-            if (mesh != null)
+            SkinnedEffect skinEff = part.Material.Effect as SkinnedEffect;
+            if (skinEff == null)
             {
-                mesh.Material.Effect.Parameters["WorldViewProj"].SetValue(bone.CombinedTransform * renderManager.ViewTarget.ViewMatrix * 
-                                                                          renderManager.ViewTarget.ProjectionMatrix);
-                mesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
-
-                if (mesh.DiffuseTexture != null)
-                {
-                    mesh.Material.Effect.Parameters["Texture"].SetValue(mesh.DiffuseTexture);
-                    mesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
-                }
-
-                renderConfig.GraphicsDevice.SetVertexBuffer(mesh.VertexBuffer);
-                renderConfig.GraphicsDevice.DrawPrimitives(mesh.PrimitiveType, 0, mesh.PrimitiveCount);
+                return;
             }
 
-            for (int i = 0; i < bone.ChildBones.Length; i++)
+            skinEff.WeightsPerVertex = 1;
+
+            skinEff.AmbientLightColor = Vector3.One;
+            skinEff.FogEnabled = false;
+
+            skinEff.SetBoneTransforms(part.BoneMatrics);
+
+            skinEff.World = WorldMatrix;
+            skinEff.View = renderManager.ViewTarget.ViewMatrix;
+            skinEff.Projection = renderManager.ViewTarget.ProjectionMatrix;
+
+            skinEff.Parameters["WorldViewProj"].SetValue(WorldMatrix * 
+                                                         renderManager.ViewTarget.ViewMatrix * 
+                                                         renderManager.ViewTarget.ProjectionMatrix);
+            part.Material.Effect.CurrentTechnique.Passes[0].Apply();
+
+            if (part.DiffuseTexture != null)
             {
-                RenderBone(bone.ChildBones[i], renderManager, renderConfig);
+                part.Material.Effect.Parameters["Texture"].SetValue(part.DiffuseTexture);
+                part.Material.Effect.CurrentTechnique.Passes[0].Apply();
             }
+
+            renderConfig.GraphicsDevice.SetVertexBuffer(part.VertexBuffer);
+            renderConfig.GraphicsDevice.DrawPrimitives(part.PrimitiveType, 0, part.PrimitiveCount);
         }
 
         public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager)
         {
             base.Render(renderConfig, renderManager);
 
-            RenderBone(SkeletalMesh.RootBone, renderManager, renderConfig);
+            for (int i = 0; i < SkeletalMesh.MeshParts.Count; i++)
+            {
+                RenderMeshPart(SkeletalMesh.MeshParts[i], renderManager, renderConfig);
+            }
+
+            /*if (SkeletalMesh.Model != null)
+            {
+                SkeletalMesh.Model.Draw(WorldMatrix, renderManager.ViewTarget.ViewMatrix,
+                                        renderManager.ViewTarget.ProjectionMatrix);                
+            }
+            else
+            {
+                RenderBone(SkeletalMesh.RootBone, renderManager, renderConfig);
+            }*/
 
             /*Performance.StartAppendAggreate("Setup");
             StaticMesh.Material.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
