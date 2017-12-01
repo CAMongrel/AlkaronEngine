@@ -27,7 +27,7 @@ namespace AlkaronEngine.Graphics3D
         /// <summary>
         /// Needs locking with lockObj ... accessed by multiple threads.
         /// </summary>
-        private List<BaseRenderProxy> renderProxyStage;
+        private List<BaseRenderProxy> renderProxyStagingArea;
 
         private long frameRenderStartTime;
 
@@ -68,7 +68,7 @@ namespace AlkaronEngine.Graphics3D
             renderThread = null;
             renderThreadActive = false;
             lockObj = new Object();
-            renderProxyStage = new List<BaseRenderProxy>();
+            renderProxyStagingArea = new List<BaseRenderProxy>();
 
             renderPasses = new List<RenderPass>();
             renderConfig = setRenderConfig;
@@ -177,7 +177,7 @@ namespace AlkaronEngine.Graphics3D
         {
             lock (lockObj)
             {
-                renderProxyStage.AddRange(list);
+                renderProxyStagingArea.AddRange(list);
             }
         }
 
@@ -243,11 +243,13 @@ namespace AlkaronEngine.Graphics3D
                 frameCounter = 0;
             }
 
+            long now = System.Diagnostics.Stopwatch.GetTimestamp();
+            // Delta time in seconds since the last rendering pass
+            double delta = (double)(now - frameRenderStartTime) / (double)System.Diagnostics.Stopwatch.Frequency;
+
             if (maxFPS >= -1)
             {
                 // Check maxFPS delay
-                long now = System.Diagnostics.Stopwatch.GetTimestamp();
-                double delta = (double)(now - frameRenderStartTime) / (double)System.Diagnostics.Stopwatch.Frequency;
 
                 double minDelta = 1.0 / (double)maxFPS;
                 if (delta < minDelta)
@@ -266,10 +268,14 @@ namespace AlkaronEngine.Graphics3D
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            ApplyPreFrame();
+            // Apply update before rendering (adding new rendering proxies,
+            // updating existing proxies)
+            ApplyPreFrame(delta);
 
+            // Render all active proxies in rendering passes
             RenderRenderPasses();
 
+            // Render the UI
             RenderUI();
 
             Performance.Pop();
@@ -320,15 +326,15 @@ namespace AlkaronEngine.Graphics3D
         /// Must only be called from inside ApplyPreFrame() or otherwise secured with
         /// lock (lockObj).
         /// </summary>
-        private void ApplyRenderProxyStage()
+        private void ApplyRenderProxyStagingArea()
         {
             // Apply stage to current process
 
             Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
 
-            for (int p = 0; p < renderProxyStage.Count; p++)
+            for (int p = 0; p < renderProxyStagingArea.Count; p++)
             {
-                BaseRenderProxy proxy = renderProxyStage[p];
+                BaseRenderProxy proxy = renderProxyStagingArea[p];
 
                 RenderPass passToUse = null;
 
@@ -347,10 +353,10 @@ namespace AlkaronEngine.Graphics3D
                 passToUse.AddProxy(proxy);
             }
 
-            renderProxyStage.Clear();
+            renderProxyStagingArea.Clear();
         }
 
-        private void ApplyPreFrame()
+        private void ApplyPreFrame(double deltaTime)
         {
             lock (lockObj)
             {
@@ -360,7 +366,18 @@ namespace AlkaronEngine.Graphics3D
                     nextViewTarget = null;
                 }
 
-                ApplyRenderProxyStage();
+                ApplyRenderProxyStagingArea();
+            }
+
+            UpdateRenderProxies(deltaTime);
+        }
+
+        private void UpdateRenderProxies(double deltaTime)
+        {
+            // Update all render proxies
+            for (int i = 0; i < renderPasses.Count; i++)
+            {
+                renderPasses[i].Update(deltaTime);
             }
         }
         #endregion

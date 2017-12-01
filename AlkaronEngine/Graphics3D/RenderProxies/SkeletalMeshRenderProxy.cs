@@ -1,4 +1,5 @@
 ﻿using System;
+using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
@@ -8,7 +9,15 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 {
     public class SkeletalMeshRenderProxy : BaseRenderProxy
     {
+        public static BasicEffect effect = null;
+
         public SkeletalMesh SkeletalMesh { get; private set; }
+
+        /// <summary>
+        /// Used by both threads, must be guarded by lock object
+        /// </summary>
+        private double nextAnimationTimeDelta;
+        public double AnimationTime { get; private set; }
 
         public SkeletalMeshRenderProxy(SkeletalMesh setSkeletalMesh)
         {
@@ -51,44 +60,85 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             renderConfig.GraphicsDevice.DrawPrimitives(part.PrimitiveType, 0, part.PrimitiveCount);
         }
 
-        public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager)
+        private void DrawBone(SkeletalMeshBone bone, RenderManager renderManager, IRenderConfiguration renderConfig)
+        {
+            if (effect == null)
+            {
+                effect = new BasicEffect(renderConfig.GraphicsDevice);
+            }
+
+            VertexPositionColor v1 = new VertexPositionColor();
+            v1.Color = Color.Red;
+            v1.Position = bone.CombinedTransform.Translation;
+
+            VertexPositionColor v2 = new VertexPositionColor();
+            v2.Color = Color.Blue;
+            v2.Position = bone.ParentBone.CombinedTransform.Translation;
+
+            Vector3 midPoint = v1.Position + ((v2.Position - v1.Position) * 0.5f);
+            Vector3 screenPos = renderConfig.GraphicsDevice.Viewport.Project(midPoint,
+                                                                             renderManager.ViewTarget.ProjectionMatrix,
+                                                                             renderManager.ViewTarget.ViewMatrix,
+                                                                             WorldMatrix);
+            renderConfig.RenderManager.SpriteBatch.Begin();
+            renderConfig.RenderManager.SpriteBatch.DrawString(renderConfig.RenderManager.EngineFont,
+                                                              bone.BoneName,
+                                                              new Vector2(screenPos.X, screenPos.Y),
+                                                              Color.Yellow);
+            renderConfig.RenderManager.SpriteBatch.End();
+
+            effect.TextureEnabled = false;
+            effect.VertexColorEnabled = true;
+            effect.FogEnabled = false;
+            effect.LightingEnabled = false;
+
+            effect.Parameters["WorldViewProj"].SetValue(WorldMatrix *
+                                                        renderManager.ViewTarget.ViewMatrix *
+                                                        renderManager.ViewTarget.ProjectionMatrix);
+
+            effect.CurrentTechnique.Passes[0].Apply();
+
+            renderConfig.GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList,
+                                                                                new VertexPositionColor[] { v1, v2 }, 0, 1);
+
+            for (int i = 0; i < bone.ChildBones.Length; i++)
+            {
+                DrawBone(bone.ChildBones[i], renderManager, renderConfig);
+            }
+        }
+
+        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager)
         {
             base.Render(renderConfig, renderManager);
 
+            SkeletalMesh.SetAnimationTime(AnimationTime);
             for (int i = 0; i < SkeletalMesh.MeshParts.Count; i++)
             {
                 RenderMeshPart(SkeletalMesh.MeshParts[i], renderManager, renderConfig);
             }
 
-            /*if (SkeletalMesh.Model != null)
+            for (int i = 0; i < SkeletalMesh.RootBone.ChildBones.Length; i++)
             {
-                SkeletalMesh.Model.Draw(WorldMatrix, renderManager.ViewTarget.ViewMatrix,
-                                        renderManager.ViewTarget.ProjectionMatrix);                
+                DrawBone(SkeletalMesh.RootBone.ChildBones[i], renderManager, renderConfig);
             }
-            else
-            {
-                RenderBone(SkeletalMesh.RootBone, renderManager, renderConfig);
-            }*/
+        }
 
-            /*Performance.StartAppendAggreate("Setup");
-            StaticMesh.Material.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
-            StaticMesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
-            Performance.EndAppendAggreate("Setup");
+        internal override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
 
-            if (StaticMesh.DiffuseTexture != null)
+            lock (lockObj)
             {
-                Performance.StartAppendAggreate("Setup Texture");
-                StaticMesh.Material.Effect.Parameters["Texture"].SetValue(StaticMesh.DiffuseTexture);
-                StaticMesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
-                Performance.EndAppendAggreate("Setup Texture");
+                AnimationTime += nextAnimationTimeDelta;
             }
+        }
 
-            Performance.StartAppendAggreate("SetVertexBuffer");
-            renderConfig.GraphicsDevice.SetVertexBuffer(StaticMesh.VertexBuffer);
-            Performance.EndAppendAggreate("SetVertexBuffer");
-            Performance.StartAppendAggreate("DrawPrimitives");
-            renderConfig.GraphicsDevice.DrawPrimitives(StaticMesh.PrimitiveType, 0, StaticMesh.PrimitiveCount);
-            Performance.EndAppendAggreate("DrawPrimitives");*/
+        public void TickAnimation(double deltaTime)
+        {
+            lock (lockObj)
+            {
+                nextAnimationTimeDelta = deltaTime;
+            }
         }
     }
 }

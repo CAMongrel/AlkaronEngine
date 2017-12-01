@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AlkaronEngine.Graphics2D;
@@ -139,11 +140,30 @@ namespace AlkaronEngine.Graphics3D.Geometry
         }
     }
 
+    public class SkeletalMeshBoneAnimation
+    {
+        public string Name { get; set; }
+
+        public Matrix[] FrameTransforms { get; set; }
+        public Matrix Transform 
+        { 
+            get
+            {
+                return FrameTransforms[currentFrame % FrameTransforms.Length];
+            }
+        }
+
+        internal int currentFrame = 0;
+    }
+
     public class SkeletalMeshBone
     {
+        public string BoneName;
+        public string AnimationName;
         public int MeshIndex;
         public SkeletalMeshBone ParentBone;
         public SkeletalMeshBone[] ChildBones;
+
         public Matrix Transform;
 
         public Matrix CombinedTransform
@@ -152,14 +172,55 @@ namespace AlkaronEngine.Graphics3D.Geometry
             {
                 if (ParentBone != null)
                 {
-                    return Transform * ParentBone.CombinedTransform;
+                    if (CurrentAnimation != null)
+                    {
+                        return CurrentAnimation.Transform * ParentBone.CombinedTransform;
+                    }
+                    else
+                    {
+                        return Transform * ParentBone.CombinedTransform;
+                    }
                 }
 
-                return Transform;
+                if (CurrentAnimation != null)
+                {
+                    return CurrentAnimation.Transform;
+                }
+                else
+                {
+                    return Transform;
+                }
             }
         }
 
-        public StaticMesh Mesh;
+        public StaticMesh Mesh { get; set; }
+
+        private int currentAnimationIndex;
+        public SkeletalMeshBoneAnimation[] Animations { get; set; }
+        public SkeletalMeshBoneAnimation CurrentAnimation 
+        { 
+            get
+            {
+                return Animations[currentAnimationIndex];
+            }
+        }
+
+        public void SetCurrentAnimationByName(string name)
+        {
+            name = name.ToLowerInvariant();
+            for (int i = 0; i < Animations.Length; i++)
+            {
+                if (Animations[i].Name.ToLowerInvariant() == name)
+                {
+                    currentAnimationIndex = i;
+                }
+            }
+        }
+
+        public void SetAnimationTime(double animationTime)
+        {
+            CurrentAnimation.currentFrame = (int)animationTime;
+        }
     }
 
     public class SkeletalMeshPart
@@ -173,8 +234,39 @@ namespace AlkaronEngine.Graphics3D.Geometry
         public Material Material { get; set; }
 
         public SkeletalMeshBone[] Bones { get; set; }
-        public Matrix[] BoneMatrics { get; set; }
+        public Matrix[] BoneMatrics 
+        { 
+            get
+            {
+                Matrix[] result = new Matrix[Bones.Length];
+                for (int i = 0; i < Bones.Length; i++)
+                {
+                    result[i] = Bones[i].CombinedTransform;
+                }
+                return result;
+            }
+        }
         public int[] AffectedBonesIndices { get; set; }
+
+        public SkeletalMeshPart()
+        {
+        }
+
+        internal void SetCurrentAnimation(string name)
+        {
+            for (int i = 0; i < Bones.Length; i++)
+            {
+                Bones[i].SetCurrentAnimationByName(name);
+            }
+        }
+
+        public void SetAnimationTime(double animationTime)
+        {
+            for (int i = 0; i < Bones.Length; i++)
+            {
+                Bones[i].SetAnimationTime(animationTime);
+            }
+        }
     }
 
     public class SkeletalMesh
@@ -182,13 +274,39 @@ namespace AlkaronEngine.Graphics3D.Geometry
         public Material Material { get; set; }
         public BoundingBox BoundingBox { get; set; }
 
+        public SkeletalMeshBone RootBone { get; set; }
+
         public SkeletalMeshBone[] Bones { get; set; }
 
         public List<SkeletalMeshPart> MeshParts { get; private set; }
 
+        public List<string> AnimationNames { get; set; }
+
         public SkeletalMesh()
         {
             MeshParts = new List<SkeletalMeshPart>();
+            AnimationNames = new List<string>();
+        }
+
+        public void SetAnimationByName(string name)
+        {
+            for (int i = 0; i < MeshParts.Count; i++)
+            {
+                MeshParts[i].SetCurrentAnimation(name);
+            }
+        }
+
+        public string[] GetAnimationNames()
+        {
+            return AnimationNames.ToArray();
+        }
+
+        public void SetAnimationTime(double animationTime)
+        {
+            for (int i = 0; i < MeshParts.Count; i++)
+            {
+                MeshParts[i].SetAnimationTime(animationTime);
+            }
         }
     }
 }

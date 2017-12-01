@@ -127,5 +127,13 @@ namespace AlkaronEngine.Graphics3D
 
             return renderedProxies;
         }
+
+        internal void Update(double deltaTime)
+        {
+            for (int i = 0; i < proxies.Count; i++)
+            {
+                proxies[i].Update(deltaTime);
+            }
+        }
     }
 }
