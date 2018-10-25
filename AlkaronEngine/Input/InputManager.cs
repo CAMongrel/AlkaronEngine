@@ -2,148 +2,179 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using AlkaronEngine.Graphics2D;
+using System.Collections.Generic;
 
 namespace AlkaronEngine.Input
 {
-    public delegate void KeyEvent(Keys key, KeyEventType eventType);
-    public delegate void PointerEvent(Vector2 position, PointerType pointerType);
+   public delegate void PointerEvent(Vector2 position, PointerType pointerType, GameTime gameTime);
+   public delegate void KeyEvent(Keys key, GameTime gameTime);
 
-    public class InputManager
-    {
-        private Vector2 prevMousePos;
-        private MouseState prevMouseState;
-        private int prevWheelValue;
+   public class InputManager
+   {
+      private Vector2 prevMousePos;
+      private MouseState prevMouseState;
+      private KeyboardState curKeyboardState;
+      private KeyboardState prevKeyboardState;
+      private int prevWheelValue;
 
-        private KeyboardState prevKeyboardState;
+      public event PointerEvent OnPointerMoved;
+      public event PointerEvent OnPointerPressed;
+      public event PointerEvent OnPointerReleased;
+      public event PointerEvent OnPointerWheelChanged;
 
-        public event PointerEvent OnPointerMoved;
-        public event PointerEvent OnPointerPressed;
-        public event PointerEvent OnPointerReleased;
-        public event PointerEvent OnPointerWheelChanged;
+      public event KeyEvent OnKeyPressed;
+      public event KeyEvent OnKeyReleased;
 
-        public event KeyEvent OnKeyEvent;
+      private IRenderConfiguration renderConfig;
 
-        private IRenderConfiguration renderConfig;
+      public Vector2 MousePosition { get; private set; }
+      public Vector2 ScaledMousePosition { get; private set; }
 
-        public Vector2 MousePosition { get; private set; }
-        public Vector2 ScaledMousePosition { get; private set; }
+      public InputManager(IRenderConfiguration setRenderConfig)
+      {
+         if (setRenderConfig == null)
+         {
+            throw new ArgumentNullException(nameof(setRenderConfig));
+         }
 
-        public InputManager(IRenderConfiguration setRenderConfig)
-        {
-            if (setRenderConfig == null)
+         renderConfig = setRenderConfig;
+         prevMousePos = new Vector2(-1, -1);
+
+         MouseState mouseState = Mouse.GetState();
+         prevWheelValue = mouseState.ScrollWheelValue;
+      }
+
+      public void UpdateInput(GameTime gameTime)
+      {
+         MouseState mouseState = Mouse.GetState();
+
+         curKeyboardState = Keyboard.GetState();
+
+         Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+
+         Vector2 ScaledOffset = renderConfig.ScaledOffset;
+         Vector2 Scale = renderConfig.Scale;
+
+         Vector2 scaledPosition = new Vector2((mousePos.X - ScaledOffset.X) / Scale.X,
+            (mousePos.Y - ScaledOffset.Y) / Scale.Y);
+
+         MousePosition = mousePos;
+         ScaledMousePosition = scaledPosition;
+
+         if (mousePos != prevMousePos)
+         {
+            OnPointerMoved?.Invoke(scaledPosition, PointerType.None, gameTime);
+            prevMousePos = mousePos;
+         }
+
+         // Left mouse button
+         if (mouseState.LeftButton == ButtonState.Pressed && prevMouseState.LeftButton == ButtonState.Released)
+         {
+            OnPointerPressed?.Invoke(scaledPosition, PointerType.LeftMouse, gameTime);
+         }
+         if (mouseState.LeftButton == ButtonState.Released && prevMouseState.LeftButton == ButtonState.Pressed)
+         {
+            OnPointerReleased?.Invoke(scaledPosition, PointerType.LeftMouse, gameTime);
+         }
+
+         // Middle mouse button
+         if (mouseState.MiddleButton == ButtonState.Pressed && prevMouseState.MiddleButton == ButtonState.Released)
+         {
+            OnPointerPressed?.Invoke(scaledPosition, PointerType.MiddleMouse, gameTime);
+         }
+         if (mouseState.MiddleButton == ButtonState.Released && prevMouseState.MiddleButton == ButtonState.Pressed)
+         {
+            OnPointerReleased?.Invoke(scaledPosition, PointerType.MiddleMouse, gameTime);
+         }
+
+         // Right mouse button
+         if (mouseState.RightButton == ButtonState.Pressed && prevMouseState.RightButton == ButtonState.Released)
+         {
+            OnPointerPressed?.Invoke(scaledPosition, PointerType.RightMouse, gameTime);
+         }
+         if (mouseState.RightButton == ButtonState.Released && prevMouseState.RightButton == ButtonState.Pressed)
+         {
+            OnPointerReleased?.Invoke(scaledPosition, PointerType.RightMouse, gameTime);
+         }
+
+         // Mouse wheel
+         int newWheelValue = mouseState.ScrollWheelValue;
+         int curWheelDelta = newWheelValue - prevWheelValue;
+         prevWheelValue = newWheelValue;
+         if (curWheelDelta != 0)
+         {
+            OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel, gameTime);
+         }
+
+         // Handle keyboard events
+         HandleKeyboardEvents(curKeyboardState, prevKeyboardState, gameTime);
+
+         prevMouseState = mouseState;
+         prevKeyboardState = curKeyboardState;
+      }
+
+      private void HandleKeyboardEvents(KeyboardState curState, KeyboardState prevState, GameTime gameTime)
+      {
+         var curPressedKeys = new List<Keys>(curState.GetPressedKeys());
+         var prevPressedKeys = new List<Keys>(prevState.GetPressedKeys());
+
+         var newlyPressedKeys = new List<Keys>();
+         var noLongerPressedKeys = new List<Keys>();
+         var stillPressedKeys = new List<Keys>();
+
+         // First build lists of newly or still pressed keys
+         for (int i = curPressedKeys.Count - 1; i >= 0; i--)
+         {
+            Keys key = curPressedKeys[i];
+            if (prevPressedKeys.Contains(key))
             {
-                throw new ArgumentNullException(nameof(setRenderConfig));
+               stillPressedKeys.Add(key);
+
+               curPressedKeys.RemoveAt(i);
+               prevPressedKeys.Remove(key);
             }
-
-            renderConfig = setRenderConfig;
-            prevMousePos = new Vector2(-1, -1);
-
-            MouseState mouseState = Mouse.GetState();
-            prevWheelValue = mouseState.ScrollWheelValue;
-        }
-
-        public void UpdateInput(GameTime gameTime)
-        {
-            UpdateMouseState();
-            UpdateKeyboardState();
-        }
-
-        private void UpdateKeyboardState()
-        {
-            KeyboardState keybState = Keyboard.GetState();
-
-            Keys[] prevPressedKeys = prevKeyboardState.GetPressedKeys();
-
-            Keys[] curPressedKeys = keybState.GetPressedKeys();
-
-            for (int i = 0; i < curPressedKeys.Length; i++)
+            else
             {
-                if (prevKeyboardState.IsKeyDown(curPressedKeys[i]) == false)
-                {
-                    // Key press event
-                    OnKeyEvent?.Invoke(curPressedKeys[i], KeyEventType.Pressed);
-                }
-                else
-                {
-                    // Key held down
-                    OnKeyEvent?.Invoke(curPressedKeys[i], KeyEventType.Pressed);
-                }
+               newlyPressedKeys.Add(key);
             }
+         }
 
-            for (int i = 0; i < prevPressedKeys.Length; i++)
+         // Remaining keys in prevPressedKeys are no longer pressed
+         for (int i = 0; i < prevPressedKeys.Count; i++)
+         {
+            noLongerPressedKeys.Add(prevPressedKeys[i]);
+         }
+
+         if (OnKeyPressed != null)
+         {
+            for (int i = 0; i < newlyPressedKeys.Count; i++)
             {
-                if (keybState.IsKeyUp(prevPressedKeys[i]) == true)
-                {
-                    // Key released event
-                    OnKeyEvent?.Invoke(prevPressedKeys[i], KeyEventType.Released);
-                }
+               OnKeyPressed(newlyPressedKeys[i], gameTime);
             }
-
-            prevKeyboardState = keybState;
-        }
-
-        private void UpdateMouseState()
-        {
-            MouseState mouseState = Mouse.GetState();
-
-            Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
-
-            Vector2 ScaledOffset = renderConfig.ScaledOffset;
-            Vector2 Scale = renderConfig.Scale;
-
-            Vector2 scaledPosition = new Vector2((mousePos.X - ScaledOffset.X) / Scale.X,
-               (mousePos.Y - ScaledOffset.Y) / Scale.Y);
-
-            MousePosition = mousePos;
-            ScaledMousePosition = scaledPosition;
-
-            if (mousePos != prevMousePos)
+         }
+         if (OnKeyReleased != null)
+         {
+            for (int i = 0; i < noLongerPressedKeys.Count; i++)
             {
-                OnPointerMoved?.Invoke(scaledPosition, PointerType.None);
-                prevMousePos = mousePos;
+               OnKeyReleased(noLongerPressedKeys[i], gameTime);
             }
+         }
+      }
 
-            // Left mouse button
-            if (mouseState.LeftButton == ButtonState.Pressed && prevMouseState.LeftButton == ButtonState.Released)
-            {
-                OnPointerPressed?.Invoke(scaledPosition, PointerType.LeftMouse);
-            }
-            if (mouseState.LeftButton == ButtonState.Released && prevMouseState.LeftButton == ButtonState.Pressed)
-            {
-                OnPointerReleased?.Invoke(scaledPosition, PointerType.LeftMouse);
-            }
+      public bool IsKeyPressed(Keys key)
+      {
+         return curKeyboardState.IsKeyDown(key);
+      }
 
-            // Middle mouse button
-            if (mouseState.MiddleButton == ButtonState.Pressed && prevMouseState.MiddleButton == ButtonState.Released)
-            {
-                OnPointerPressed?.Invoke(scaledPosition, PointerType.MiddleMouse);
-            }
-            if (mouseState.MiddleButton == ButtonState.Released && prevMouseState.MiddleButton == ButtonState.Pressed)
-            {
-                OnPointerReleased?.Invoke(scaledPosition, PointerType.MiddleMouse);
-            }
+      public bool WasKeyPressed(Keys key)
+      {
+         return prevKeyboardState.IsKeyDown(key);
+      }
 
-            // Right mouse button
-            if (mouseState.RightButton == ButtonState.Pressed && prevMouseState.RightButton == ButtonState.Released)
-            {
-                OnPointerPressed?.Invoke(scaledPosition, PointerType.RightMouse);
-            }
-            if (mouseState.RightButton == ButtonState.Released && prevMouseState.RightButton == ButtonState.Pressed)
-            {
-                OnPointerReleased?.Invoke(scaledPosition, PointerType.RightMouse);
-            }
-
-            // Mouse wheel
-            int newWheelValue = mouseState.ScrollWheelValue;
-            int curWheelDelta = newWheelValue - prevWheelValue;
-            prevWheelValue = newWheelValue;
-            if (curWheelDelta != 0)
-            {
-                OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel);
-            }
-
-            prevMouseState = mouseState;
-        }
-    }
+      public bool IsAnyKeyPressed()
+      {
+         return curKeyboardState.GetPressedKeys().Length > 0;
+      }
+   }
 }
 

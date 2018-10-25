@@ -8,7 +8,7 @@ namespace AlkaronEngine.Actors
 {
     public class CameraActor : BaseActor
     {
-        public CameraComponent CameraComponent { get; private set; } 
+        public CameraComponent CameraComponent { get; private set; }
 
         public CameraActor(CameraComponent setCameraComponent)
         {
@@ -36,9 +36,14 @@ namespace AlkaronEngine.Actors
             return CameraComponent?.PointerWheelChanged(position) ?? false;
         }
 
-        public virtual bool OnKeyEvent(Keys key, KeyEventType eventType)
+        public virtual bool KeyPressed(Keys key)
         {
-            return CameraComponent?.OnKeyEvent(key, eventType) ?? false;
+            return CameraComponent?.KeyPressed(key) ?? false;
+        }
+
+        public virtual bool KeyReleased(Keys key)
+        {
+            return CameraComponent?.KeyReleased(key) ?? false;
         }
     }
 }

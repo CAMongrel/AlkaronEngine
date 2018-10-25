@@ -26,7 +26,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 
         private void RenderMeshPart(SkeletalMeshPart part, 
                                     RenderManager renderManager,
-                                    Graphics2D.IRenderConfiguration renderConfig)
+                                    Graphics2D.IRenderConfiguration renderConfig, 
+                                    Material materialToUse)
         {
             SkinnedEffect skinEff = part.Material.Effect as SkinnedEffect;
             if (skinEff == null)
@@ -107,19 +108,19 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }
         }
 
-        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager)
+        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager, Material materialToUse)
         {
-            base.Render(renderConfig, renderManager);
+            base.Render(renderConfig, renderManager, materialToUse);
 
             SkeletalMesh.SetAnimationTime(AnimationTime);
             for (int i = 0; i < SkeletalMesh.MeshParts.Count; i++)
             {
-                RenderMeshPart(SkeletalMesh.MeshParts[i], renderManager, renderConfig);
+                RenderMeshPart(SkeletalMesh.MeshParts[i], renderManager, renderConfig, materialToUse);
             }
 
             for (int i = 0; i < SkeletalMesh.RootBone.ChildBones.Length; i++)
             {
-                DrawBone(SkeletalMesh.RootBone.ChildBones[i], renderManager, renderConfig);
+                //DrawBone(SkeletalMesh.RootBone.ChildBones[i], renderManager, renderConfig);
             }
         }
 

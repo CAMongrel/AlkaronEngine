@@ -1,4 +1,5 @@
 ﻿using System;
+using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
@@ -17,26 +18,26 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             Material = StaticMesh.Material;
         }
 
-        public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager)
+        public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager, Material materialToUse)
         {
             if (StaticMesh.IsCollisionOnly)
             {
                 return;
             }
 
-            base.Render(renderConfig, renderManager);
+            base.Render(renderConfig, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
 
-            StaticMesh.Material.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
-            StaticMesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
+            materialToUse.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
+            materialToUse.Effect.CurrentTechnique.Passes[0].Apply();
             Performance.EndAppendAggreate("Setup");
 
             if (StaticMesh.DiffuseTexture != null)
             {
                 Performance.StartAppendAggreate("Setup Texture");
-                StaticMesh.Material.Effect.Parameters["Texture"].SetValue(StaticMesh.DiffuseTexture);
-                StaticMesh.Material.Effect.CurrentTechnique.Passes[0].Apply();
+                materialToUse.Effect.Parameters["Texture"].SetValue(StaticMesh.DiffuseTexture);
+                materialToUse.Effect.CurrentTechnique.Passes[0].Apply();
                 Performance.EndAppendAggreate("Setup Texture");
             }
 

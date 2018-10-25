@@ -126,9 +126,9 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public virtual void PointerDown(Vector2 position, PointerType pointerType)
+        public virtual void PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
-            bool res = UIWindowManager.PointerDown(position, pointerType);
+            bool res = UIWindowManager.PointerDown(position, pointerType, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -149,9 +149,9 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public virtual void PointerUp(Vector2 position, PointerType pointerType)
+        public virtual void PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
-            bool res = UIWindowManager.PointerUp(position, pointerType);
+            bool res = UIWindowManager.PointerUp(position, pointerType, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -169,9 +169,9 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public virtual void PointerMoved(Vector2 position)
+        public virtual void PointerMoved(Vector2 position, GameTime gameTime)
         {
-            bool res = UIWindowManager.PointerMoved(position);
+            bool res = UIWindowManager.PointerMoved(position, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -189,30 +189,45 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public virtual void PointerWheelChanged(Vector2 position)
+        public virtual void PointerWheelChanged(Vector2 deltaValue, GameTime gameTime)
         {
-            bool res = UIWindowManager.PointerWheelChanged(position);
+            bool res = UIWindowManager.PointerWheelChanged(deltaValue, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
-                res = CurrentController?.PointerWheelChanged(position) ?? false;
+                res = CurrentController?.PointerWheelChanged(deltaValue) ?? false;
                 if (res == false)
                 {
-                    CurrentCamera?.PointerWheelChanged(position);
+                    CurrentCamera?.PointerWheelChanged(deltaValue);
                 }
             }
         }
 
-        public virtual bool OnKeyEvent(Keys key, KeyEventType eventType)
+        public virtual bool KeyPressed(Keys key, GameTime gameTime)
         {
-            bool res = UIWindowManager.KeyEvent(key, eventType);
+            bool res = UIWindowManager.KeyPressed(key, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
-                res = CurrentController?.OnKeyEvent(key, eventType) ?? false;
+                res = CurrentController?.KeyPressed(key) ?? false;
                 if (res == false)
                 {
-                    CurrentCamera?.OnKeyEvent(key, eventType);
+                    CurrentCamera?.KeyPressed(key);
+                }
+            }
+            return res;
+        }
+
+        public virtual bool KeyReleased(Keys key, GameTime gameTime)
+        {
+            bool res = UIWindowManager.KeyReleased(key, gameTime);
+            if (res == false)
+            {
+                // Event was not handled by UI
+                res = CurrentController?.KeyReleased(key) ?? false;
+                if (res == false)
+                {
+                    CurrentCamera?.KeyReleased(key);
                 }
             }
             return res;

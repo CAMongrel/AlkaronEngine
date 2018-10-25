@@ -16,6 +16,8 @@ namespace AlkaronEngine.Graphics2D
 
         public Material(IRenderConfiguration renderConfig)
         {
+            RequiresOrderingBackToFront = false;
+
             RenderConfig = renderConfig;
         }
 

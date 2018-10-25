@@ -83,7 +83,12 @@ namespace AlkaronEngine.Components
             return false;
         }
 
-        public virtual bool OnKeyEvent(Keys key, KeyEventType eventType)
+        public virtual bool KeyPressed(Keys key)
+        {
+            return false;
+        }
+
+        public virtual bool KeyReleased(Keys key)
         {
             return false;
         }

@@ -104,53 +104,53 @@ namespace AlkaronEngine.Components
             return true;
         }
 
-        public override bool OnKeyEvent(Microsoft.Xna.Framework.Input.Keys key, Input.KeyEventType eventType)
+        public override bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key)
         {
-            if (eventType == Input.KeyEventType.Pressed)
+            if (key == Microsoft.Xna.Framework.Input.Keys.W)
             {
-                if (key == Microsoft.Xna.Framework.Input.Keys.W)
-                {
-                    moveForward = true;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.S)
-                {
-                    moveBackward = true;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.A)
-                {
-                    strafeLeft = true;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.D)
-                {
-                    strafeRight = true;
-                    return true;
-                }
+                moveForward = true;
+                return true;
             }
-            if (eventType == Input.KeyEventType.Released)
+            if (key == Microsoft.Xna.Framework.Input.Keys.S)
             {
-                if (key == Microsoft.Xna.Framework.Input.Keys.W)
-                {
-                    moveForward = false;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.S)
-                {
-                    moveBackward = false;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.A)
-                {
-                    strafeLeft = false;
-                    return true;
-                }
-                if (key == Microsoft.Xna.Framework.Input.Keys.D)
-                {
-                    strafeRight = false;
-                    return true;
-                }
+                moveBackward = true;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.A)
+            {
+                strafeLeft = true;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.D)
+            {
+                strafeRight = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        public override bool KeyReleased(Microsoft.Xna.Framework.Input.Keys key)
+        {
+            if (key == Microsoft.Xna.Framework.Input.Keys.W)
+            {
+                moveForward = false;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.S)
+            {
+                moveBackward = false;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.A)
+            {
+                strafeLeft = false;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.D)
+            {
+                strafeRight = false;
+                return true;
             }
 
             return false;

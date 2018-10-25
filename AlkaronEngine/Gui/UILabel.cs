@@ -2,137 +2,118 @@
 using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended.BitmapFonts;
 
 namespace AlkaronEngine.Gui
 {
-   public class UILabel : UIBaseComponent
-   {
-      #region Properties
-      public string Text { get; set; }
-      public SpriteFont Font { get; set; }
-      public BitmapFont BitmapFont { get; set; }
+    public class UILabel : UIBaseComponent
+    {
+        #region Properties
+        public string Text { get; set; }
+        public SpriteFont Font { get; set; }
 
-      public bool AutoScaleFont { get; set; }
+        public bool AutoScaleFont { get; set; }
 
-      /// <summary>
-      /// Gets or sets the horizontal text alignment.
-      /// </summary>
-      public UITextAlignHorizontal TextAlignHorizontal { get; set; }
+        /// <summary>
+        /// Gets or sets the horizontal text alignment.
+        /// </summary>
+        public UITextAlignHorizontal TextAlignHorizontal { get; set; }
 
-      /// <summary>
-      /// Gets or sets the vertical text alignment.
-      /// </summary>
-      public UITextAlignVertical TextAlignVertical { get; set; }
+        /// <summary>
+        /// Gets or sets the vertical text alignment.
+        /// </summary>
+        public UITextAlignVertical TextAlignVertical { get; set; }
 
-		public override Vector2 PreferredSize
-      {
-         get
-         {
-            Vector2 resultSize = base.PreferredSize;
-            Vector2 textSize = BitmapFont != null ? (Vector2)BitmapFont.MeasureString(Text) : (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
-            if (textSize.X > resultSize.X)
+        public override Vector2 PreferredSize
+        {
+            get
             {
-               resultSize.X = textSize.X;
+                Vector2 resultSize = base.PreferredSize;
+                Vector2 textSize = (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
+                if (textSize.X > resultSize.X)
+                {
+                    resultSize.X = textSize.X;
+                }
+                if (textSize.Y > resultSize.Y)
+                {
+                    resultSize.Y = textSize.Y;
+                }
+                return resultSize;
             }
-            if (textSize.Y > resultSize.Y)
+        }
+        #endregion
+
+        #region Constructor
+        public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont)
+           : base(renderConfig)
+        {
+            Text = setText;
+            Font = setFont;
+            TextAlignHorizontal = UITextAlignHorizontal.Center;
+            TextAlignVertical = UITextAlignVertical.Center;
+            AutoScaleFont = false;
+        }
+        #endregion
+
+        #region Render
+        protected override void Draw()
+        {
+            base.Draw();
+
+            Vector2 screenPos = ScreenPosition;
+
+            Color col = Color.FromNonPremultiplied(new Vector4(Vector3.One, CompositeAlpha));
+
+            Vector2 fullSize = (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
+            float textScale = 1.0f;
+            if (AutoScaleFont)
             {
-               resultSize.Y = textSize.Y;
+                textScale = this.Width / fullSize.X;
             }
-            return resultSize;
-         }
-      }
-      #endregion
+            fullSize *= textScale;
 
-      #region Constructor
-      public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont)
-         : this(renderConfig, setText, setFont, null)
-      {
-      }
+            Vector2 position = new Vector2(0, screenPos.Y - 3);
 
-      public UILabel(IRenderConfiguration renderConfig, string setText, BitmapFont setBitmapFont)
-         : this(renderConfig, setText, null, setBitmapFont)
-      {
-      }
+            switch (TextAlignHorizontal)
+            {
+                case UITextAlignHorizontal.Center:
+                    position.X = screenPos.X + (Width / 2.0f - fullSize.X / 2.0f);
+                    break;
 
-      public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont, BitmapFont setBitmapFont)
-         : base(renderConfig)
-      {
-         Text = setText;
-         Font = setFont;
-         BitmapFont = setBitmapFont;
-         TextAlignHorizontal = UITextAlignHorizontal.Center;
-         TextAlignVertical = UITextAlignVertical.Center;
-         AutoScaleFont = false;
-      }
-      #endregion
+                case UITextAlignHorizontal.Left:
+                    position.X = screenPos.X;
+                    break;
 
-      #region Render
-      protected override void Draw()
-      {
-         base.Draw();
+                case UITextAlignHorizontal.Right:
+                    position.X = screenPos.X + (Width - fullSize.X);
+                    break;
+            }
 
-         Vector2 screenPos = ScreenPosition;
+            switch (TextAlignVertical)
+            {
+                case UITextAlignVertical.Top:
+                    position.Y = screenPos.Y;
+                    break;
 
-         Color col = Color.FromNonPremultiplied(new Vector4(Vector3.One, CompositeAlpha));
+                case UITextAlignVertical.Center:
+                    position.Y = screenPos.Y + (Height / 2.0f - fullSize.Y / 2.0f);
+                    break;
 
-         Vector2 fullSize = BitmapFont != null ? (Vector2)BitmapFont.MeasureString(Text) : (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
-         float textScale = 1.0f;
-         if (AutoScaleFont)
-         {
-            textScale = this.Width / fullSize.X;
-         }
-         fullSize *= textScale;
+                case UITextAlignVertical.Bottom:
+                    position.Y = screenPos.Y + Height - fullSize.Y;
+                    break;
+            }
 
-         Vector2 position = new Vector2(0, screenPos.Y - 3);
-
-         switch (TextAlignHorizontal)
-         {
-            case UITextAlignHorizontal.Center:
-               position.X = screenPos.X + (Width / 2.0f - fullSize.X / 2.0f);
-               break;
-
-            case UITextAlignHorizontal.Left:
-               position.X = screenPos.X;
-               break;
-
-            case UITextAlignHorizontal.Right:
-               position.X = screenPos.X + (Width - fullSize.X);
-               break;
-         }
-
-         switch (TextAlignVertical)
-         {
-            case UITextAlignVertical.Top:
-               position.Y = screenPos.Y;
-					break;
-
-            case UITextAlignVertical.Center:
-					position.Y = screenPos.Y + (Height / 2.0f - fullSize.Y / 2.0f);
-					break;
-
-            case UITextAlignVertical.Bottom:
-               position.Y = screenPos.Y + Height - fullSize.Y;
-					break;
-			}
-
-         if (BitmapFont != null)
-         {
-            FontRenderer.DrawStringDirect(renderConfig, BitmapFont, Text, position.X, position.Y, col, textScale, CompositeRotation);
-         } else
-         { 
             FontRenderer.DrawStringDirect(renderConfig, Font, Text, position.X, position.Y, col, textScale, CompositeRotation);
-         }
 
-         //
-      }
-      #endregion
+            //
+        }
+        #endregion
 
-      #region ToString
-      public override string ToString()
-      {
-         return Text;
-      }
-      #endregion
-   }
+        #region ToString
+        public override string ToString()
+        {
+            return Text;
+        }
+        #endregion
+    }
 }

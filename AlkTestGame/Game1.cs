@@ -10,8 +10,6 @@ namespace AlkTestGame
    {
       public static Game1 MainGame;
 
-      public SpriteFont DefaultFont;
-
       public Game1()
       {
          Log.LogWriter = this;
@@ -26,9 +24,9 @@ namespace AlkTestGame
 
       protected override void Initialize()
       {
-         base.Initialize();
-
          DefaultFont = Content.Load<SpriteFont>("DefaultFont");
+
+         base.Initialize();
 
          TestScene scene = new TestScene();
          SceneManager.NextScene = scene;

@@ -64,7 +64,8 @@ namespace AlkaronEngine.Scene
             InputManager.OnPointerReleased += PointerReleased;
             InputManager.OnPointerMoved += PointerMoved;
             InputManager.OnPointerWheelChanged += InputManager_OnPointerWheelChanged;
-            InputManager.OnKeyEvent += InputManager_OnKeyEvent;;
+            InputManager.OnKeyPressed += InputManager_OnKeyPressed;
+            InputManager.OnKeyReleased += InputManager_OnKeyReleased;
 
             CurrentScene = null;
             NextScene = null;
@@ -148,58 +149,51 @@ namespace AlkaronEngine.Scene
             Performance.Pop();
         }
 
-        public void PointerPressed(Vector2 scaledPosition, PointerType pointerType)
+        public void PointerPressed(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
         {
             lock (lockObj)
             {
-                if (CurrentScene != null)
-                {
-                    CurrentScene.PointerDown(scaledPosition, pointerType);
-                }
+                CurrentScene?.PointerDown(scaledPosition, pointerType, gameTime);
             }
         }
 
-        public void PointerReleased(Vector2 scaledPosition, PointerType pointerType)
+        public void PointerReleased(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
         {
             lock (lockObj)
             {
-                if (CurrentScene != null)
-                {
-                    CurrentScene.PointerUp(scaledPosition, pointerType);
-                }
+                CurrentScene?.PointerUp(scaledPosition, pointerType, gameTime);
             }
         }
 
-        public void PointerMoved(Vector2 scaledPosition, PointerType pointerType)
+        public void PointerMoved(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
         {
             lock (lockObj)
             {
-                if (CurrentScene != null)
-                {
-                    CurrentScene.PointerMoved(scaledPosition);
-                }
+                CurrentScene?.PointerMoved(scaledPosition, gameTime);
             }
         }
 
-        void InputManager_OnPointerWheelChanged(Vector2 position, Input.PointerType pointerType)
+        void InputManager_OnPointerWheelChanged(Vector2 position, Input.PointerType pointerType, GameTime gameTime)
         {
             lock (lockObj)
             {
-                if (CurrentScene != null)
-                {
-                    CurrentScene.PointerWheelChanged(position);
-                }
+                CurrentScene?.PointerWheelChanged(position, gameTime);
             }
         }
 
-        void InputManager_OnKeyEvent(Microsoft.Xna.Framework.Input.Keys key, Input.KeyEventType eventType)
+        void InputManager_OnKeyPressed(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
         {
             lock (lockObj)
             {
-                if (CurrentScene != null)
-                {
-                    CurrentScene.OnKeyEvent(key, eventType);
-                }
+                CurrentScene?.KeyPressed(key, gameTime);
+            }
+        }
+
+        void InputManager_OnKeyReleased(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        {
+            lock (lockObj)
+            {
+                CurrentScene?.KeyReleased(key, gameTime);
             }
         }
     }

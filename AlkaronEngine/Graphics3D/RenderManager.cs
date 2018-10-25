@@ -74,7 +74,7 @@ namespace AlkaronEngine.Graphics3D
             renderConfig = setRenderConfig;
 
             EffectLibrary = new EffectLibrary();
-            MaterialLibrary = new MaterialLibrary();
+            MaterialLibrary = new MaterialLibrary(setRenderConfig);
 
             CreateRenderTarget();
             CreateEffectLibrary();
@@ -302,7 +302,7 @@ namespace AlkaronEngine.Graphics3D
 
             for (int i = 0; i < renderPasses.Count; i++)
             {
-                componentCount += renderPasses[i].Draw(renderConfig, 
+                componentCount += renderPasses[i].Draw(renderConfig,
                     this, componentCount, MaxRenderCount);
             }
 
@@ -336,16 +336,22 @@ namespace AlkaronEngine.Graphics3D
             {
                 BaseRenderProxy proxy = renderProxyStagingArea[p];
 
+                Material materialToUse = proxy.Material;
+                if (proxy.Material == null)
+                {
+                    materialToUse = MaterialLibrary.GetMaterialByName(MaterialLibrary.DefaultMaterialName);
+                }
+
                 RenderPass passToUse = null;
 
-                if (renderPassDict.ContainsKey(proxy.Material) == false)
+                if (renderPassDict.ContainsKey(materialToUse) == false)
                 {
-                    passToUse = CreateAndAddRenderPassForMaterial(proxy.Material);
-                    renderPassDict.Add(proxy.Material, passToUse);
+                    passToUse = CreateAndAddRenderPassForMaterial(materialToUse);
+                    renderPassDict.Add(materialToUse, passToUse);
                 }
                 else
                 {
-                    passToUse = renderPassDict[proxy.Material];
+                    passToUse = renderPassDict[materialToUse];
                 }
 
                 passToUse.WorldOriginForDepthSorting = ViewTarget?.CameraLocation ?? Vector3.Zero;

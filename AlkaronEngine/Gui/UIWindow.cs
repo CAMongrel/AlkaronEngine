@@ -3,46 +3,57 @@ using System;
 
 namespace AlkaronEngine.Gui
 {
-   public class UIWindow : UIBaseComponent
-   {
-      #region Constructor
-      public UIWindow(IRenderConfiguration renderConfig)
-         : base(renderConfig)
-      {
-         X = Y = 0;
-         Width = renderConfig.ScreenSize.X;
-         Height = renderConfig.ScreenSize.Y;
+    public class UIWindow : UIBaseComponent
+    {
+        #region Constructor
+        public UIWindow(IRenderConfiguration renderConfig)
+           : base(renderConfig)
+        {
+            X = Y = 0;
+            Width = renderConfig.ScreenSize.X;
+            Height = renderConfig.ScreenSize.Y;
 
-         WidthSizeMode = UISizeMode.Fit;
-         HeightSizeMode = UISizeMode.Fit;
-      }
-      #endregion
+            WidthSizeMode = UISizeMode.Fit;
+            HeightSizeMode = UISizeMode.Fit;
+        }
+        #endregion
 
-      #region Show
-      public void Show()
-      {
-			UIWindowManager.AddWindow(this);
-      }
-      #endregion
+        #region Show
+        public void Show()
+        {
+            if (UIWindowManager.AddWindow(this))
+            {
+                DidShow();
+            }
+        }
 
-      #region Close
-      public void Close()
-      {
-         ClearComponents();
+        protected virtual void DidShow()
+        {
 
-         UIWindowManager.RemoveWindow(this);
-      }
+        }
+        #endregion
 
-      public virtual void DidRemove()
-      {
-      }
-      #endregion
+        #region Close
+        public void Close()
+        {
+            ClearComponents();
 
-      #region Render
-      protected override void Draw()
-      {
-         base.Draw();
-      }
-      #endregion
-   }
+            if (UIWindowManager.RemoveWindow(this))
+            {
+                DidRemove();
+            }
+        }
+
+        protected virtual void DidRemove()
+        {
+        }
+        #endregion
+
+        #region Render
+        protected override void Draw()
+        {
+            base.Draw();
+        }
+        #endregion
+    }
 }

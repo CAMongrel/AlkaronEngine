@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Input;
 #endregion
 
 namespace AlkaronEngine.Gui
@@ -50,9 +49,9 @@ namespace AlkaronEngine.Gui
         Fit
     }
 
-    public delegate void OnPointerDownInside(UIBaseComponent sender, Vector2 position);
-    public delegate void OnPointerUpInside(UIBaseComponent sender, Vector2 position);
-    public delegate void OnPointerUpOutside(UIBaseComponent sender, Vector2 position);
+    public delegate void OnPointerDownInside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
+    public delegate void OnPointerUpInside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
+    public delegate void OnPointerUpOutside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
 
     public delegate void ModifyLayout(UIBaseComponent component);
 
@@ -162,6 +161,7 @@ namespace AlkaronEngine.Gui
 
         public bool UserInteractionEnabled { get; set; }
         public bool Visible { get; set; }
+        public bool Focusable { get; set; }
 
         private UIPositionAnchor positionAnchor;
         /// <summary>
@@ -312,6 +312,7 @@ namespace AlkaronEngine.Gui
             renderConfig = setRenderConfig;
             parentComponent = null;
 
+            Focusable = false;
             PositionAnchor = UIPositionAnchor.TopLeft;
             BackgroundColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
             UserInteractionEnabled = true;
@@ -469,6 +470,25 @@ namespace AlkaronEngine.Gui
             this.X = newLocalPos.X;
             this.Y = newLocalPos.Y;
         }
+
+        /// <summary>
+        /// Returns the child component that comes after the given component
+        /// Returns null if the given component is not a child of the current
+        /// component.
+        /// May return the same component as the given component if there is 
+        /// only one child component
+        /// </summary>
+        public UIBaseComponent GetNextChildComponent(UIBaseComponent comp)
+        {
+            int index = components.IndexOf(comp);
+            if (index == -1)
+            {
+                return null;
+            }
+
+            index = (index + 1) % components.Count;
+            return components[index];
+        }
         #endregion
 
         #region Positioning
@@ -497,7 +517,7 @@ namespace AlkaronEngine.Gui
         public void SizeToFit()
         {
             Vector2 prefSize = PreferredSize;
-            SuppressPerformLayout((comp) =>
+            BulkPerformLayout((comp) =>
             {
                 Width = prefSize.X;
                 Height = prefSize.Y;
@@ -586,11 +606,11 @@ namespace AlkaronEngine.Gui
         /// multiple PerformLayout() events. 
         /// 
         /// For example, setting Width and Height indivually causes two PerformLayout()s to be invoked.
-        /// Using SuppressPerformLayout allows the user to modify multiple properties with only one
+        /// Using BulkPerformLayout allows the user to modify multiple properties with only one
         /// PerformLayout() call, thus saving CPU power.
         /// </summary>
         /// <param name="modifyLayoutCode">Code to be executed that modifies layout-essential code.</param>
-        public void SuppressPerformLayout(ModifyLayout modifyLayoutCode)
+        public void BulkPerformLayout(ModifyLayout modifyLayoutCode)
         {
             try
             {
@@ -674,6 +694,24 @@ namespace AlkaronEngine.Gui
 
                 components[i].InternalRender();
             }
+
+            // Render focus
+            if (HasCapturedKeyboardFocus())
+            {
+                Vector2 screenPos = ScreenPosition;
+                RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
+
+                Color focusColor = Color.FromNonPremultiplied(new Vector4(new Vector3(0.3f), 0.7f));
+                RectangleF focusRect = rect;
+                int focusInset = 4;
+
+                focusRect.X += focusInset;
+                focusRect.Y += focusInset;
+                focusRect.Width -= (focusInset * 2);
+                focusRect.Height -= (focusInset * 2);
+
+                Graphics2D.Texture.RenderRectangle(renderConfig, focusRect, focusColor, 2);
+            }
         }
 
         protected virtual void Draw()
@@ -681,7 +719,9 @@ namespace AlkaronEngine.Gui
             // Draw background
             if (BackgroundColor.A > 0)
             {
-                Texture.SingleWhite?.RenderOnScreen(ScreenPosition.X, ScreenPosition.Y, this.Width, this.Height, new Color(BackgroundColor, CompositeAlpha), CompositeRotation);
+                float backgroundAlpha = (float)BackgroundColor.A / 255.0f;
+                Texture.SingleWhite?.RenderOnScreen(ScreenPosition.X, ScreenPosition.Y, this.Width, this.Height, 
+                    new Color(BackgroundColor, CompositeAlpha * backgroundAlpha), CompositeRotation);
             }
         }
         #endregion
@@ -733,7 +773,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        protected internal virtual bool PointerDown(Vector2 position, PointerType pointerType)
+        protected internal virtual bool PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -748,7 +788,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerDown(localPosition, pointerType))
+                if (components[i].PointerDown(localPosition, pointerType, gameTime))
                 {
                     return true;
                 }
@@ -757,7 +797,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool PointerUp(Vector2 position, PointerType pointerType)
+        protected internal virtual bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -772,7 +812,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerUp(localPosition, pointerType))
+                if (components[i].PointerUp(localPosition, pointerType, gameTime))
                 {
                     return true;
                 }
@@ -781,7 +821,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool PointerMoved(Vector2 position)
+        protected internal virtual bool PointerMoved(Vector2 position, GameTime gameTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -796,7 +836,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerMoved(localPosition))
+                if (components[i].PointerMoved(localPosition, gameTime))
                 {
                     return true;
                 }
@@ -805,19 +845,34 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool KeyEvent(Keys key, KeyEventType eventType)
+        protected internal virtual bool KeyReleased(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
         {
             if (UserInteractionEnabled == false)
             {
-                return false;
+                return true;
             }
 
-            for (int i = components.Count - 1; i >= 0; i--)
+            return false;
+        }
+
+        protected internal virtual bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        {
+            if (UserInteractionEnabled == false ||
+                HasCapturedKeyboardFocus() == false)
             {
-                if (components[i].KeyEvent(key, eventType))
+                return true;
+            }
+
+            if (key == Microsoft.Xna.Framework.Input.Keys.Tab)
+            {
+                UIBaseComponent nextFocus = FindNextFocusable(this);
+                if (nextFocus != null &&
+                    nextFocus != this)
                 {
-                    return true;
+                    RelinquishFocus();
+                    nextFocus.ReceiveFocus(gameTime);
                 }
+                return true;
             }
 
             return false;
@@ -836,6 +891,66 @@ namespace AlkaronEngine.Gui
         public bool HasCapturedInput()
         {
             return UIWindowManager.CapturedComponent == this;
+        }
+
+        protected void CaptureKeyboardFocus()
+        {
+            UIWindowManager.CaptureKeyboardFocus(this);
+        }
+
+        protected void ReleaseKeyboardFocus()
+        {
+            UIWindowManager.CaptureKeyboardFocus(null);
+        }
+
+        public bool HasCapturedKeyboardFocus()
+        {
+            return UIWindowManager.CapturedKeyboardComponent == this;
+        }
+        #endregion
+
+        #region Focus
+        public virtual void ReceiveFocus(GameTime gameTime)
+        {
+            if (Focusable)
+            {
+                CaptureKeyboardFocus();
+            }
+        }
+
+        public virtual void RelinquishFocus()
+        {
+            ReleaseKeyboardFocus();
+        }
+
+        public UIBaseComponent FindNextFocusable(UIBaseComponent original)
+        {
+            UIBaseComponent foundComponent = original;
+
+            var parent = original.ParentComponent;
+            if (parent == null)
+            {
+                return null;
+            }
+
+            var nextComp = parent.GetNextChildComponent(original);
+            while (nextComp != original)
+            {
+                if (nextComp.Focusable == true)
+                {
+                    foundComponent = nextComp;
+                    break;
+                }
+
+                nextComp = parent.GetNextChildComponent(nextComp);
+            }
+
+            if (foundComponent == original)
+            {
+                return null;
+            }
+
+            return foundComponent;
         }
         #endregion
 
@@ -893,7 +1008,7 @@ namespace AlkaronEngine.Gui
 
         internal virtual void RestoreAnimateableProperties(Dictionary<string, object> backup)
         {
-            SuppressPerformLayout((comp) =>
+            BulkPerformLayout((comp) =>
             {
                 if (backup.ContainsKey("X")) { X = (float)backup["X"]; }
                 if (backup.ContainsKey("Y")) { Y = (float)backup["Y"]; }

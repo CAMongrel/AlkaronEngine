@@ -31,12 +31,15 @@ namespace AlkaronEngine.Components
                    Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
                    Matrix.CreateTranslation(Center);
 
-            proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
-            proxy.WorldMatrix = worldMatrix;
-            proxy.Material = SkeletalMesh.Material;
-            proxy.BoundingBox = new BoundingBox(Center + SkeletalMesh.BoundingBox.Min, Center + SkeletalMesh.BoundingBox.Max);
+            if (SkeletalMesh != null)
+            {
+                proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
+                proxy.WorldMatrix = worldMatrix;
+                proxy.Material = SkeletalMesh.Material;
+                proxy.BoundingBox = new BoundingBox(Center + SkeletalMesh.BoundingBox.Min, Center + SkeletalMesh.BoundingBox.Max);
 
-            resultList.Add(proxy);
+                resultList.Add(proxy);
+            }
 
             return resultList;
         }
@@ -45,7 +48,10 @@ namespace AlkaronEngine.Components
         {
             base.Update(gameTime);
 
-            proxy.TickAnimation(gameTime.ElapsedGameTime.TotalSeconds);
+            if (proxy != null)
+            {
+                proxy.TickAnimation(gameTime.ElapsedGameTime.TotalSeconds);
+            }
         }
     }
 }

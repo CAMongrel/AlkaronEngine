@@ -114,7 +114,7 @@ namespace AlkaronEngine.Graphics3D
                 {
                     continue;
                 }
-                proxies[i].Render(renderConfig, renderManager);
+                proxies[i].Render(renderConfig, renderManager, Material);
 
                 renderCount++;
                 renderedProxies++;
