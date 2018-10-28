@@ -126,6 +126,11 @@ namespace AlkaronEngine.Components
                 strafeRight = true;
                 return true;
             }
+            if (key == Microsoft.Xna.Framework.Input.Keys.LeftShift)
+            {
+                SpeedModifier *= 3.0f;
+                return true;
+            }
 
             return false;
         }
@@ -150,6 +155,11 @@ namespace AlkaronEngine.Components
             if (key == Microsoft.Xna.Framework.Input.Keys.D)
             {
                 strafeRight = false;
+                return true;
+            }
+            if (key == Microsoft.Xna.Framework.Input.Keys.LeftShift)
+            {
+                SpeedModifier /= 3.0f;
                 return true;
             }
 

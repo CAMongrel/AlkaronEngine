@@ -4,9 +4,16 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.8" />
     <PackageReference Include="MonoGame.Extended.Graphics" Version="1.1.0" />
+    <PackageReference Include="BepuPhysics" Version="2.0.0-beta" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Graphics2D\DDSImage.cs" />

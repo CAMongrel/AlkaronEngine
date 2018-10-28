@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using AlkaronEngine.Actors;
 using AlkaronEngine.Components;
 using AlkaronEngine.Controllers;
@@ -8,6 +9,9 @@ using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
+using BepuPhysics;
+using BepuPhysics.Collidables;
+using BepuPhysics.CollisionDetection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;

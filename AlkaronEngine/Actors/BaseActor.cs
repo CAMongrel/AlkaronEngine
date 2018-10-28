@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AlkaronEngine.Components;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
+using BepuPhysics.Collidables;
 using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Actors
@@ -35,6 +36,12 @@ namespace AlkaronEngine.Actors
             {
                 AttachedComponents[i].ActorAddedToSceneGraph(sceneGraph);
             }
+        }
+
+        internal virtual IShape CreatePhysicsShape()
+        {
+
+            return null; 
         }
 
         public List<BaseRenderProxy> CreateRenderProxies()
