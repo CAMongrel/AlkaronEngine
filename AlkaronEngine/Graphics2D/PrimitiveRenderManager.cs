@@ -7,23 +7,23 @@ using System.Text;
 
 namespace AlkaronEngine.Graphics2D
 {
-    public class PrimitiveRenderManager
-    {
-        private IRenderConfiguration renderConfig;
+   public class PrimitiveRenderManager
+   {
+      private IRenderConfiguration renderConfig;
 
-        public SpriteBatch SpriteBatch { get; private set; }
+      public SpriteBatch SpriteBatch { get; private set; }
 
         public SpriteFont EngineFont { get; set; }
 
-        public PrimitiveRenderManager(IRenderConfiguration setRenderConfig)
-        {
-            if (setRenderConfig == null)
-            {
-                throw new ArgumentNullException(nameof(setRenderConfig));
-            }
-            renderConfig = setRenderConfig;
+      public PrimitiveRenderManager(IRenderConfiguration setRenderConfig)
+      {
+         if (setRenderConfig == null)
+         {
+            throw new ArgumentNullException(nameof(setRenderConfig));
+         }
+         renderConfig = setRenderConfig;
 
-            SpriteBatch = new SpriteBatch(renderConfig.GraphicsDevice);
-        }
-    }
+         SpriteBatch = new SpriteBatch(renderConfig.GraphicsDevice);
+      }
+   }
 }
