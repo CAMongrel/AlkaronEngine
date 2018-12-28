@@ -32,7 +32,7 @@ namespace AlkaronEngine.Gui
         private Keys lastPressedKey;
         private double lastPressedKeyTimestamp;
 
-        public UITextField(IRenderConfiguration renderConfig, SpriteFont setFont, string setText = "")
+        public UITextField(IRenderConfiguration renderConfig, SpriteFont setFont = null, string setText = "")
             : base(renderConfig)
         {
             firstKeyRepeat = true;
@@ -41,7 +41,7 @@ namespace AlkaronEngine.Gui
             lastPressedKeyTimestamp = -1;
             cursorPos = 0;
             Text = setText;
-            Font = setFont;
+            Font = setFont ?? renderConfig.RenderManager.EngineFont;
             Padding = 10;
             renderCursor = false;
 

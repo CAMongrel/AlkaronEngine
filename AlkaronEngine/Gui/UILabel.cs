@@ -43,11 +43,11 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Constructor
-        public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont)
+        public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont = null)
            : base(renderConfig)
         {
             Text = setText;
-            Font = setFont;
+            Font = setFont ?? renderConfig.RenderManager.EngineFont;
             TextAlignHorizontal = UITextAlignHorizontal.Center;
             TextAlignVertical = UITextAlignVertical.Center;
             AutoScaleFont = false;

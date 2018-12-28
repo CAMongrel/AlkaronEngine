@@ -50,7 +50,7 @@ namespace AlkaronEngine.Scene
             var physicsShape = newActor.CreatePhysicsShape();
             if (physicsShape != null)
             {
-                physicsSimulation.Shapes.Add(physicsShape ?? new Box()); 
+                //physicsSimulation.Shapes.Add(physicsShape ?? new Box()); 
             }
 
             SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());

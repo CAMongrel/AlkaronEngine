@@ -55,6 +55,7 @@ namespace AlkaronEngine
             SceneManager = new SceneManager(GraphicsDevice);
             ScreenQuad.Initialize(SceneManager);
             Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
+            SceneManager.RenderManager.EngineFont = Content.Load<SpriteFont>("DefaultFont");
         }
 
         /// <summary>

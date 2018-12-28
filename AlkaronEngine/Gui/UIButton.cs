@@ -111,9 +111,9 @@ namespace AlkaronEngine.Gui
         #region MouseDown
         protected internal override bool PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
-            if (!base.PointerDown(position, pointerType, gameTime))
+            if (base.PointerDown(position, pointerType, gameTime))
             {
-                return false;
+                return true;
             }
 
             CaptureInput();
@@ -128,9 +128,9 @@ namespace AlkaronEngine.Gui
         #region MouseUp
         protected internal override bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
         {
-            if (!base.PointerUp(position, pointerType, gameTime))
+            if (base.PointerUp(position, pointerType, gameTime))
             {
-                return false;
+                return true;
             }
 
             ReleaseInput();
