@@ -333,11 +333,16 @@ namespace AlkaronEngine.Assets
 		/// <summary>
 		/// Saves the package
 		/// </summary>
-		public void Save()
+		public bool Save()
 		{
 			if (isTransient)
             {
-                return;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(fullFilename))
+            {
+                return false;
             }
 
             if (IsLoaded == false)
@@ -349,7 +354,7 @@ namespace AlkaronEngine.Assets
                 if (IsLoaded == false)
                 {
                     AlkaronCoreGame.Core.Log("Saving package failed");
-                    return;
+                    return false;
                 }
             }
 
@@ -396,6 +401,8 @@ namespace AlkaronEngine.Assets
 			File.Move(tempName, fullFilename);
 
 			SetNeedsSave(false);
+
+            return true;
 		}
         #endregion
 

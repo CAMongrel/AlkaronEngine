@@ -9,8 +9,6 @@ namespace AlkaronEngine.Components
 {
     public abstract class BaseComponent
     {
-        public BepuPhysics.Collidables.IShape PhysicsShape;
-
         public Vector3 Center { get; protected set; }
         public Vector3 Rotation { get; set; }
         public Vector3 Scale { get; set; }
@@ -23,7 +21,6 @@ namespace AlkaronEngine.Components
 
         public BaseComponent(Vector3 setCenter)
         {
-            PhysicsShape = null;
             Center = setCenter;
             Rotation = Vector3.Zero;
             Scale = Vector3.One;

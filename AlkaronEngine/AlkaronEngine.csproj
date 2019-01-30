@@ -13,12 +13,33 @@
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="BepuPhysics" Version="2.0.0-beta" />
+    <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Graphics2D\DDSImage.cs" />
+    <Compile Remove="Components\CollisionComponentConvexHull.cs" />
+    <Compile Remove="Components\CollisionComponentEllipsis.cs" />
+    <Compile Remove="Components\CollisionComponentSkeletonBox.cs" />
+    <Compile Remove="Components\CollisionComponentSphere.cs" />
+    <Compile Remove="Components\CollisionComponentVertices.cs" />
+    <Compile Remove="Assets\Importers\Collision\CollisionDataVertices.cs" />
+    <Compile Remove="Assets\Importers\Collision\CollisionDataSphere.cs" />
+    <Compile Remove="Assets\Importers\Collision\CollisionDataSkeletonBox.cs" />
+    <Compile Remove="Assets\Importers\Collision\CollisionDataEllipse.cs" />
+    <Compile Remove="Assets\Importers\Collision\CollisionDataConvexHull.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentConvexHull.cs" />
+    <None Include="Components\CollisionComponentEllipsis.cs" />
+    <None Include="Components\CollisionComponentSkeletonBox.cs" />
+    <None Include="Components\CollisionComponentSphere.cs" />
+    <None Include="Components\CollisionComponentVertices.cs" />
+    <None Include="Assets\Importers\Collision\CollisionDataVertices.cs" />
+    <None Include="Assets\Importers\Collision\CollisionDataSphere.cs" />
+    <None Include="Assets\Importers\Collision\CollisionDataSkeletonBox.cs" />
+    <None Include="Assets\Importers\Collision\CollisionDataEllipse.cs" />
+    <None Include="Assets\Importers\Collision\CollisionDataConvexHull.cs" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
