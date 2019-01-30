@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using AlkaronEngine.Scene;
 using AlkaronEngine.Graphics2D;
+using System.Reflection;
+using System.IO;
+using AlkaronEngine.Assets;
 
 namespace AlkaronEngine
 {
@@ -21,11 +24,24 @@ namespace AlkaronEngine
 
         public SpriteFont DefaultFont { get; protected set; }
 
+        public string ContentDirectory { get; protected set; }
+
+        public PackageManager PackageManager { get; private set; }
+
         public AlkaronCoreGame(int setPreferredBackbufferWidth = 1280,
                                int setPreferredBackbufferHeight = 720,
                                string setContentFolder = "Content")
         {
             Core = this;
+
+            ContentDirectory = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
+                "Content");
+
+            if (Directory.Exists(ContentDirectory) == false)
+            {
+                Directory.CreateDirectory(ContentDirectory); 
+            }
 
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = setPreferredBackbufferWidth;
@@ -52,7 +68,11 @@ namespace AlkaronEngine
         {
             base.Initialize();
 
+            PackageManager = new PackageManager();
+            PackageManager.BuildPackageMap();
+
             SceneManager = new SceneManager(GraphicsDevice);
+
             ScreenQuad.Initialize(SceneManager);
             Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
             SceneManager.RenderManager.EngineFont = Content.Load<SpriteFont>("DefaultFont");
@@ -66,6 +86,10 @@ namespace AlkaronEngine
             base.OnExiting(sender, args);
 
             SceneManager?.Shutdown();
+            SceneManager = null;
+
+            PackageManager?.Cleanup();
+            PackageManager = null;
         }
 
         /// <summary>
@@ -98,6 +122,14 @@ namespace AlkaronEngine
             base.Draw(gameTime);
 
             SceneManager.Draw(gameTime);
+        }
+
+        /// <summary>
+        /// Passes log output to the log handler
+        /// </summary>
+        internal void Log(string text)
+        { 
+            //
         }
     }
 }
