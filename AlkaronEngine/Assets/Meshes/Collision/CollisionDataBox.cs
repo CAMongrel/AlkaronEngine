@@ -1,5 +1,5 @@
 ﻿// Project: Hellspawn, File: CollisionDataBox.cs
-// Namespace: HellspawnEngine.Assets.Meshes.Collision, Class: CollisionDataBox
+// Namespace: AlkaronEngine.Assets.Meshes.Collision, Class: CollisionDataBox
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes\Collision, Author: Henning
 // Code lines: 91, Size of file: 2,47 KB
 // Creation date: 23.04.2010 21:22
@@ -8,6 +8,8 @@
 
 #region Using directives
 using AlkaronEngine.Actors;
+using AlkaronEngine.Components;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using System.IO;
 #endregion
@@ -81,11 +83,11 @@ namespace AlkaronEngine.Assets.Meshes.Collision
 		/// </summary>
 		/// <param name="owner">Owner</param>
 		/// <returns>Collision component</returns>
-		public override CollisionComponent CreateComponent(BaseActor owner)
+		public override CollisionComponent CreateComponent(Actor owner)
 		{
 			CollisionComponentBox res = new CollisionComponentBox(owner);
 			res.CreatePhysicsBody(width, height);
 			return res;
 		} // CreateComponent(owner)
 	} // class CollisionDataBox
-} // namespace HellspawnEngine.Assets.Meshes.Collision
+} // namespace AlkaronEngine.Assets.Meshes.Collision

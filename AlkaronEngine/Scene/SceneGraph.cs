@@ -20,12 +20,14 @@ namespace AlkaronEngine.Scene
         private BepuUtilities.Memory.BufferPool bufferPool;
 
         public BaseScene SceneOwner { get; private set; }
-        private List<BaseActor> Actors;
+        private List<BasicObject> AllObjects;
+
+        public int Count => AllObjects.Count;
 
         public SceneGraph(BaseScene sceneOwner)
         {
             SceneOwner = sceneOwner;
-            Actors = new List<BaseActor>();
+            AllObjects = new List<BasicObject>();
 
             bufferPool = new BepuUtilities.Memory.BufferPool();
             physicsSimulation = BepuPhysics.Simulation.Create(bufferPool, new SceneCallbacks());
@@ -36,24 +38,38 @@ namespace AlkaronEngine.Scene
             // Update phyics
             physicsSimulation.Timestep((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-            for (int i = 0; i < Actors.Count; i++)
+            for (int i = 0; i < AllObjects.Count; i++)
             {
-                Actors[i].Update(gameTime);
+                AllObjects[i].Tick(gameTime);
             }
         }
 
-        public void AddActor(BaseActor newActor)
+        public void AddObject(BasicObject obj)
         {
-            Actors.Add(newActor);
-            newActor.ActorAddedToSceneGraph(this);
+            AllObjects.Add(obj);
+            //obj.ActorAddedToSceneGraph(this);
 
-            var physicsShape = newActor.CreatePhysicsShape();
-            if (physicsShape != null)
+            //var physicsShape = newActor.CreatePhysicsShape();
+            //if (physicsShape != null)
             {
                 //physicsSimulation.Shapes.Add(physicsShape ?? new Box()); 
             }
 
-            SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
+            //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
+        }
+
+        public void DestroyObject(BasicObject obj)
+        {
+            AllObjects.Remove(obj);
+            //obj.ActorAddedToSceneGraph(this);
+
+            //var physicsShape = newActor.CreatePhysicsShape();
+            //if (physicsShape != null)
+            {
+                //physicsSimulation.Shapes.Add(physicsShape ?? new Box()); 
+            }
+
+            //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
         }
     }
 

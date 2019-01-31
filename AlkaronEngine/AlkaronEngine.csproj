@@ -17,29 +17,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Graphics2D\DDSImage.cs" />
+    <Compile Remove="Assets\Meshes\Collision\CollisionDataConvexHull.cs" />
+    <Compile Remove="Assets\Meshes\Collision\CollisionDataEllipse.cs" />
+    <Compile Remove="Assets\Meshes\Collision\CollisionDataSkeletonBox.cs" />
+    <Compile Remove="Assets\Meshes\Collision\CollisionDataSphere.cs" />
+    <Compile Remove="Assets\Meshes\Collision\CollisionDataVertices.cs" />
     <Compile Remove="Components\CollisionComponentConvexHull.cs" />
     <Compile Remove="Components\CollisionComponentEllipsis.cs" />
     <Compile Remove="Components\CollisionComponentSkeletonBox.cs" />
     <Compile Remove="Components\CollisionComponentSphere.cs" />
     <Compile Remove="Components\CollisionComponentVertices.cs" />
-    <Compile Remove="Assets\Importers\Collision\CollisionDataVertices.cs" />
-    <Compile Remove="Assets\Importers\Collision\CollisionDataSphere.cs" />
-    <Compile Remove="Assets\Importers\Collision\CollisionDataSkeletonBox.cs" />
-    <Compile Remove="Assets\Importers\Collision\CollisionDataEllipse.cs" />
-    <Compile Remove="Assets\Importers\Collision\CollisionDataConvexHull.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Components\CollisionComponentConvexHull.cs" />
-    <None Include="Components\CollisionComponentEllipsis.cs" />
-    <None Include="Components\CollisionComponentSkeletonBox.cs" />
-    <None Include="Components\CollisionComponentSphere.cs" />
-    <None Include="Components\CollisionComponentVertices.cs" />
-    <None Include="Assets\Importers\Collision\CollisionDataVertices.cs" />
-    <None Include="Assets\Importers\Collision\CollisionDataSphere.cs" />
-    <None Include="Assets\Importers\Collision\CollisionDataSkeletonBox.cs" />
-    <None Include="Assets\Importers\Collision\CollisionDataEllipse.cs" />
-    <None Include="Assets\Importers\Collision\CollisionDataConvexHull.cs" />
+    <None Include="Assets\Meshes\Collision\CollisionDataConvexHull.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Assets\Meshes\Collision\CollisionDataEllipse.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Assets\Meshes\Collision\CollisionDataSkeletonBox.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Assets\Meshes\Collision\CollisionDataSphere.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Assets\Meshes\Collision\CollisionDataVertices.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentConvexHull.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentEllipsis.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentSkeletonBox.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentSphere.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Components\CollisionComponentVertices.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

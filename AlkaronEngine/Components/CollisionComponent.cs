@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using AlkaronEngine.Actors;
 using BepuPhysics.Collidables;
+using AlkaronEngine.Scene;
 
 namespace AlkaronEngine.Components
 {
@@ -20,8 +21,8 @@ namespace AlkaronEngine.Components
 	{
         public IShape PhysicsShape { get; protected set; }
 
-        /*#region Members
-		protected Body physicsBody;
+        #region Members
+        /*protected Body physicsBody;
 		/// <summary>
 		/// Physics body object. Handles forces.
 		/// </summary>
@@ -79,9 +80,9 @@ namespace AlkaronEngine.Components
 				collisionArea = value;
 				ApplyCollisionArea();
 			}
-		}
+		}*/
 
-		protected CollisionType collisionType;
+        protected CollisionType collisionType;
 		public CollisionType CollisionType
 		{
 			get
@@ -89,19 +90,15 @@ namespace AlkaronEngine.Components
 				return collisionType;
 			}
 		}
-		#endregion*/
+		#endregion
 
         protected CollisionComponent()
 		{
 		}
 
-		public CollisionComponent(BaseActor setOwner)
+		public CollisionComponent(Actor setOwner)
 			: base(setOwner)
 		{
-			if (setOwner == null)
-				throw new ArgumentNullException(nameof(setOwner));
-
-			Owner = setOwner;
 		}
 
 		/*public override void Destroy()

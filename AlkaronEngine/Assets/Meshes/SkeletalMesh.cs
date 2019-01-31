@@ -1,5 +1,5 @@
-// Project: Hellspawn, File: SkeletalMesh.cs
-// Namespace: HellspawnEngine.Assets.Meshes, Class: SkeletalMesh
+﻿// Project: Hellspawn, File: SkeletalMesh.cs
+// Namespace: AlkaronEngine.Assets.Meshes, Class: SkeletalMesh
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes, Author: Henning
 // Code lines: 1341, Size of file: 36,92 KB
 // Creation date: 23.04.2010 21:22
@@ -7,10 +7,7 @@
 // Generated with Commenter by abi.exDream.com
 
 #region Using directives
-using HellspawnEngine.Assets.Materials;
-using HellspawnEngine.Assets.Meshes.Collision;
-using HellspawnEngine.Graphics;
-using HellspawnEngine.Scenes;
+using AlkaronEngine.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -461,14 +458,10 @@ namespace AlkaronEngine.Assets.Meshes
 			BinaryReader reader = new BinaryReader(stream);
 			{
 				string magic = reader.ReadString();
-				assetVersion = reader.ReadInt32();
+				AssetVersion = reader.ReadInt32();
 
 				// Skip the original filename on the Xbox, remember on PC
-#if (WINDOWS)
 				OriginalFilename = reader.ReadString();
-#else
-				reader.ReadString();
-#endif
 
 				// Read mesh data
 				numOfVertices = reader.ReadInt32();
@@ -498,14 +491,14 @@ namespace AlkaronEngine.Assets.Meshes
 					objectIndices[i] = reader.ReadInt32();
 				} // for (int)
 
-				if (assetVersion == 1)
+				if (AssetVersion == 1)
 				{
 					boundingSphere = new BoundingSphere(
 						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
 							reader.ReadSingle()),
 						reader.ReadSingle());
 				} // if (assetVersion)
-				else if (assetVersion == 2 || assetVersion == 3)
+				else if (AssetVersion == 2 || assetVersion == 3)
 				{
 					CollisionType collisionType = (CollisionType)reader.ReadInt32();
 					int vertCount = reader.ReadInt32();
@@ -521,7 +514,7 @@ namespace AlkaronEngine.Assets.Meshes
 					// Read collision data
 					collisionData = ReadCollisionData(reader);
 
-					if (assetVersion >= 8)
+					if (AssetVersion >= 8)
 					{
 						// Read custom collisions
 						int numColl = reader.ReadInt32();
@@ -531,7 +524,7 @@ namespace AlkaronEngine.Assets.Meshes
 						} // for (int)
 					} // if (assetVersion)
 
-					if (assetVersion >= 5)
+					if (AssetVersion >= 5)
 					{
 						// Read animation data
 						runtimeAnimations.Clear();
@@ -548,10 +541,10 @@ namespace AlkaronEngine.Assets.Meshes
 					} // if (assetVersion)
 				} // else
 
-				if (assetVersion < 4)
+				if (AssetVersion < 4)
 					CreateRuntimeCollisionData(CollisionType);
 
-				if (assetVersion < 7)
+				if (AssetVersion < 7)
 				{
 					string semantic = reader.ReadString();
 					string defaultDiffuseTexture = reader.ReadString();
@@ -813,7 +806,7 @@ namespace AlkaronEngine.Assets.Meshes
 			#endregion
 
 			#region Write object matrix
-			HellspawnEngine.Assets.Importers.AssetImporterMesh.
+			AlkaronEngine.Assets.Importers.AssetImporterMesh.
 				WriteMatrixHelper(writer, objectMatrix);
 			#endregion
 
@@ -830,14 +823,14 @@ namespace AlkaronEngine.Assets.Meshes
 				{
 					WriteBoneRef(bones[i].children[j], writer);
 				} // for (int)
-				HellspawnEngine.Assets.Importers.AssetImporterMesh.
+				AlkaronEngine.Assets.Importers.AssetImporterMesh.
 					WriteMatrixHelper(writer, bones[i].initialMatrix);
-				HellspawnEngine.Assets.Importers.AssetImporterMesh.
+				AlkaronEngine.Assets.Importers.AssetImporterMesh.
 					WriteMatrixHelper(writer, bones[i].invBoneSkinMatrix);
 				writer.Write(bones[i].animationMatrices.Length);
 				for (int j = 0; j < bones[i].animationMatrices.Length; j++)
 				{
-					HellspawnEngine.Assets.Importers.AssetImporterMesh.
+					AlkaronEngine.Assets.Importers.AssetImporterMesh.
 						WriteMatrixHelper(writer, bones[i].animationMatrices[j]);
 				} // for (int)
 			} // for (int)

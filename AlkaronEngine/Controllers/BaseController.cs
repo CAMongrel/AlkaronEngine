@@ -1,6 +1,5 @@
-﻿using System;
-using AlkaronEngine.Actors;
-using AlkaronEngine.Input;
+﻿using AlkaronEngine.Input;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -8,13 +7,13 @@ namespace AlkaronEngine.Controllers
 {
    public class BaseController
    {
-      public BaseActor PossessedActor { get; private set; }
+      public Actor PossessedActor { get; private set; }
 
       public BaseController()
       {
       }
 
-      public void Possess(BaseActor actor)
+      public void Possess(Actor actor)
       {
          PossessedActor = actor;
       }

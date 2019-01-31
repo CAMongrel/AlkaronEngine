@@ -27,6 +27,7 @@ namespace AlkaronEngine
         public string ContentDirectory { get; protected set; }
 
         public PackageManager PackageManager { get; private set; }
+        public AssetManager AssetManager { get; private set; }
 
         public AlkaronCoreGame(int setPreferredBackbufferWidth = 1280,
                                int setPreferredBackbufferHeight = 720,
@@ -67,6 +68,8 @@ namespace AlkaronEngine
         protected override void Initialize()
         {
             base.Initialize();
+
+            AssetManager = new AssetManager();
 
             PackageManager = new PackageManager();
             PackageManager.BuildPackageMap();

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
-using FarseerGames.FarseerPhysics.Collisions;
-using FarseerGames.FarseerPhysics.Factories;
 
 namespace AlkaronEngine.Components
 {

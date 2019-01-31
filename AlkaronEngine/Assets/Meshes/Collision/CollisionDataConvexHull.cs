@@ -1,5 +1,5 @@
 ﻿// Project: Hellspawn, File: CollisionDataConvexHull.cs
-// Namespace: HellspawnEngine.Assets.Meshes.Collision, Class: CollisionDataConvexHull
+// Namespace: AlkaronEngine.Assets.Meshes.Collision, Class: CollisionDataConvexHull
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes\Collision, Author: Henning
 // Code lines: 217, Size of file: 6,63 KB
 // Creation date: 23.04.2010 21:22
@@ -7,7 +7,7 @@
 // Generated with Commenter by abi.exDream.com
 
 #region Using directives
-using HellspawnEngine.Scenes;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -308,4 +308,4 @@ namespace AlkaronEngine.Assets.Meshes.Collision
 		}
 		#endregion // CreateComponent(owner)
 	} // class CollisionDataConvexHull
-} // namespace HellspawnEngine.Assets.Meshes.Collision
+} // namespace AlkaronEngine.Assets.Meshes.Collision

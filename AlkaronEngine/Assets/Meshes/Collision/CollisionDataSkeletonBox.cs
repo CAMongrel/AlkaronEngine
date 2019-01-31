@@ -1,5 +1,5 @@
 ﻿// Project: Hellspawn, File: CollisionDataSkeletonBox.cs
-// Namespace: HellspawnEngine.Assets.Meshes.Collision, Class: CollisionDataSkeletonBox
+// Namespace: AlkaronEngine.Assets.Meshes.Collision, Class: CollisionDataSkeletonBox
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes\Collision, Author: Henning
 // Code lines: 73, Size of file: 2,16 KB
 // Creation date: 23.04.2010 21:22
@@ -7,7 +7,7 @@
 // Generated with Commenter by abi.exDream.com
 
 #region Using directives
-using HellspawnEngine.Scenes;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -72,4 +72,4 @@ namespace AlkaronEngine.Assets.Meshes.Collision
 			return new CollisionComponentSkeletonBox(owner);
 		} // CreateComponent(owner)
 	} // class CollisionDataSkeletonBox
-} // namespace HellspawnEngine.Assets.Meshes.Collision
+} // namespace AlkaronEngine.Assets.Meshes.Collision

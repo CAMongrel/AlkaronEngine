@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlkaronEngine.Actors;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
@@ -7,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Components
 {
-    public abstract class BaseComponent
+    public abstract class BaseComponent : ILoadableObject
     {
         public Vector3 Center { get; protected set; }
         public Vector3 Rotation { get; set; }
@@ -19,9 +20,17 @@ namespace AlkaronEngine.Components
 
         public bool IsDirty { get; protected set; }
 
-        public BaseComponent(Vector3 setCenter)
+        public Actor OwnerActor { get; private set; }
+
+        protected BaseComponent()
+        { 
+        }
+
+        public BaseComponent(Actor setOwner)
         {
-            Center = setCenter;
+            OwnerActor = setOwner;
+
+            Center = Vector3.Zero;
             Rotation = Vector3.Zero;
             Scale = Vector3.One;
             CanBeRendered = false;
@@ -47,6 +56,11 @@ namespace AlkaronEngine.Components
 
         public virtual void ActorAddedToSceneGraph(SceneGraph owner)
         {
+        }
+
+        public virtual void PostLoad()
+        {
+            //
         }
     }
 }

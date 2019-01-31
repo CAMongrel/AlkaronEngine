@@ -1,5 +1,5 @@
 ﻿// Project: Hellspawn, File: CollisionDataSphere.cs
-// Namespace: HellspawnEngine.Assets.Meshes.Collision, Class: CollisionDataSphere
+// Namespace: AlkaronEngine.Assets.Meshes.Collision, Class: CollisionDataSphere
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes\Collision, Author: Henning
 // Code lines: 83, Size of file: 2,37 KB
 // Creation date: 23.04.2010 21:22
@@ -7,7 +7,7 @@
 // Generated with Commenter by abi.exDream.com
 
 #region Using directives
-using HellspawnEngine.Scenes;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -82,4 +82,4 @@ namespace AlkaronEngine.Assets.Meshes.Collision
 			return res;
 		} // CreateComponent(owner)
 	} // class CollisionDataSphere
-} // namespace HellspawnEngine.Assets.Meshes.Collision
+} // namespace AlkaronEngine.Assets.Meshes.Collision

@@ -1,19 +1,20 @@
 ﻿using System;
 using AlkaronEngine.Components;
 using AlkaronEngine.Input;
+using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace AlkaronEngine.Actors
 {
-    public class CameraActor : BaseActor
+    public class CameraActor : Actor
     {
         public CameraComponent CameraComponent { get; private set; }
 
         public CameraActor(CameraComponent setCameraComponent)
         {
             CameraComponent = setCameraComponent;
-            AttachedComponents.Add(CameraComponent);
+            // TODO!!! AttachedComponents.Add(CameraComponent);
         }
 
         public virtual bool PointerDown(Vector2 position, PointerType pointerType)
@@ -44,6 +45,12 @@ namespace AlkaronEngine.Actors
         public virtual bool KeyReleased(Keys key)
         {
             return CameraComponent?.KeyReleased(key) ?? false;
+        }
+
+        public override BasicObject Clone()
+        {
+            // TODO!!!
+            return new CameraActor();
         }
     }
 }

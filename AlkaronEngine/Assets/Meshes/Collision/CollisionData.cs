@@ -1,5 +1,5 @@
 ﻿// Project: Hellspawn, File: CollisionData.cs
-// Namespace: HellspawnEngine.Assets.Meshes.Collision, Class: CollisionData
+// Namespace: AlkaronEngine.Assets.Meshes.Collision, Class: CollisionData
 // Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes\Collision, Author: Henning
 // Code lines: 31, Size of file: 956 Bytes
 // Creation date: 23.04.2010 21:22
@@ -8,7 +8,8 @@
 
 #region Using directives
 using System.IO;
-using AlkaronEngine.Actors;
+using AlkaronEngine.Components;
+using AlkaronEngine.Scene;
 #endregion
 
 namespace AlkaronEngine.Assets.Meshes.Collision
@@ -35,6 +36,6 @@ namespace AlkaronEngine.Assets.Meshes.Collision
 		/// </summary>
 		/// <param name="owner">Owner</param>
 		/// <returns>Collision component</returns>
-		public abstract CollisionComponent CreateComponent(BaseActor owner);
+		public abstract CollisionComponent CreateComponent(Actor owner);
 	} // class CollisionData
-} // namespace HellspawnEngine.Assets.Meshes.Collision
+} // namespace AlkaronEngine.Assets.Meshes.Collision
