@@ -36,6 +36,7 @@ namespace AlkaronEngine.Graphics3D
         private int frameCounter;
         private long frameCalcStart;
 
+        // Public stats
         public float CurrentFPS { get; private set; }
         public int RenderedComponentsLastFrame { get; private set; }
 
@@ -173,10 +174,11 @@ namespace AlkaronEngine.Graphics3D
             }
         }
 
-        public void AppendRenderProxies(List<BaseRenderProxy> list)
+        public void SetRenderProxies(List<BaseRenderProxy> list)
         {
             lock (lockObj)
             {
+                renderProxyStagingArea.Clear();
                 renderProxyStagingArea.AddRange(list);
             }
         }
@@ -199,7 +201,7 @@ namespace AlkaronEngine.Graphics3D
 
             // Perform rendering
             Performance.Push("RenderManager.Draw (Clear)");
-            renderConfig.GraphicsDevice.Clear(Color.Black);
+            Clear(Color.CornflowerBlue);
             Performance.Pop();
 
             Performance.Push("RenderManager.Draw (DrawRenderPasses)");
@@ -309,12 +311,12 @@ namespace AlkaronEngine.Graphics3D
             RenderedComponentsLastFrame = componentCount;
         }
 
-        public void ClearRenderPasses()
+        private void ClearRenderPasses()
         {
             renderPasses.Clear();
         }
 
-        public RenderPass CreateAndAddRenderPassForMaterial(Material material)
+        private RenderPass CreateAndAddRenderPassForMaterial(Material material)
         {
             RenderPass renderPass = new RenderPass(material);
             renderPasses.Add(renderPass);
@@ -362,6 +364,14 @@ namespace AlkaronEngine.Graphics3D
             renderProxyStagingArea.Clear();
         }
 
+        private void ClearRenderPassses()
+        {
+            for (int i = 0; i < renderPasses.Count; i++)
+            {
+                renderPasses[i].Clear();
+            }
+        }
+
         private void ApplyPreFrame(double deltaTime)
         {
             lock (lockObj)
@@ -372,6 +382,7 @@ namespace AlkaronEngine.Graphics3D
                     nextViewTarget = null;
                 }
 
+                ClearRenderPassses();
                 ApplyRenderProxyStagingArea();
             }
 

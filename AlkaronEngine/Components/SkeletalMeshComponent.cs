@@ -8,32 +8,37 @@ namespace AlkaronEngine.Components
 {
     public class SkeletalMeshComponent : BaseComponent
     {
-        int frameIndex;
-        double lastFrameTime;
+        //private int frameIndex;
+        //private double lastFrameTime;
 
-        public SkeletalMesh SkeletalMesh { get; set; }
+        public SkeletalMesh SkeletalMesh { get; private set; }
 
         // Reference to the rendering proxy
-        private SkeletalMeshRenderProxy proxy;
+        //private SkeletalMeshRenderProxy proxy;
 
         public SkeletalMeshComponent(Vector3 setCenter)
            : base(setCenter)
         {
-            frameIndex = 0;
+            //frameIndex = 0;
             CanBeRendered = true;
         }
 
-        public override List<BaseRenderProxy> CreateRenderProxies()
+        public void SetSkeletalMesh(SkeletalMesh skeletalMesh)
         {
-            List<BaseRenderProxy> resultList = base.CreateRenderProxies();
+            CreateRenderProxies();
+        }
 
-            Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
-                   Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
-                   Matrix.CreateTranslation(Center);
+        private void CreateRenderProxies()
+        {
+            List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
             if (SkeletalMesh != null)
             {
-                proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
+                Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+                       Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
+                       Matrix.CreateTranslation(Center);
+
+                SkeletalMeshRenderProxy proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = SkeletalMesh.Material;
                 proxy.BoundingBox = new BoundingBox(Center + SkeletalMesh.BoundingBox.Min, Center + SkeletalMesh.BoundingBox.Max);
@@ -41,17 +46,17 @@ namespace AlkaronEngine.Components
                 resultList.Add(proxy);
             }
 
-            return resultList;
+            renderProxies = resultList.ToArray();
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            if (proxy != null)
+            /*if (proxy != null)
             {
                 proxy.TickAnimation(gameTime.ElapsedGameTime.TotalSeconds);
-            }
+            }*/
         }
     }
 }

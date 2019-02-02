@@ -40,10 +40,18 @@ namespace AlkaronEngine.Scene
             {
                 Actors[i].Update(gameTime);
             }
+
+            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());
         }
 
         public void AddActor(BaseActor newActor)
         {
+            if (Actors.Contains(newActor))
+            {
+                // 
+                return;
+            }
+
             Actors.Add(newActor);
             newActor.ActorAddedToSceneGraph(this);
 
@@ -53,7 +61,38 @@ namespace AlkaronEngine.Scene
                 //physicsSimulation.Shapes.Add(physicsShape ?? new Box()); 
             }
 
-            SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
+            //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
+        }
+
+        public void RemoveActor(BaseActor remActor)
+        {
+            if (Actors.Contains(remActor) == false)
+            {
+                // 
+                return;
+            }
+
+            Actors.Remove(remActor);
+
+            remActor.ActorRemovedFromSceneGraph(this);
+
+            // TODO: Handle physics
+
+            
+            //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
+        }
+
+        public List<BaseRenderProxy> GetSceneRenderProxies()
+        {
+            List<BaseRenderProxy> result = new List<BaseRenderProxy>();
+
+            for (int i = 0; i < Actors.Count; i++)
+            {
+                var list = Actors[i].GetRenderProxies();
+                result.AddRange(list);
+            }
+
+            return result;
         }
     }
 

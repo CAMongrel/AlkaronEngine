@@ -9,171 +9,147 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Graphics
 {
-	/// <summary>
-	/// TangentVertex, custom format with postition, normal, tangent and one set
-	/// of uv coordinates.
-	[StructLayout(LayoutKind.Sequential)]
-	public struct TangentVertex
-	{
-		#region Variables
-		/// <summary>
-		/// Position
-		/// </summary>
-		public Vector3 pos;
-		/// <summary>
-		/// Texture coordinates
-		/// </summary>
-		public Vector2 uv;
-		/// <summary>
-		/// Tangent
-		/// </summary>
-		public Vector3 normal;
-		/// <summary>
-		/// Normal
-		/// </summary>
-		public Vector3 tangent;
-		/// <summary>
-		/// Tangent
-		/// </summary>
-		public Vector3 bitangent;
-		#endregion
+    /// <summary>
+    /// TangentVertex, custom format with postition, normal, tangent and one set
+    /// of uv coordinates.
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TangentVertex
+    {
+        #region Variables
+        /// <summary>
+        /// Position
+        /// </summary>
+        public Vector3 Position;
+        /// <summary>
+        /// Texture coordinates
+        /// </summary>
+        public Vector2 TexCoord;
+        /// <summary>
+        /// Tangent
+        /// </summary>
+        public Vector3 Normal;
+        /// <summary>
+        /// Normal
+        /// </summary>
+        public Vector3 Tangent;
+        /// <summary>
+        /// Tangent
+        /// </summary>
+        public Vector3 BiTangent;
+        #endregion
 
-		#region Properties
-		/// <summary>
-		/// Stride size, in XNA called SizeInBytes. I'm just conforming with that.
-		/// </summary>
-		public static int SizeInBytes
-		{
-			get
-			{
-				// 4 bytes per float:
-				// 3 floats pos, 2 floats uv, 3 floats normal, 3 float tangent and 3 float bitangent
-				return 4 * (3 + 2 + 3 + 3 + 3);
-			} // get
-		} // StrideSize
+        #region Properties
+        /// <summary>
+        /// Stride size, in XNA called SizeInBytes. I'm just conforming with that.
+        /// </summary>
+        public static int SizeInBytes
+        {
+            get
+            {
+                // 4 bytes per float:
+                // 3 floats pos, 2 floats uv, 3 floats normal, 3 float tangent and 3 float bitangent
+                return 4 * (3 + 2 + 3 + 3 + 3);
+            } // get
+        } // StrideSize
+        #endregion
 
-		/// <summary>
-		/// U texture coordinate
-		/// </summary>
-		/// <returns>Float</returns>
-		public float U
-		{
-			get
-			{
-				return uv.X;
-			} // get
-		} // U
+        #region Methods
+        #region Constructor
+        /// <summary>
+        /// Create tangent vertex
+        /// </summary>
+        /// <param name="setPos">Set position</param>
+        /// <param name="setU">Set u texture coordinate</param>
+        /// <param name="setV">Set v texture coordinate</param>
+        /// <param name="setNormal">Set normal</param>
+        /// <param name="setTangent">Set tangent</param>
+        public TangentVertex(
+            Vector3 setPos,
+            float setU, float setV,
+            Vector3 setNormal,
+            Vector3 setTangent,
+            Vector3 setBitangent)
+        {
+            Position = setPos;
+            TexCoord = new Vector2(setU, setV);
+            Normal = setNormal;
+            Tangent = setTangent;
+            BiTangent = setBitangent;
+        } // TangentVertex(setPos, setU, setV)
 
-		/// <summary>
-		/// V texture coordinate
-		/// </summary>
-		/// <returns>Float</returns>
-		public float V
-		{
-			get
-			{
-				return uv.Y;
-			} // get
-		} // V
-		#endregion
+        /// <summary>
+        /// Create tangent vertex
+        /// </summary>
+        /// <param name="setPos">Set position</param>
+        /// <param name="setUv">Set uv texture coordinates</param>
+        /// <param name="setNormal">Set normal</param>
+        /// <param name="setTangent">Set tangent</param>
+        public TangentVertex(
+            Vector3 setPos,
+            Vector2 setUv,
+            Vector3 setNormal,
+            Vector3 setTangent,
+            Vector3 setBitangent)
+        {
+            Position = setPos;
+            TexCoord = setUv;
+            Normal = setNormal;
+            Tangent = setTangent;
+            BiTangent = setBitangent;
+        } // TangentVertex(setPos, setUv, setNormal)
+        #endregion
 
-		#region Methods
-		#region Constructor
-		/// <summary>
-		/// Create tangent vertex
-		/// </summary>
-		/// <param name="setPos">Set position</param>
-		/// <param name="setU">Set u texture coordinate</param>
-		/// <param name="setV">Set v texture coordinate</param>
-		/// <param name="setNormal">Set normal</param>
-		/// <param name="setTangent">Set tangent</param>
-		public TangentVertex(
-			Vector3 setPos,
-			float setU, float setV,
-			Vector3 setNormal,
-			Vector3 setTangent,
-			Vector3 setBitangent)
-		{
-			pos = setPos;
-			uv = new Vector2(setU, setV);
-			normal = setNormal;
-			tangent = setTangent;
-			bitangent = setBitangent;
-		} // TangentVertex(setPos, setU, setV)
+        #region To string
+        /// <summary>
+        /// To string
+        /// </summary>
+        public override string ToString()
+        {
+            return "TangentVertex(pos=" + Position + ", " +
+                "u=" + TexCoord.X + ", " +
+                "v=" + TexCoord.Y + ", " +
+                "normal=" + Normal + ", " +
+                "tangent=" + Tangent + ", " +
+                "bitangent=" + BiTangent + ")";
+        } // ToString()
+        #endregion
 
-		/// <summary>
-		/// Create tangent vertex
-		/// </summary>
-		/// <param name="setPos">Set position</param>
-		/// <param name="setUv">Set uv texture coordinates</param>
-		/// <param name="setNormal">Set normal</param>
-		/// <param name="setTangent">Set tangent</param>
-		public TangentVertex(
-			Vector3 setPos,
-			Vector2 setUv,
-			Vector3 setNormal,
-			Vector3 setTangent,
-			Vector3 setBitangent)
-		{
-			pos = setPos;
-			uv = setUv;
-			normal = setNormal;
-			tangent = setTangent;
-			bitangent = setBitangent;
-		} // TangentVertex(setPos, setUv, setNormal)
-		#endregion
+        #region Generate vertex declaration
+        /// <summary>
+        /// Vertex elements for Mesh.Clone
+        /// </summary>
+        public static readonly VertexDeclaration VertexDecl =
+            GenerateVertexDeclaration();
 
-		#region To string
-		/// <summary>
-		/// To string
-		/// </summary>
-		public override string ToString()
-		{
-			return "TangentVertex(pos=" + pos + ", " +
-				"u=" + uv.X + ", " +
-				"v=" + uv.Y + ", " +
-				"normal=" + normal + ", " +
-				"tangent=" + tangent + ", " +
-				"bitangent=" + bitangent + ")";
-		} // ToString()
-		#endregion
+        /// <summary>
+        /// Generate vertex declaration
+        /// </summary>
+        private static VertexDeclaration GenerateVertexDeclaration()
+        {
+            VertexElement[] decl = new VertexElement[]
+                {
+                    new VertexElement(0, VertexElementFormat.Vector3,
+                                            VertexElementUsage.Position, 0),
 
-		#region Generate vertex declaration
-		/// <summary>
-		/// Vertex elements for Mesh.Clone
-		/// </summary>
-		public static readonly VertexDeclaration VertexDecl =
-			GenerateVertexDeclaration();
+                    new VertexElement(12, VertexElementFormat.Vector2,
+                                             VertexElementUsage.TextureCoordinate, 0),
 
-		/// <summary>
-		/// Generate vertex declaration
-		/// </summary>
-		private static VertexDeclaration GenerateVertexDeclaration()
-		{
-			VertexElement[] decl = new VertexElement[]
-				{
-					new VertexElement(0, VertexElementFormat.Vector3, 
-											VertexElementUsage.Position, 0),
-			                            
-					new VertexElement(12, VertexElementFormat.Vector2,
-											 VertexElementUsage.TextureCoordinate, 0),
-				                            
-					new VertexElement(20, VertexElementFormat.Vector3,
-											 VertexElementUsage.Normal, 0),
-				                            
-					new VertexElement(32, VertexElementFormat.Vector3,
-											 VertexElementUsage.Tangent, 0),
+                    new VertexElement(20, VertexElementFormat.Vector3,
+                                             VertexElementUsage.Normal, 0),
 
-					new VertexElement(44, VertexElementFormat.Vector3,
-											 VertexElementUsage.Binormal, 1)
-				};
+                    new VertexElement(32, VertexElementFormat.Vector3,
+                                             VertexElementUsage.Tangent, 0),
 
-			return new VertexDeclaration(decl);
-		} // GenerateVertexElements()
-		#endregion
+                    new VertexElement(44, VertexElementFormat.Vector3,
+                                             VertexElementUsage.Binormal, 1)
+                };
 
-		#region Is declaration tangent vertex declaration
-		/*
+            return new VertexDeclaration(decl);
+        } // GenerateVertexElements()
+        #endregion
+
+        #region Is declaration tangent vertex declaration
+        /*
 		/// <summary>
 		/// Returns true if declaration is tangent vertex declaration.
 		/// </summary>
@@ -188,80 +164,80 @@ namespace AlkaronEngine.Graphics
 				declaration[3].SemanticName == "texcoord";
 		} // IsTangentVertexDeclaration(declaration)
 		*/
-		#endregion
-		#endregion
-	}
+        #endregion
+        #endregion
+    }
 
-	/// <summary>
-	/// Index vertex keeps for each element an index, can be used to identify
-	/// vertices without float comparisons.
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct IndexVertex : IComparable<IndexVertex>
-	{
-		#region Variables
-		public int positionIndex;
-		public int normalIndex;
-		public int tangentIndex;
+    /// <summary>
+    /// Index vertex keeps for each element an index, can be used to identify
+    /// vertices without float comparisons.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct IndexVertex : IComparable<IndexVertex>
+    {
+        #region Variables
+        public int positionIndex;
+        public int normalIndex;
+        public int tangentIndex;
         public int bitangentIndex;
-		public int texCoordIndex;
-		#endregion
+        public int texCoordIndex;
+        #endregion
 
-		#region Constructor
-		/// <summary>
-		/// Construct a vertex
-		/// </summary>
-		/// <param name="setPositionIndex"></param>
-		/// <param name="setNormalIndex"></param>
-		/// <param name="setTangentIndex"></param>
-		/// <param name="setTexCoordIndex"></param>
-		public IndexVertex(int setPositionIndex, int setNormalIndex,
-			int setTangentIndex, int setBitangentIndex, int setTexCoordIndex)
-		{
-			positionIndex = setPositionIndex;
-			normalIndex = setNormalIndex;
-			tangentIndex = setTangentIndex;
-			bitangentIndex = setBitangentIndex;
-			texCoordIndex = setTexCoordIndex;
-		}
-		#endregion
+        #region Constructor
+        /// <summary>
+        /// Construct a vertex
+        /// </summary>
+        /// <param name="setPositionIndex"></param>
+        /// <param name="setNormalIndex"></param>
+        /// <param name="setTangentIndex"></param>
+        /// <param name="setTexCoordIndex"></param>
+        public IndexVertex(int setPositionIndex, int setNormalIndex,
+            int setTangentIndex, int setBitangentIndex, int setTexCoordIndex)
+        {
+            positionIndex = setPositionIndex;
+            normalIndex = setNormalIndex;
+            tangentIndex = setTangentIndex;
+            bitangentIndex = setBitangentIndex;
+            texCoordIndex = setTexCoordIndex;
+        }
+        #endregion
 
-		#region Methods
-		public static bool operator ==(IndexVertex v1, IndexVertex v2)
-		{
-			return v1.positionIndex == v2.positionIndex &&
-				v1.normalIndex == v2.normalIndex &&
-				//v1.tangentIndex == v2.tangentIndex &&
-				v1.texCoordIndex == v2.texCoordIndex;
-		}
+        #region Methods
+        public static bool operator ==(IndexVertex v1, IndexVertex v2)
+        {
+            return v1.positionIndex == v2.positionIndex &&
+                v1.normalIndex == v2.normalIndex &&
+                //v1.tangentIndex == v2.tangentIndex &&
+                v1.texCoordIndex == v2.texCoordIndex;
+        }
 
-		public static bool operator !=(IndexVertex v1, IndexVertex v2)
-		{
-			return !(v1 == v2);
-		}
+        public static bool operator !=(IndexVertex v1, IndexVertex v2)
+        {
+            return !(v1 == v2);
+        }
 
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
-		public override bool Equals(object obj)
-		{
-			return base.Equals(obj);
-		}
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
 
-		public int CompareTo(IndexVertex other)
-		{
-			if (positionIndex != other.positionIndex)
-				return positionIndex < other.positionIndex ? -1 : 1;
-			if (normalIndex != other.normalIndex)
-				return normalIndex < other.normalIndex ? -1 : 1;
-			//if(tangentIndex != other.tangentIndex)
-			//  return tangentIndex < other.tangentIndex ? -1 : 1;
-			if (texCoordIndex != other.texCoordIndex)
-				return texCoordIndex < other.texCoordIndex ? -1 : 1;
-			return 0;
-		}
-		#endregion
-	}
+        public int CompareTo(IndexVertex other)
+        {
+            if (positionIndex != other.positionIndex)
+                return positionIndex < other.positionIndex ? -1 : 1;
+            if (normalIndex != other.normalIndex)
+                return normalIndex < other.normalIndex ? -1 : 1;
+            //if(tangentIndex != other.tangentIndex)
+            //  return tangentIndex < other.tangentIndex ? -1 : 1;
+            if (texCoordIndex != other.texCoordIndex)
+                return texCoordIndex < other.texCoordIndex ? -1 : 1;
+            return 0;
+        }
+        #endregion
+    }
 } // namespace WornEdges.Engine.Model

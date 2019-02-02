@@ -12,7 +12,7 @@ namespace AlkaronEngine.Actors
         {
             SkeletalMeshComponent = new SkeletalMeshComponent(Vector3.Zero);
 
-            AttachedComponents.Add(SkeletalMeshComponent);
+            AttachComponent(SkeletalMeshComponent);
         }
     }
 }

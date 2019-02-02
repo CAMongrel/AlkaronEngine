@@ -1,4 +1,5 @@
 ﻿using System;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Util;
@@ -20,33 +21,29 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 
         public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager, Material materialToUse)
         {
-            if (StaticMesh.IsCollisionOnly)
+            /*if (StaticMesh.IsCollisionOnly)
             {
                 return;
-            }
+            }*/
 
             base.Render(renderConfig, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-
             materialToUse.Effect.Parameters["WorldViewProj"].SetValue(WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix);
             materialToUse.Effect.CurrentTechnique.Passes[0].Apply();
             Performance.EndAppendAggreate("Setup");
 
-            if (StaticMesh.DiffuseTexture != null)
+            /*if (StaticMesh.DiffuseTexture != null)
             {
                 Performance.StartAppendAggreate("Setup Texture");
                 materialToUse.Effect.Parameters["Texture"].SetValue(StaticMesh.DiffuseTexture);
                 materialToUse.Effect.CurrentTechnique.Passes[0].Apply();
                 Performance.EndAppendAggreate("Setup Texture");
-            }
+            }*/
 
-            Performance.StartAppendAggreate("SetVertexBuffer");
-            renderConfig.GraphicsDevice.SetVertexBuffer(StaticMesh.VertexBuffer);
-            Performance.EndAppendAggreate("SetVertexBuffer");
-            Performance.StartAppendAggreate("DrawPrimitives");
-            renderConfig.GraphicsDevice.DrawPrimitives(StaticMesh.PrimitiveType, 0, StaticMesh.PrimitiveCount);
-            Performance.EndAppendAggreate("DrawPrimitives");
+            Performance.StartAppendAggreate("Render Mesh");
+            StaticMesh.Render();
+            Performance.EndAppendAggreate("Render Mesh");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Graphics3D.RenderProxies;
@@ -25,13 +26,15 @@ namespace AlkaronEngine.Components
 
             if (IsDirty)
             {
+                CreateRenderProxies();
+
                 IsDirty = false;
             }
         }
 
-        public override List<BaseRenderProxy> CreateRenderProxies()
+        private void CreateRenderProxies()
         {
-            List<BaseRenderProxy> resultList = base.CreateRenderProxies();
+            List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
             Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
                    Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
@@ -44,11 +47,11 @@ namespace AlkaronEngine.Components
                 StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = mesh.Material;
-                proxy.BoundingBox = new BoundingBox(Center + staticMeshes[i].BoundingBox.Min, Center + staticMeshes[i].BoundingBox.Max);
+                proxy.BoundingBox = BoundingBox.CreateMerged(proxy.BoundingBox, BoundingBox.CreateFromSphere(staticMeshes[i].BoundingSphere));
                 resultList.Add(proxy);
             }
 
-            return resultList;
+            renderProxies = resultList.ToArray();
         }
 
         public void ClearStaticMeshes()

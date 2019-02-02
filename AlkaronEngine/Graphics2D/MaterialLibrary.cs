@@ -22,10 +22,12 @@ namespace AlkaronEngine.Graphics2D
         private void CreateAndAddDefaultMaterial()
         {
             BasicEffect basicEffect = new BasicEffect(renderConfig.GraphicsDevice);
-            basicEffect.LightingEnabled = false;
+            basicEffect.LightingEnabled = true;
+            basicEffect.PreferPerPixelLighting = true;
+            basicEffect.EnableDefaultLighting();
             basicEffect.FogEnabled = false;
             basicEffect.TextureEnabled = false;
-            basicEffect.VertexColorEnabled = true;
+            basicEffect.VertexColorEnabled = false;
 
             Material defaultMat = new Material(renderConfig);
             defaultMat.SetEffect(basicEffect);

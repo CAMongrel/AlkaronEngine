@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlkaronEngine", "AlkaronEng
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlkTestGame", "AlkTestGame\AlkTestGame.csproj", "{37202CA4-E907-4C45-843D-29AFA169C07A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlkaronViewer", "AlkaronViewer\AlkaronViewer.csproj", "{E6DB115F-0D45-4AAD-969C-8371ADFBD757}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -21,6 +23,10 @@ Global
 		{37202CA4-E907-4C45-843D-29AFA169C07A}.Debug|x86.Build.0 = Debug|x86
 		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|x86.ActiveCfg = Release|x86
 		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|x86.Build.0 = Release|x86
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|x86.Build.0 = Debug|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|x86.ActiveCfg = Release|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

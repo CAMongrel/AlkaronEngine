@@ -13,7 +13,7 @@ namespace AlkaronEngine.Actors
         public CameraActor(CameraComponent setCameraComponent)
         {
             CameraComponent = setCameraComponent;
-            AttachedComponents.Add(CameraComponent);
+            AttachComponent(CameraComponent);
         }
 
         public virtual bool PointerDown(Vector2 position, PointerType pointerType)

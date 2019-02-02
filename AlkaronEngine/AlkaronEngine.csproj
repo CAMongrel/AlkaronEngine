@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -11,14 +11,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="BepuPhysics" Version="2.0.0-beta" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Assets\Meshes\SkeletalMesh.cs" />
     <Compile Remove="Graphics2D\DDSImage.cs" />
+    <Compile Remove="Graphics3D\Geometry\StaticMesh.cs" />
+    <Compile Remove="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Meshes\SkeletalMesh.cs" />
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Graphics3D\Geometry\StaticMesh.cs" />
+    <None Include="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

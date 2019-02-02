@@ -1,4 +1,5 @@
 ﻿using System;
+using AlkaronEngine.Components;
 using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,7 +13,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         /// potentially crosses thread-boundaries must be guarded with this
         /// lock object.
         /// </summary>
-        protected Object lockObj = new Object();
+        protected object lockObj = new Object();
 
         public Material Material { get; set; }
         public Matrix WorldMatrix { get; set; }
@@ -34,6 +35,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         /// </summary>
         internal virtual void Update(double deltaTime)
         {
+            //
         }
     }
 }

@@ -1,106 +1,123 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using AlkaronEngine.Assets.Materials;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Assets.Importers
 {
-	public static class AssetImporterSurface2D
-	{
-		#region GetNiceInfo
-		/// <summary>
-		/// Returns a nicely formatted string with information about the texture
-		/// </summary>
-		static string GetNiceInfo(Texture2D texture)
-		{
-			return
-				"Texture2D information:\r\n" + 
-				"==============================\r\n" + 
-				"Width: " + texture.Width + "\r\n" +
-				"Height: " + texture.Height + "\r\n" +
-				"MipLevels: " + texture.LevelCount + "\r\n" +
-				"Format: " + texture.Format;
-		}
-		#endregion
+    public static class AssetImporterSurface2D
+    {
+        private static readonly string[] allowedExtensions = new string[] { ".png", ".jpg" };
 
-		#region GetPixelStride
-		/// <summary>
-		/// Returns the size in bytes of a single texel 
-		/// </summary>
-		static float GetPixelStride(SurfaceFormat format)
-		{
-			switch (format)
-			{
-				case SurfaceFormat.Alpha8:
-					return 1;
+        #region GetNiceInfo
+        /// <summary>
+        /// Returns a nicely formatted string with information about the texture
+        /// </summary>
+        static string GetNiceInfo(Texture2D texture)
+        {
+            return
+                "Texture2D information:\r\n" +
+                "==============================\r\n" +
+                "Width: " + texture.Width + "\r\n" +
+                "Height: " + texture.Height + "\r\n" +
+                "MipLevels: " + texture.LevelCount + "\r\n" +
+                "Format: " + texture.Format;
+        }
+        #endregion
 
-				case SurfaceFormat.Bgr565:
-					return 2;
+        #region GetPixelStride
+        /// <summary>
+        /// Returns the size in bytes of a single texel 
+        /// </summary>
+        static float GetPixelStride(SurfaceFormat format)
+        {
+            switch (format)
+            {
+                case SurfaceFormat.Alpha8:
+                    return 1;
 
-				case SurfaceFormat.Color:
-					return 4;
+                case SurfaceFormat.Bgr565:
+                    return 2;
 
-				case SurfaceFormat.Single:
-					return 4;
+                case SurfaceFormat.Color:
+                    return 4;
 
-				case SurfaceFormat.Dxt1:
-					return 0.5f;
+                case SurfaceFormat.Single:
+                    return 4;
 
-				case SurfaceFormat.Dxt3:
-				case SurfaceFormat.Dxt5:
-					return 1;
+                case SurfaceFormat.Dxt1:
+                    return 0.5f;
 
-				default:
-					return -1;
-			}
-		}
-		#endregion
+                case SurfaceFormat.Dxt3:
+                case SurfaceFormat.Dxt5:
+                    return 1;
 
-		#region IsCompressedFormat
-		/// <summary>
-		/// Checks if the format is DXT compressed
-		/// </summary>
-		static bool IsCompressedFormat(SurfaceFormat format)
-		{
-			switch (format)
-			{
-				default:
-					return false;
+                default:
+                    return -1;
+            }
+        }
+        #endregion
 
-				case SurfaceFormat.Dxt1:
-				case SurfaceFormat.Dxt3:
-				case SurfaceFormat.Dxt5:
-					return true;
-			}
-		}
-		#endregion
+        #region IsCompressedFormat
+        /// <summary>
+        /// Checks if the format is DXT compressed
+        /// </summary>
+        static bool IsCompressedFormat(SurfaceFormat format)
+        {
+            switch (format)
+            {
+                default:
+                    return false;
 
-		#region Import
-		/// <summary>
-		/// Imports a new surface 2D into the content system
-		/// </summary>
-		public static bool Import(string fullFilename,
-			string setAssetName, 
+                case SurfaceFormat.Dxt1:
+                case SurfaceFormat.Dxt3:
+                case SurfaceFormat.Dxt5:
+                    return true;
+            }
+        }
+        #endregion
+
+        #region Import
+        /// <summary>
+        /// Imports a new surface 2D into the content system
+        /// </summary>
+        public static bool Import(string fullFilename,
+            string setAssetName,
             string setPackageName,
-			Asset existingAsset)
-		{
-			// Remember input filename
-			string inputFile = fullFilename;
-			if (File.Exists(inputFile) == false)
-			{
-				AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' is not valid!");
-				return false;
-			}
+            Asset existingAsset)
+        {
+            // Remember input filename
+            string inputFile = fullFilename;
+            if (File.Exists(inputFile) == false)
+            {
+                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' is not valid!");
+                return false;
+            }
 
-			// Create asset and package names
-			string assetName = setAssetName;
-			string packageName = setPackageName;
-			
-			Package packageToSaveIn = null;
+            string extension = Path.GetExtension(inputFile);
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                return false;
+            }
 
-			assetName = Path.ChangeExtension(assetName, ".surface2d");
+            extension = extension.ToLowerInvariant();
+            if (allowedExtensions.Contains(extension) == false)
+            {
+                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                return false;
+            }
 
-			if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
+            // Create asset and package names
+            string assetName = setAssetName;
+            string packageName = setPackageName;
+
+            Package packageToSaveIn = null;
+
+            assetName = Path.ChangeExtension(assetName, ".surface2d");
+
+            if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
             {
                 packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName);
             }
@@ -112,14 +129,14 @@ namespace AlkaronEngine.Assets.Importers
 
             if (packageToSaveIn == null)
             {
-                // Log warning?
+                AlkaronCoreGame.Core.Log("Unable to create or find the package for this asset");
                 return false;
             }
 
             try
-			{
-				// Import existing file and convert it to the new format
-				Texture2D newTex = null;
+            {
+                // Import existing file and convert it to the new format
+                Texture2D newTex = null;
                 using (FileStream fs = File.OpenRead(fullFilename))
                 {
                     newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, fs);
@@ -200,7 +217,7 @@ namespace AlkaronEngine.Assets.Importers
                             // Rewind stream
                             memStr.Position = 0;
 
-                            // Re-read asset							
+                            // Re-read asset
                             Surface2D surf = null;
                             if (existingAsset == null)
                             {
@@ -215,15 +232,15 @@ namespace AlkaronEngine.Assets.Importers
                         }
                     }
                 }
-			}
-			catch (Exception ex)
-			{
-				AlkaronCoreGame.Core.Log("Failed to import Surface2D: " + ex.ToString());
-				return false;
-			}
-			
-			return true;
-		}
-		#endregion
-	}
+            }
+            catch (Exception ex)
+            {
+                AlkaronCoreGame.Core.Log("Failed to import Surface2D: " + ex.ToString());
+                return false;
+            }
+
+            return true;
+        }
+        #endregion
+    }
 }

@@ -12,30 +12,35 @@ namespace AlkaronEngine.Actors
     {
         public bool IsAddedToSceneGraph { get; private set; }
 
-        public List<BaseComponent> AttachedComponents { get; private set; }
+        private List<BaseComponent> attachedComponents;
 
         public BaseActor()
         {
-            AttachedComponents = new List<BaseComponent>();
+            attachedComponents = new List<BaseComponent>();
             IsAddedToSceneGraph = false;
         }
 
-        public virtual void Update(GameTime gameTime)
+        internal virtual void Update(GameTime gameTime)
         {
-            for (int i = 0; i < AttachedComponents.Count; i++)
+            for (int i = 0; i < attachedComponents.Count; i++)
             {
-                AttachedComponents[i].Update(gameTime);
+                attachedComponents[i].Update(gameTime);
             }
         }
 
-        public virtual void ActorAddedToSceneGraph(SceneGraph sceneGraph)
+        internal virtual void ActorAddedToSceneGraph(SceneGraph sceneGraph)
         {
             IsAddedToSceneGraph = true;
 
-            for (int i = 0; i < AttachedComponents.Count; i++)
+            for (int i = 0; i < attachedComponents.Count; i++)
             {
-                AttachedComponents[i].ActorAddedToSceneGraph(sceneGraph);
+                attachedComponents[i].OwnerActorAddedToSceneGraph(sceneGraph);
             }
+        }
+
+        internal virtual void ActorRemovedFromSceneGraph(SceneGraph sceneGraph)
+        {
+            IsAddedToSceneGraph = false;
         }
 
         internal virtual IShape CreatePhysicsShape()
@@ -44,16 +49,42 @@ namespace AlkaronEngine.Actors
             return null; 
         }
 
-        public List<BaseRenderProxy> CreateRenderProxies()
+        internal IEnumerable<BaseRenderProxy> GetRenderProxies()
         {
             List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
-            for (int i = 0; i < AttachedComponents.Count; i++)
+            for (int i = 0; i < attachedComponents.Count; i++)
             {
-                resultList.AddRange(AttachedComponents[i].CreateRenderProxies());
+                var componentProxies = attachedComponents[i].GetRenderProxies();
+
+                // Some components may have no rendering component
+                if (componentProxies != null)
+                {
+                    resultList.AddRange(componentProxies);
+                }
             }
 
             return resultList;
+        }
+
+        public void AttachComponent(BaseComponent component)
+        {
+            if (attachedComponents.Contains(component))
+            {
+                return;
+            }
+
+            attachedComponents.Add(component);
+        }
+
+        public void DetachComponent(BaseComponent component)
+        {
+            if (attachedComponents.Contains(component) == false)
+            {
+                return;
+            }
+
+            attachedComponents.Remove(component);
         }
     }
 }

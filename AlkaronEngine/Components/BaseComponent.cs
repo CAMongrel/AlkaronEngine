@@ -19,8 +19,12 @@ namespace AlkaronEngine.Components
 
         public bool IsDirty { get; protected set; }
 
+        protected BaseRenderProxy[] renderProxies;
+
         public BaseComponent(Vector3 setCenter)
         {
+            renderProxies = null;
+
             Center = setCenter;
             Rotation = Vector3.Zero;
             Scale = Vector3.One;
@@ -31,7 +35,7 @@ namespace AlkaronEngine.Components
 
         public virtual void Update(GameTime gameTime)
         {
-
+            //
         }
 
         public void SetCenter(Vector3 newCenter, bool performSweep)
@@ -40,13 +44,14 @@ namespace AlkaronEngine.Components
             IsDirty = true;
         }
 
-        public virtual List<BaseRenderProxy> CreateRenderProxies()
+        public virtual IEnumerable<BaseRenderProxy> GetRenderProxies()
         {
-            return new List<BaseRenderProxy>();
+            return renderProxies;
         }
 
-        public virtual void ActorAddedToSceneGraph(SceneGraph owner)
+        public virtual void OwnerActorAddedToSceneGraph(SceneGraph owner)
         {
+            //
         }
     }
 }

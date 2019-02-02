@@ -12,7 +12,7 @@ namespace AlkaronEngine.Actors
         {
             StaticMeshComponent = new StaticMeshComponent(Vector3.Zero);
 
-            AttachedComponents.Add(StaticMeshComponent);
+            AttachComponent(StaticMeshComponent);
         }
     }
 }
