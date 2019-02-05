@@ -15,13 +15,29 @@ using System.Text;
 
 namespace AlkaronViewer
 {
+
     class MeshScene : BaseScene
     {
+        private GltfModelManager modelManager;
+
         private BaseActor focusActor;
 
         public MeshScene()
         {
             focusActor = null;
+
+            string baseModelFolder = "";
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                baseModelFolder = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\";
+            }
+            else
+            {
+                baseModelFolder = @"/Users/henning/Projects/Research/GitHub/glTF-Sample-Models/2.0/";
+            }
+
+            modelManager = new GltfModelManager(baseModelFolder);
+            modelManager.BuildModelList();
         }
 
         public override void Close()
@@ -87,18 +103,25 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
-            string file = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\Box\glTF\Box.gltf";
-            file = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf";
-            file = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\Avocado\glTF\Avocado.gltf";
-            file = @"D:\Projekte\gltf_models\boat_large.gltf";
-            file = @"D:\Projekte\gltf_models\ship_dark.gltf";
+            PresentModel("Monster", GltfModelEntryType.Base);
+        }
 
-            string name = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
+        private void PresentModel(string name, GltfModelEntryType type = GltfModelEntryType.Base)
+        {
+            string file = modelManager.GetModelPath(name, type);
 
-            var res = AssetImporterStaticMesh.Import(file, name, name, out StaticMesh staticMesh);
+            string assetName = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
 
-            //StaticMesh mesh = new StaticMeshUnitCube(RenderConfig);
-            SetStaticMesh(staticMesh);
+            var res = AssetImporterStaticMesh.Import(file, assetName, assetName, out List<AlkaronEngine.Assets.Asset> importedAssets);
+
+            for (int i = 0; i < importedAssets.Count; i++)
+            {
+                if (importedAssets[i] is StaticMesh)
+                {
+                    SetStaticMesh(importedAssets[i] as StaticMesh);
+                    break; 
+                }
+            }
         }
 
         protected override void InitUI()

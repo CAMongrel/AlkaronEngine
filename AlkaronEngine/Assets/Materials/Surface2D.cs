@@ -98,13 +98,6 @@ namespace AlkaronEngine.Assets.Materials
                 int MipLevels = reader.ReadInt32();
 				SurfaceFormat format = (SurfaceFormat)reader.ReadInt32();
 
-				if (AssetVersion > 1)
-				{
-					TextureFilterMin = (TextureFilter)reader.ReadInt32();
-					TextureFilterMag = (TextureFilter)reader.ReadInt32();
-					TextureFilterMip = (TextureFilter)reader.ReadInt32();
-				} // if (assetVersion)
-
                 bool autoGenerateMipmaps = (MipLevels < 2);
 
 				int count = reader.ReadInt32();
@@ -151,7 +144,7 @@ namespace AlkaronEngine.Assets.Materials
 		/// </summary>
 		public override void Save(BinaryWriter writer)
 		{
-			writer.Write("HAF ");
+			writer.Write("AEAF");
 			writer.Write(MaxAssetVersion);
 			writer.Write(OriginalFilename);
 
@@ -159,10 +152,6 @@ namespace AlkaronEngine.Assets.Materials
 			writer.Write(Texture.Height);
 			writer.Write(Texture.LevelCount);
 			writer.Write((int)Texture.Format);
-
-			writer.Write((int)TextureFilterMin);
-			writer.Write((int)TextureFilterMag);
-			writer.Write((int)TextureFilterMip);
 
 			writer.Write(rawData.Length);
 			writer.Write(rawData);

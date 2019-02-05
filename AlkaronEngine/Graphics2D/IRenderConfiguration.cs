@@ -18,6 +18,6 @@ namespace AlkaronEngine.Graphics2D
 
       bool RequiresPowerOfTwoTextures { get; }
 
-      PrimitiveRenderManager RenderManager { get; }
+      PrimitiveRenderManager PrimitiveRenderManager { get; }
    }
 }

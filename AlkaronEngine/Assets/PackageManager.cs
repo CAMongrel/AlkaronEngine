@@ -200,6 +200,8 @@ namespace AlkaronEngine.Assets
                 return LoadPackage(packageName);
             }
 
+            packageName = Path.ChangeExtension(packageName, ".package");
+
             targetFilename = Path.ChangeExtension(targetFilename, ".package");
             string fullFilename = targetFilename;
 

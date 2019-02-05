@@ -21,7 +21,7 @@ namespace AlkaronEngine.Graphics2D
             Vector2 Scale = renderConfig.Scale;
             Vector2 ScaledOffset = renderConfig.ScaledOffset;
 
-            renderConfig.RenderManager.SpriteBatch.DrawString(font, text, new Vector2(ScaledOffset.X + (x * Scale.X), ScaledOffset.Y + (y * Scale.Y)), color, 0,
+            renderConfig.PrimitiveRenderManager.SpriteBatch.DrawString(font, text, new Vector2(ScaledOffset.X + (x * Scale.X), ScaledOffset.Y + (y * Scale.Y)), color, 0,
                 Vector2.Zero, new Vector2(Scale.X, Scale.Y), SpriteEffects.None, 1.0f);
         }
 
@@ -52,13 +52,13 @@ namespace AlkaronEngine.Graphics2D
 
             Vector2 scaleVec = new Vector2(Scale.X * scale, Scale.Y * scale);
 
-            renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+            renderConfig.PrimitiveRenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);
 
-            renderConfig.RenderManager.SpriteBatch.DrawString(font, text, pos,
+            renderConfig.PrimitiveRenderManager.SpriteBatch.DrawString(font, text, pos,
                                                               color, radRotation, Vector2.Zero, scaleVec,
                                                               SpriteEffects.None, 1.0f);
 
-            renderConfig.RenderManager.SpriteBatch.End();
+            renderConfig.PrimitiveRenderManager.SpriteBatch.End();
         }
 
         private static Vector2 MeasureString(string text, SpriteFont font1)
@@ -150,7 +150,7 @@ namespace AlkaronEngine.Graphics2D
             int lineHeight = font1 != null ? font1.LineSpacing : 0;
             int totalHeight = lineHeight * lines.Length;
 
-            renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+            renderConfig.PrimitiveRenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);
 
             float yGap = -2;
             float yPos = 0;
@@ -192,7 +192,7 @@ namespace AlkaronEngine.Graphics2D
 
                 if (font1 != null)
                 {
-                    renderConfig.RenderManager.SpriteBatch.DrawString(font1,
+                    renderConfig.PrimitiveRenderManager.SpriteBatch.DrawString(font1,
                        lines[i],
                        new Vector2(ScaledOffset.X + (xPos * Scale.X), ScaledOffset.Y + (yPos * Scale.Y)),
                        color,
@@ -206,7 +206,7 @@ namespace AlkaronEngine.Graphics2D
                 yPos += lineHeight + yGap;
             }
 
-            renderConfig.RenderManager.SpriteBatch.End();
+            renderConfig.PrimitiveRenderManager.SpriteBatch.End();
         }
     }
 }

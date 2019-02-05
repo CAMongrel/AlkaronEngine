@@ -87,7 +87,7 @@ namespace AlkaronEngine.Assets.Meshes
 
             BinaryReader reader = new BinaryReader(stream);
             {
-                string magic = reader.ReadString();
+                string magic = new string(reader.ReadChars(4));
                 AssetVersion = reader.ReadInt32();
 
                 // Skip the original filename on the Xbox, remember on PC
@@ -260,7 +260,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         public override void Save(BinaryWriter writer)
         {
-            writer.Write("HAF ");
+            writer.Write("AEAF".ToCharArray());
             writer.Write(MaxAssetVersion);
             writer.Write(OriginalFilename);
 

@@ -81,12 +81,12 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
                                                                              renderManager.ViewTarget.ProjectionMatrix,
                                                                              renderManager.ViewTarget.ViewMatrix,
                                                                              WorldMatrix);
-            renderConfig.RenderManager.SpriteBatch.Begin();
-            renderConfig.RenderManager.SpriteBatch.DrawString(renderConfig.RenderManager.EngineFont,
+            renderConfig.PrimitiveRenderManager.SpriteBatch.Begin();
+            renderConfig.PrimitiveRenderManager.SpriteBatch.DrawString(renderConfig.PrimitiveRenderManager.EngineFont,
                                                               bone.BoneName,
                                                               new Vector2(screenPos.X, screenPos.Y),
                                                               Color.Yellow);
-            renderConfig.RenderManager.SpriteBatch.End();
+            renderConfig.PrimitiveRenderManager.SpriteBatch.End();
 
             effect.TextureEnabled = false;
             effect.VertexColorEnabled = true;

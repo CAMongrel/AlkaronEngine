@@ -41,7 +41,7 @@ namespace AlkaronEngine.Gui
             lastPressedKeyTimestamp = -1;
             cursorPos = 0;
             Text = setText;
-            Font = setFont ?? renderConfig.RenderManager.EngineFont;
+            Font = setFont ?? renderConfig.PrimitiveRenderManager.EngineFont;
             Padding = 10;
             renderCursor = false;
 

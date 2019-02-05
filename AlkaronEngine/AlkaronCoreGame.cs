@@ -75,7 +75,7 @@ namespace AlkaronEngine
 
             ScreenQuad.Initialize(SceneManager);
             Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
-            SceneManager.RenderManager.EngineFont = Content.Load<SpriteFont>("DefaultFont");
+            SceneManager.PrimitiveRenderManager.EngineFont = Content.Load<SpriteFont>("DefaultFont");
 
             RasterizerState rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.CullClockwiseFace;

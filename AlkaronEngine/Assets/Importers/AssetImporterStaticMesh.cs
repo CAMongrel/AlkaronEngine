@@ -1,5 +1,7 @@
-﻿using AlkaronEngine.Assets.Meshes;
+﻿using AlkaronEngine.Assets.Materials;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.Geometry;
 using glTFLoader.Schema;
 using Microsoft.Xna.Framework;
@@ -21,9 +23,9 @@ namespace AlkaronEngine.Assets.Importers
         public static bool Import(string fullFilename,
             string setAssetName,
             string setPackageName,
-            out StaticMesh importedAsset)
+            out List<Asset> importedAssets)
         {
-            importedAsset = null;
+            importedAssets = new List<Asset>();
 
             // Remember input filename
             string inputFile = fullFilename;
@@ -73,7 +75,15 @@ namespace AlkaronEngine.Assets.Importers
 
             try
             {
-                importedAsset = LoadStaticMesh(fullFilename, assetName, packageToSaveIn);
+                if (extension == ".gltf" ||
+                    extension == ".glb")
+                {
+                    ImportGLTFFile(fullFilename, assetName, packageToSaveIn, importedAssets);
+                }
+                else
+                {
+                    throw new NotImplementedException("Import for mesh with extension '" + extension + "' is not implemented.");
+                }
             }
             catch (Exception ex)
             {
@@ -84,193 +94,279 @@ namespace AlkaronEngine.Assets.Importers
             return true;
         }
 
-        private static StaticMesh LoadStaticMesh(string fullFilename, string assetName, Package packageToSaveIn)
+        #region ImportGLTFFile
+        private static void ImportGLTFFile(string fullFilename, string assetName, Package packageToSaveIn, List<Asset> importedAssets)
         {
-            StaticMesh staticMesh = null;
-
             string baseFolder = Path.GetDirectoryName(fullFilename);
 
             var model = glTFLoader.Interface.LoadModel(fullFilename);
 
-            List<byte[]> rawBuffers = new List<byte[]>();
-            for (int i = 0; i < model.Buffers.Length; i++)
-            {
-                var buf = model.Buffers[i];
+            // Load all binary referenced buffers (vertices, indices, animations, etc.)
+            List<byte[]> rawBuffers = LoadBuffers(model, fullFilename);
 
-                string buf_filename = Path.Combine(baseFolder, buf.Uri);
+            // Import all textures as Surface2D assets
+            importedAssets.AddRange(LoadTextures(packageToSaveIn, model, fullFilename));
 
-                rawBuffers.Add(File.ReadAllBytes(buf_filename));
-            }
-
+            // Import all meshes
             for (int i = 0; i < model.Meshes.Length; i++)
             {
                 var mesh = model.Meshes[i];
 
-                for (int p = 0; p < mesh.Primitives.Length; p++)
+                importedAssets.AddRange(LoadMesh(packageToSaveIn, model, rawBuffers, mesh));
+            }
+        }
+
+        private static string GetImageAssetName(Image img, int index, string fullFilename)
+        {
+            string surfaceAssetName = "";
+            if (img.Uri.StartsWith("data:", StringComparison.InvariantCultureIgnoreCase))
+            {
+                surfaceAssetName = Path.GetFileNameWithoutExtension(Path.GetFileName(fullFilename)) + "_image_" + index;
+            }
+            else
+            {
+                surfaceAssetName = Path.GetFileNameWithoutExtension(img.Uri);
+            }
+            return surfaceAssetName;
+        }
+
+        private static List<Surface2D> LoadTextures(Package packageToSaveIn, Gltf model, string fullFilename)
+        {
+            List<Surface2D> resultList = new List<Surface2D>();
+
+            if (model.Textures == null)
+            {
+                return resultList; 
+            }
+
+            for (int t = 0; t < model.Textures.Length; t++)
+            {
+                glTFLoader.Schema.Texture tex = model.Textures[t];
+                if (tex.Source == null)
                 {
-                    var prim = mesh.Primitives[p];
+                    continue; 
+                }
 
-                    if (prim.Mode != MeshPrimitive.ModeEnum.TRIANGLES)
+                int imageIndex = tex.Source.Value;
+                Image img = model.Images[imageIndex];
+
+                using (Stream str = glTFLoader.Interface.OpenImageFile(model, imageIndex, fullFilename))
+                {
+                    string surfaceAssetName = GetImageAssetName(img, imageIndex, fullFilename);
+
+                    AssetImporterSurface2D.Import(str, surfaceAssetName, packageToSaveIn.PackageName, "", null, out Surface2D surface);
+                    if (surface != null)
                     {
-                        throw new NotImplementedException("Modes other than TRIANGLES are not implemented (yet)");
-                    }
-
-                    Accessor positionAccessor = GetAccessorByIndex(prim.Attributes["POSITION"], model);
-                    if (positionAccessor.Type != Accessor.TypeEnum.VEC3)
-                    {
-                        throw new InvalidDataException("POSITION accessor must have type VEC3");
-                    }
-
-                    Accessor normalAccessor = GetAccessorByIndex(prim.Attributes["NORMAL"], model);
-                    if (normalAccessor != null &&
-                        normalAccessor.Type != Accessor.TypeEnum.VEC3)
-                    {
-                        throw new InvalidDataException("NORMAL accessor must have type VEC3");
-                    }
-
-                    Accessor texcoordAccessor = GetAccessorByIndex(prim.Attributes["TEXCOORD_0"], model);
-                    if (texcoordAccessor != null &&
-                        texcoordAccessor.Type != Accessor.TypeEnum.VEC2)
-                    {
-                        throw new InvalidDataException("TEXCOORD accessor must have type VEC2");
-                    }
-
-                    Accessor tangentAccessor = GetAccessorByIndex(prim.Attributes["TANGENT"], model);
-                    if (tangentAccessor != null &&
-                        tangentAccessor.Type != Accessor.TypeEnum.VEC4)
-                    {
-                        throw new InvalidDataException("TANGENT accessor must have type VEC4");
-                    }
-
-                    TangentVertex[] vertices = new TangentVertex[positionAccessor.Count];
-                    BufferView positionBufferView = model.BufferViews[positionAccessor.BufferView.Value];
-                    BufferView normalsBufferView = null;
-                    if (normalAccessor != null)
-                    {
-                        normalsBufferView = model.BufferViews[normalAccessor.BufferView.Value];
-                    }
-                    BufferView texCoordBufferView = null;
-                    if (texcoordAccessor != null)
-                    {
-                        texCoordBufferView = model.BufferViews[texcoordAccessor.BufferView.Value];
-                    }
-                    BufferView tangentBufferView = null;
-                    if (tangentAccessor != null)
-                    {
-                        tangentBufferView = model.BufferViews[tangentAccessor.BufferView.Value];
-                    }
-
-                    ReadOnlySpan<Vector3> positionSpan = MemoryMarshal.Cast<byte, Vector3>(
-                        new ReadOnlySpan<byte>(rawBuffers[positionBufferView.Buffer], positionBufferView.ByteOffset + positionAccessor.ByteOffset, positionAccessor.Count * 12));
-                    ReadOnlySpan<Vector3> normalsSpan = null;
-                    if (normalsBufferView != null)
-                    {
-                        normalsSpan = MemoryMarshal.Cast<byte, Vector3>(
-                            new ReadOnlySpan<byte>(rawBuffers[normalsBufferView.Buffer], normalsBufferView.ByteOffset + normalAccessor.ByteOffset, normalAccessor.Count * 12));
-                    }
-                    ReadOnlySpan<Vector2> texCoordSpan = null;
-                    if (texCoordBufferView != null)
-                    {
-                        texCoordSpan = MemoryMarshal.Cast<byte, Vector2>(
-                            new ReadOnlySpan<byte>(rawBuffers[texCoordBufferView.Buffer], texCoordBufferView.ByteOffset + texcoordAccessor.ByteOffset, texcoordAccessor.Count * 8));
-                    }
-                    ReadOnlySpan<Vector4> tangentSpan = null;
-                    if (tangentBufferView != null)
-                    {
-                        tangentSpan = MemoryMarshal.Cast<byte, Vector4>(
-                            new ReadOnlySpan<byte>(rawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
-                    }
-
-                    for (int v = 0; v < vertices.Length; v++)
-                    {
-                        vertices[v].Position = positionSpan[v];
-
-                        if (normalsSpan != null)
-                        {
-                            vertices[v].Normal = normalsSpan[v];
-                        }
-
-                        if (texCoordSpan != null)
-                        {
-                            vertices[v].TexCoord = texCoordSpan[v];
-                        }
-
-                        if (tangentSpan != null)
-                        {
-                            vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
-                            if (normalsSpan != null)
-                            {
-                                vertices[v].BiTangent = Vector3.Cross(normalsSpan[v], vertices[v].Tangent) * tangentSpan[v].W;
-                            }
-                        }
-                    }
-
-                    if (prim.Indices == null)
-                    {
-                        staticMesh = StaticMesh.FromVertices(vertices);
-                    }
-                    else
-                    {
-                        int primIndex = prim.Indices.Value;
-                        Accessor indexAccessor = GetAccessorByIndex(primIndex, model);
-                        if (indexAccessor != null)
-                        {
-                            if (indexAccessor.Type != Accessor.TypeEnum.SCALAR)
-                            {
-                                throw new InvalidDataException("Index accessor must have type SCALAR");
-                            }
-
-                            uint[] indices = new uint[indexAccessor.Count];
-
-                            BufferView indexBufferView = model.BufferViews[indexAccessor.BufferView.Value];
-                            switch (indexAccessor.ComponentType)
-                            {
-                                case Accessor.ComponentTypeEnum.UNSIGNED_BYTE:
-                                    {
-                                        ReadOnlySpan<byte> indexSpan =
-                                            new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count);
-
-                                        for (int idx = 0; idx < indices.Length; idx++)
-                                        {
-                                            indices[idx] = (uint)indexSpan[idx];
-                                        }
-                                    }
-                                    break;
-
-                                case Accessor.ComponentTypeEnum.UNSIGNED_SHORT:
-                                    {
-                                        ReadOnlySpan<ushort> indexSpan = MemoryMarshal.Cast<byte, ushort>(
-                                            new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 2));
-
-                                        for (int idx = 0; idx < indices.Length; idx++)
-                                        {
-                                            indices[idx] = (uint)indexSpan[idx];
-                                        }
-                                    }
-                                    break;
-
-                                case Accessor.ComponentTypeEnum.UNSIGNED_INT:
-                                    {
-                                        ReadOnlySpan<uint> indexSpan = MemoryMarshal.Cast<byte, uint>(
-                                            new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 4));
-
-                                        indices = indexSpan.ToArray();
-                                    }
-                                    break;
-
-                                default:
-                                    throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
-                            }
-
-                            staticMesh = StaticMesh.FromVertices(vertices, indices);
-                        }
+                        resultList.Add(surface); 
                     }
                 }
             }
 
-            packageToSaveIn.StoreAsset(assetName, staticMesh);
+            return resultList;
+        }
 
-            return staticMesh;
+        private static List<byte[]> LoadBuffers(Gltf model, string fullFilename)
+        {
+            List<byte[]> rawBuffers = new List<byte[]>();
+            for (int i = 0; i < model.Buffers.Length; i++)
+            {
+                rawBuffers.Add(glTFLoader.Interface.LoadBinaryBuffer(model, i, fullFilename));
+            }
+            return rawBuffers;
+        }
+
+        private static List<StaticMesh> LoadMesh(Package packageToSaveIn, Gltf model, List<byte[]> rawBuffers, Mesh mesh)
+        {
+            List<StaticMesh> staticMeshes = new List<StaticMesh>();
+
+            for (int p = 0; p < mesh.Primitives.Length; p++)
+            {
+                var prim = mesh.Primitives[p];
+
+                if (prim.Mode != MeshPrimitive.ModeEnum.TRIANGLES)
+                {
+                    throw new NotImplementedException("Modes other than TRIANGLES are not implemented (yet)");
+                }
+
+                Accessor positionAccessor = GetAccessorByType("POSITION", model, prim);
+                if (positionAccessor.Type != Accessor.TypeEnum.VEC3)
+                {
+                    throw new InvalidDataException("POSITION accessor must have type VEC3");
+                }
+
+                Accessor normalAccessor = GetAccessorByType("NORMAL", model, prim);
+                if (normalAccessor != null &&
+                    normalAccessor.Type != Accessor.TypeEnum.VEC3)
+                {
+                    throw new InvalidDataException("NORMAL accessor must have type VEC3");
+                }
+
+                Accessor texcoordAccessor = GetAccessorByType("TEXCOORD_0", model, prim);
+                if (texcoordAccessor != null &&
+                    texcoordAccessor.Type != Accessor.TypeEnum.VEC2)
+                {
+                    throw new InvalidDataException("TEXCOORD accessor must have type VEC2");
+                }
+
+                Accessor tangentAccessor = GetAccessorByType("TANGENT", model, prim);
+                if (tangentAccessor != null &&
+                    tangentAccessor.Type != Accessor.TypeEnum.VEC4)
+                {
+                    throw new InvalidDataException("TANGENT accessor must have type VEC4");
+                }
+
+                TangentVertex[] vertices = new TangentVertex[positionAccessor.Count];
+                BufferView positionBufferView = model.BufferViews[positionAccessor.BufferView.Value];
+                BufferView normalsBufferView = null;
+                if (normalAccessor != null)
+                {
+                    normalsBufferView = model.BufferViews[normalAccessor.BufferView.Value];
+                }
+                BufferView texCoordBufferView = null;
+                if (texcoordAccessor != null)
+                {
+                    texCoordBufferView = model.BufferViews[texcoordAccessor.BufferView.Value];
+                }
+                BufferView tangentBufferView = null;
+                if (tangentAccessor != null)
+                {
+                    tangentBufferView = model.BufferViews[tangentAccessor.BufferView.Value];
+                }
+
+                ReadOnlySpan<Vector3> positionSpan = MemoryMarshal.Cast<byte, Vector3>(
+                    new ReadOnlySpan<byte>(rawBuffers[positionBufferView.Buffer], positionBufferView.ByteOffset + positionAccessor.ByteOffset, positionAccessor.Count * 12));
+                ReadOnlySpan<Vector3> normalsSpan = null;
+                if (normalsBufferView != null)
+                {
+                    normalsSpan = MemoryMarshal.Cast<byte, Vector3>(
+                        new ReadOnlySpan<byte>(rawBuffers[normalsBufferView.Buffer], normalsBufferView.ByteOffset + normalAccessor.ByteOffset, normalAccessor.Count * 12));
+                }
+                ReadOnlySpan<Vector2> texCoordSpan = null;
+                if (texCoordBufferView != null)
+                {
+                    texCoordSpan = MemoryMarshal.Cast<byte, Vector2>(
+                        new ReadOnlySpan<byte>(rawBuffers[texCoordBufferView.Buffer], texCoordBufferView.ByteOffset + texcoordAccessor.ByteOffset, texcoordAccessor.Count * 8));
+                }
+                ReadOnlySpan<Vector4> tangentSpan = null;
+                if (tangentBufferView != null)
+                {
+                    tangentSpan = MemoryMarshal.Cast<byte, Vector4>(
+                        new ReadOnlySpan<byte>(rawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
+                }
+
+                for (int v = 0; v < vertices.Length; v++)
+                {
+                    vertices[v].Position = positionSpan[v];
+
+                    if (normalsSpan != null)
+                    {
+                        vertices[v].Normal = normalsSpan[v];
+                    }
+
+                    if (texCoordSpan != null)
+                    {
+                        vertices[v].TexCoord = texCoordSpan[v];
+                    }
+
+                    if (tangentSpan != null)
+                    {
+                        vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
+                        if (normalsSpan != null)
+                        {
+                            vertices[v].BiTangent = Vector3.Cross(normalsSpan[v], vertices[v].Tangent) * tangentSpan[v].W;
+                        }
+                    }
+                }
+
+                StaticMesh staticMesh = null;
+
+                if (prim.Indices == null)
+                {
+                    staticMesh = StaticMesh.FromVertices(vertices);
+                }
+                else
+                {
+                    int primIndex = prim.Indices.Value;
+                    Accessor indexAccessor = GetAccessorByIndex(primIndex, model);
+                    if (indexAccessor != null)
+                    {
+                        if (indexAccessor.Type != Accessor.TypeEnum.SCALAR)
+                        {
+                            throw new InvalidDataException("Index accessor must have type SCALAR");
+                        }
+
+                        uint[] indices = new uint[indexAccessor.Count];
+
+                        BufferView indexBufferView = model.BufferViews[indexAccessor.BufferView.Value];
+                        switch (indexAccessor.ComponentType)
+                        {
+                            case Accessor.ComponentTypeEnum.UNSIGNED_BYTE:
+                                {
+                                    ReadOnlySpan<byte> indexSpan =
+                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count);
+
+                                    for (int idx = 0; idx < indices.Length; idx++)
+                                    {
+                                        indices[idx] = (uint)indexSpan[idx];
+                                    }
+                                }
+                                break;
+
+                            case Accessor.ComponentTypeEnum.UNSIGNED_SHORT:
+                                {
+                                    ReadOnlySpan<ushort> indexSpan = MemoryMarshal.Cast<byte, ushort>(
+                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 2));
+
+                                    for (int idx = 0; idx < indices.Length; idx++)
+                                    {
+                                        indices[idx] = (uint)indexSpan[idx];
+                                    }
+                                }
+                                break;
+
+                            case Accessor.ComponentTypeEnum.UNSIGNED_INT:
+                                {
+                                    ReadOnlySpan<uint> indexSpan = MemoryMarshal.Cast<byte, uint>(
+                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 4));
+
+                                    indices = indexSpan.ToArray();
+                                }
+                                break;
+
+                            default:
+                                throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
+                        }
+
+                        staticMesh = StaticMesh.FromVertices(vertices, indices);
+                    }
+                }
+
+                staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
+                packageToSaveIn.StoreAsset(staticMesh.Name, staticMesh);
+                staticMeshes.Add(staticMesh);
+
+                PbrMaterial material = CreateMaterialForMesh(prim, model);
+            }
+
+            return staticMeshes;
+        }
+
+        private static PbrMaterial CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
+        {
+            PbrMaterial result = new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
+            //result.Effect = AlkaronCoreGame.Core.SceneManager.RenderManager.
+
+            return result;
+        }
+
+        private static Accessor GetAccessorByType(string attribute, Gltf model, MeshPrimitive prim)
+        {
+            if (prim.Attributes.ContainsKey(attribute) == false)
+            {
+                return null; 
+            }
+
+            return GetAccessorByIndex(prim.Attributes[attribute], model);
         }
 
         private static Accessor GetAccessorByIndex(int accessorIndex, Gltf model)
@@ -295,5 +391,6 @@ namespace AlkaronEngine.Assets.Importers
 
             return null;
         }
+        #endregion
     }
 }

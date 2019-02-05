@@ -24,8 +24,6 @@
   <ItemGroup>
     <None Include="Assets\Meshes\SkeletalMesh.cs" />
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Graphics3D\Geometry\StaticMesh.cs" />
-    <None Include="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

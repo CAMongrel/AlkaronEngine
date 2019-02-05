@@ -16,7 +16,7 @@ namespace AlkaronEngine.Scene
 
         public GraphicsDevice GraphicsDevice { get; private set; }
         public InputManager InputManager { get; private set; }
-        public PrimitiveRenderManager RenderManager { get; private set; }
+        public PrimitiveRenderManager PrimitiveRenderManager { get; private set; }
 
         public virtual Vector2 Scale
         {
@@ -58,7 +58,7 @@ namespace AlkaronEngine.Scene
             }
             GraphicsDevice = setGraphicsDevice;
 
-            RenderManager = new PrimitiveRenderManager(this);
+            PrimitiveRenderManager = new PrimitiveRenderManager(this);
             InputManager = new InputManager(this);
             InputManager.OnPointerPressed += PointerPressed;
             InputManager.OnPointerReleased += PointerReleased;

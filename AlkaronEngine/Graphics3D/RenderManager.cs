@@ -46,10 +46,6 @@ namespace AlkaronEngine.Graphics3D
 
         private List<RenderPass> renderPasses;
 
-        public EffectLibrary EffectLibrary { get; private set; }
-
-        public MaterialLibrary MaterialLibrary { get; private set; }
-
         internal ViewTarget ViewTarget { get; private set; }
         /// <summary>
         /// Applied to viewTarget at the start of the next frame

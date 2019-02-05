@@ -10,6 +10,7 @@ namespace AlkaronViewer
     public class MainGame : AlkaronCoreGame
     {
         public MainGame()
+            : base(1280, 1024)
         {
             IsMouseVisible = true;
         }

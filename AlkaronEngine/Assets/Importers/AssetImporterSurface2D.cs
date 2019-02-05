@@ -85,8 +85,11 @@ namespace AlkaronEngine.Assets.Importers
         public static bool Import(string fullFilename,
             string setAssetName,
             string setPackageName,
-            Asset existingAsset)
+            Asset existingAsset,
+            out Surface2D importedAsset)
         {
+            importedAsset = null;
+
             // Remember input filename
             string inputFile = fullFilename;
             if (File.Exists(inputFile) == false)
@@ -108,6 +111,24 @@ namespace AlkaronEngine.Assets.Importers
                 AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
+
+            using (FileStream fs = File.OpenRead(inputFile))
+            {
+                return Import(fs, setAssetName, setPackageName, inputFile, existingAsset, out importedAsset);
+            }
+        }
+
+        /// <summary>
+        /// Imports a new surface 2D into the content system
+        /// </summary>
+        public static bool Import(Stream surfaceStream,
+            string setAssetName,
+            string setPackageName,
+            string originalInputFile,
+            Asset existingAsset,
+            out Surface2D importedAsset)
+        {
+            importedAsset = null;
 
             // Create asset and package names
             string assetName = setAssetName;
@@ -136,11 +157,7 @@ namespace AlkaronEngine.Assets.Importers
             try
             {
                 // Import existing file and convert it to the new format
-                Texture2D newTex = null;
-                using (FileStream fs = File.OpenRead(fullFilename))
-                {
-                    newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, fs);
-                }
+                Texture2D newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, surfaceStream);
 
                 using (newTex)
                 {
@@ -151,7 +168,7 @@ namespace AlkaronEngine.Assets.Importers
                         {
                             writer.Write("HAF ");
                             writer.Write(Surface2D.MaxAssetVersion);
-                            writer.Write(inputFile);
+                            writer.Write(originalInputFile);
 
                             writer.Write(newTex.Width);
                             writer.Write(newTex.Height);
@@ -229,6 +246,8 @@ namespace AlkaronEngine.Assets.Importers
                             }
                             surf.Load(packageName, assetName, memStr);
                             packageToSaveIn.StoreAsset(assetName, surf);
+
+                            importedAsset = surf;
                         }
                     }
                 }

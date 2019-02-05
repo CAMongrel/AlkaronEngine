@@ -47,7 +47,7 @@ namespace AlkaronEngine.Gui
            : base(renderConfig)
         {
             Text = setText;
-            Font = setFont ?? renderConfig.RenderManager.EngineFont;
+            Font = setFont ?? renderConfig.PrimitiveRenderManager.EngineFont;
             TextAlignHorizontal = UITextAlignHorizontal.Center;
             TextAlignVertical = UITextAlignVertical.Center;
             AutoScaleFont = false;

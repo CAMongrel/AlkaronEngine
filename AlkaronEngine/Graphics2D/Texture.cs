@@ -253,12 +253,12 @@ namespace AlkaronEngine.Graphics2D
          Rectangle rightRect = new Rectangle((int)destRect.X + (int)destRect.Width - BorderWidth, (int)destRect.Y, BorderWidth, (int)destRect.Height);
          Rectangle bottomRect = new Rectangle((int)destRect.X, (int)destRect.Y + (int)destRect.Height - BorderWidth, (int)destRect.Width, BorderWidth);
 
-         renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
-         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, leftRect, singleRect, col);
-         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, topRect, singleRect, col);
-         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, rightRect, singleRect, col);
-         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, bottomRect, singleRect, col);
-         renderConfig.RenderManager.SpriteBatch.End();
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, leftRect, singleRect, col);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, topRect, singleRect, col);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, rightRect, singleRect, col);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, bottomRect, singleRect, col);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.End();
       }
 
       public static void FillRectangle(IRenderConfiguration renderConfig, RectangleF destRect, Color col)
@@ -277,9 +277,9 @@ namespace AlkaronEngine.Graphics2D
          Rectangle singleRect = new Rectangle(0, 0, 1, 1);
          Rectangle destinationRect = new Rectangle((int)destRect.X, (int)destRect.Y, (int)destRect.Width, (int)destRect.Height);
 
-         renderConfig.RenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
-         renderConfig.RenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, destinationRect, singleRect, col);
-         renderConfig.RenderManager.SpriteBatch.End();
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.Draw(Texture.SingleWhite.nativeTexture, destinationRect, singleRect, col);
+         renderConfig.PrimitiveRenderManager.SpriteBatch.End();
       }
 
       #endregion      
