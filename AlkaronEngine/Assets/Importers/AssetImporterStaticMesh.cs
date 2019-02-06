@@ -87,7 +87,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             catch (Exception ex)
             {
-                AlkaronCoreGame.Core.Log("Failed to import Mesh: " + ex.ToString());
+                AlkaronCoreGame.Core.Log("Failed to import Mesh: " + ex);
                 return false;
             }
 

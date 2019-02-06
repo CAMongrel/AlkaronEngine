@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Assets.Materials
@@ -9,15 +10,21 @@ namespace AlkaronEngine.Assets.Materials
     {
         private const int MaxAssetVersion = 1;
 
-        enum GraphicsLibrary
+        internal enum GraphicsLibrary
         {
             DirectX,
             OpenGL 
         }
 
+        internal enum CodeType
+        {
+            XNAEffect
+        }
+
         class EffectCode
         {
             internal GraphicsLibrary GraphicsLibrary;
+            internal CodeType CodeType;
             internal byte[] ByteCode;
         }
 
@@ -50,10 +57,31 @@ namespace AlkaronEngine.Assets.Materials
                 {
                     EffectCode code = new EffectCode();
                     code.GraphicsLibrary = (GraphicsLibrary)reader.ReadInt32();
+                    code.CodeType = (CodeType)reader.ReadInt32();
                     code.ByteCode = reader.ReadBytes(reader.ReadInt32());
                     EffectCodeList.Add(code);
                 }
             }
+        }
+
+        private EffectCode GetEffectCode(GraphicsLibrary graphicsLibrary, CodeType codeType)
+        {
+            return (from e in EffectCodeList
+                    where e.GraphicsLibrary == graphicsLibrary &&
+                          e.CodeType == codeType
+                    select e).FirstOrDefault();
+        }
+
+        internal void AddBinaryCode(GraphicsLibrary graphicsLibrary, CodeType codeType, byte[] binaryCode)
+        {
+            EffectCode existingEntry = GetEffectCode(graphicsLibrary, codeType);
+            if (existingEntry != null)
+            {
+                // TODO Handle error
+                return; 
+            }
+
+
         }
 
         /// <summary>
@@ -83,6 +111,7 @@ namespace AlkaronEngine.Assets.Materials
             for (int i = 0; i < EffectCodeList.Count; i++)
             {
                 writer.Write((int)EffectCodeList[i].GraphicsLibrary);
+                writer.Write((int)EffectCodeList[i].CodeType);
                 writer.Write((int)EffectCodeList[i].ByteCode.Length);
                 writer.Write(EffectCodeList[i].ByteCode);
             }

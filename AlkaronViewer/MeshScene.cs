@@ -103,6 +103,10 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
+            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.ogl.mgfxo", "BasicEffect", "EngineMaterials", out AlkaronEngine.Assets.Materials.Material material);
+            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.dx11.mgfxo", "BasicEffect", "EngineMaterials", out material);
+            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.mgfxo", "BasicEffect", "EngineMaterials", out material);
+
             PresentModel("Monster", GltfModelEntryType.Base);
         }
 
