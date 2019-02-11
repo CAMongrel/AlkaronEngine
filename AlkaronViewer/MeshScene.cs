@@ -103,13 +103,15 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
-            //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.dx11.mgfxo", "BasicEffect", "EngineMaterials", out var material);
+            //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SkinnedEffect.dx11.mgfxo", "SkinnedEffect", "EngineMaterials", out var material);
+            //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SpriteEffect.dx11.mgfxo", "SpriteEffect", "EngineMaterials", out material);
 
-            var package = MainGame.Instance.PackageManager.LoadPackage("EngineMaterials", false);
+            //var package = MainGame.Instance.PackageManager.LoadPackage("EngineMaterials", false);
+            //package.Save();
 
-            var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
+            //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
-            PresentModel("Monster", GltfModelEntryType.Base);
+            PresentModel("Box", GltfModelEntryType.Base);
         }
 
         private void PresentModel(string name, GltfModelEntryType type = GltfModelEntryType.Base)

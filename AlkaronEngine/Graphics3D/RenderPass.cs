@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Util;

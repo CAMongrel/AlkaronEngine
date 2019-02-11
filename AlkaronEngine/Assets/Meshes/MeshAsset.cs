@@ -1,6 +1,7 @@
-﻿// Project: Hellspawn
+// Project: Hellspawn
 
 #region Using directives
+using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

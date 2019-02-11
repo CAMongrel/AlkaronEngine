@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -6,6 +6,7 @@ using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using AlkaronEngine.Assets.Meshes;
+using AlkaronEngine.Assets.Materials;
 
 namespace AlkaronEngine.Graphics3D.Geometry
 {

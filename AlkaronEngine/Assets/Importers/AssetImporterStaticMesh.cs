@@ -345,15 +345,15 @@ namespace AlkaronEngine.Assets.Importers
                 packageToSaveIn.StoreAsset(staticMesh);
                 staticMeshes.Add(staticMesh);
 
-                PbrMaterial material = CreateMaterialForMesh(prim, model);
+                Materials.Material material = CreateMaterialForMesh(prim, model);
             }
 
             return staticMeshes;
         }
 
-        private static PbrMaterial CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
+        private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
         {
-            PbrMaterial result = new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
+            Materials.Material result = null; //new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
             //result.Effect = AlkaronCoreGame.Core.SceneManager.RenderManager.
 
             return result;

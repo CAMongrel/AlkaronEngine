@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -9,7 +10,7 @@ namespace AlkaronEngine.Assets.Materials
 {
     public class Material : Asset
     {
-        protected override int MaxAssetVersion => 1;
+        protected override int MaxAssetVersion => 2;
 
         internal enum CodeType
         {
@@ -27,9 +28,16 @@ namespace AlkaronEngine.Assets.Materials
 
         private List<EffectCode> EffectCodeList;
 
+        public bool RequiresOrderingBackToFront { get; set; }
+        public BlendState BlendState { get; set; }
+        public SamplerState SamplerState { get; set; }
+
         public Material()
         {
+            RequiresOrderingBackToFront = false;
             EffectCodeList = new List<EffectCode>();
+            BlendState = BlendState.Opaque;
+            SamplerState = SamplerState.AnisotropicWrap;
 
             Effect = null;
         }
@@ -54,6 +62,13 @@ namespace AlkaronEngine.Assets.Materials
             EffectCodeList.Clear();
 
             base.Deserialize(reader);
+
+            if (AssetVersion >= 2)
+            {
+                RequiresOrderingBackToFront = reader.ReadBoolean();
+                int tempBlendState = reader.ReadInt32();
+                int tempSamplerState = reader.ReadInt32();
+            }
 
             int count = reader.ReadInt32();
             EffectCodeList = new List<EffectCode>(count);
@@ -118,9 +133,19 @@ namespace AlkaronEngine.Assets.Materials
             return material;
         }
 
+        internal virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        {
+            AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
+            AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;
+        }
+
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
+
+            writer.Write(RequiresOrderingBackToFront);
+            writer.Write((Int32)0);     // Placeholder for blend mode
+            writer.Write((Int32)0);     // Placeholder for sampler mode
 
             writer.Write(EffectCodeList.Count);
             for (int i = 0; i < EffectCodeList.Count; i++)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Components;
@@ -10,6 +10,7 @@ using AlkaronEngine.Graphics3D.RenderProxies;
 using System.Threading;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Graphics3D.Geometry;
+using AlkaronEngine.Assets.Materials;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -334,6 +335,7 @@ namespace AlkaronEngine.Graphics3D
                 Material materialToUse = proxy.Material;
                 if (proxy.Material == null)
                 {
+                    materialToUse = AlkaronCoreGame.Core.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
                     //materialToUse = MaterialLibrary.GetMaterialByName(MaterialLibrary.DefaultMaterialName);
                 }
 

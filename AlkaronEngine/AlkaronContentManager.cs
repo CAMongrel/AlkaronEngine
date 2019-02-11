@@ -48,5 +48,23 @@ namespace AlkaronEngine
 
             return base.OpenStream(assetName);
         }
+
+        /// <summary>
+        /// Directly opens a Stream to an embedded resource.
+        /// 
+        /// Completely unrelated to the XNA content pipeline.
+        /// </summary>
+        public Stream OpenResourceStream(string resourceName)
+        {
+            var fullName = FindResource(resourceName);
+
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullName);
+            if (stream != null)
+            {
+                return stream;
+            }
+
+            return null;
+        }
     }
 }
