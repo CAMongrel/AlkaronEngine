@@ -1,4 +1,4 @@
-﻿using AlkaronEngine.Actors;
+using AlkaronEngine.Actors;
 using AlkaronEngine.Assets.Importers;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Components;
@@ -103,9 +103,11 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
-            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.ogl.mgfxo", "BasicEffect", "EngineMaterials", out AlkaronEngine.Assets.Materials.Material material);
-            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.dx11.mgfxo", "BasicEffect", "EngineMaterials", out material);
-            AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.mgfxo", "BasicEffect", "EngineMaterials", out material);
+            //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/BasicEffect.dx11.mgfxo", "BasicEffect", "EngineMaterials", out var material);
+
+            var package = MainGame.Instance.PackageManager.LoadPackage("EngineMaterials", false);
+
+            var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
             PresentModel("Monster", GltfModelEntryType.Base);
         }

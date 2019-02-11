@@ -1,33 +1,44 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AlkaronEngine.Assets
 {
 	public class AssetManager
 	{
-		#region Load<T>
-		public T Load<T>(string FullAssetName) where T : Asset, new()
-		{
-			if (FullAssetName == null)
+        #region Load<T>
+        public T Load<T>(string assetPath) where T : Asset, new()
+        {
+            string[] assetPathComponents = assetPath.Split('.');
+            if (assetPathComponents.Length != 3)
             {
-                return null;
+                // TODO!!!
+                //Log.LogError("Invalid name specified for Load Asset.");
+                return default(T);
             }
 
-            string[] assetPath = FullAssetName.Split('.');
-			if (assetPath.Length != 3)
-			{
-				// TODO!!!
-				//Log.LogError("Invalid name specified for Load Asset.");
-				return new T();
-			}
-			
-			Package pkg = AlkaronCoreGame.Core.PackageManager.LoadPackage(assetPath[0]);
+            return Load<T>(assetPathComponents[0], assetPathComponents[1] + "." + assetPathComponents[2]);
+        }
+
+        public T Load<T>(string packageName, string assetName) where T : Asset, new()
+		{
+			if (packageName == null)
+            {
+                throw new ArgumentNullException(nameof(packageName));
+            }
+            if (assetName == null)
+            {
+                throw new ArgumentNullException(nameof(assetName));
+            }
+
+            packageName = Path.ChangeExtension(packageName, ".package");
+            Package pkg = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
 			if (pkg == null)
             {
                 return new T();
             }
 
-            T asset = pkg.GetAsset(assetPath[1] + "." + assetPath[2]) as T;
+            T asset = pkg.GetAsset(assetName) as T;
 			if (asset == null)
             {
                 return new T();

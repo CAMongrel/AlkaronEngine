@@ -9,9 +9,13 @@ namespace AlkaronViewer
 {
     public class MainGame : AlkaronCoreGame
     {
+        internal static MainGame Instance;
+
         public MainGame()
             : base(1280, 1024)
         {
+            Instance = this;
+
             IsMouseVisible = true;
         }
 

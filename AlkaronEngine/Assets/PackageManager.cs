@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AlkaronEngine.Assets
@@ -64,8 +64,10 @@ namespace AlkaronEngine.Assets
 		/// <summary>
 		/// Loads a package from disk or returns an already loaded
 		/// package.
+        /// Loads all assets of the package into memory, if "loadFully" is 
+        /// <see langword="true"/>.
 		/// </summary>
-		public Package LoadPackage(string packageName)
+		public Package LoadPackage(string packageName, bool loadFully)
 		{
 			packageName = Path.ChangeExtension(packageName, ".package");
 			
@@ -89,14 +91,17 @@ namespace AlkaronEngine.Assets
 				
 			Package pkg = new Package(filename);
 			LoadedPackages.Add(packageName, pkg);
-			pkg.Load();
+            if (loadFully)
+            {
+                pkg.LoadAllAssets();
+            }
 
-#if WINDOWS
+#if IS_EDITOR
 			if (Program.Game.IsEditor)
 				RefreshPackageNodeList();
 #endif
 
-			return pkg;
+            return pkg;
 		}
 		#endregion
 		
@@ -197,7 +202,7 @@ namespace AlkaronEngine.Assets
 			if (DoesPackageExist(packageName))
             {
                 // Log warning?
-                return LoadPackage(packageName);
+                return LoadPackage(packageName, false);
             }
 
             packageName = Path.ChangeExtension(packageName, ".package");
@@ -270,7 +275,7 @@ namespace AlkaronEngine.Assets
 		{
 			foreach (KeyValuePair<string, string> pair in PackageMap)
 			{
-				Package pkg = LoadPackage(pair.Key);
+				Package pkg = LoadPackage(pair.Key, true);
 				pkg.SetNeedsSave(true);
 				pkg.Save();
 			}

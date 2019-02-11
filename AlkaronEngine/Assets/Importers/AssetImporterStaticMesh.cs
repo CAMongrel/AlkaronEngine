@@ -1,4 +1,4 @@
-﻿using AlkaronEngine.Assets.Materials;
+using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
 using AlkaronEngine.Graphics2D;
@@ -59,7 +59,7 @@ namespace AlkaronEngine.Assets.Importers
 
             if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName);
+                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
             }
             else
             {
@@ -154,7 +154,7 @@ namespace AlkaronEngine.Assets.Importers
                 {
                     string surfaceAssetName = GetImageAssetName(img, imageIndex, fullFilename);
 
-                    AssetImporterSurface2D.Import(str, surfaceAssetName, packageToSaveIn.PackageName, "", null, out Surface2D surface);
+                    AssetImporterSurface2D.Import(str, surfaceAssetName, packageToSaveIn.PackageName, fullFilename, out Surface2D surface);
                     if (surface != null)
                     {
                         resultList.Add(surface); 
@@ -342,7 +342,7 @@ namespace AlkaronEngine.Assets.Importers
                 }
 
                 staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
-                packageToSaveIn.StoreAsset(staticMesh.Name, staticMesh);
+                packageToSaveIn.StoreAsset(staticMesh);
                 staticMeshes.Add(staticMesh);
 
                 PbrMaterial material = CreateMaterialForMesh(prim, model);

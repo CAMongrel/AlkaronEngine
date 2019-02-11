@@ -1,4 +1,4 @@
-﻿using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -80,69 +80,57 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Loads the static mesh from the compiled binary mesh
         /// </summary>
-        public override void Load(string packageName, string assetName, Stream stream)
+        public override void Deserialize(BinaryReader reader)
         {
-            Name = assetName;
-            PackageName = Path.GetFileNameWithoutExtension(packageName);
+            base.Deserialize(reader);
 
-            BinaryReader reader = new BinaryReader(stream);
+            // Read mesh data
+            int NumTriangles = reader.ReadInt32();
+            int vertLen = reader.ReadInt32();
+            objectVertices = new TangentVertex[vertLen];
+            for (int i = 0; i < objectVertices.Length; i++)
             {
-                string magic = new string(reader.ReadChars(4));
-                AssetVersion = reader.ReadInt32();
-
-                // Skip the original filename on the Xbox, remember on PC
-                OriginalFilename = reader.ReadString();
-
-                // Read mesh data
-                int NumTriangles = reader.ReadInt32();
-                int vertLen = reader.ReadInt32();
-                objectVertices = new TangentVertex[vertLen];
-                for (int i = 0; i < objectVertices.Length; i++)
-                {
-                    objectVertices[i] = new TangentVertex(
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()));
-                }
-
-                int indexLen = reader.ReadInt32();
-                objectIndices = new uint[indexLen];
-                for (int i = 0; i < objectIndices.Length; i++)
-                {
-                    objectIndices[i] = reader.ReadUInt32();
-                }
-
-                // Read BoundingSphere
-                BoundingSphere = new BoundingSphere(
+                objectVertices[i] = new TangentVertex(
                     new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle()),
-                    reader.ReadSingle());
+                    new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()));
+            }
 
-                // Read MeshCameras
-                int meshCameraCount = reader.ReadInt32();
-                if (meshCameraCount == 0)
+            int indexLen = reader.ReadInt32();
+            objectIndices = new uint[indexLen];
+            for (int i = 0; i < objectIndices.Length; i++)
+            {
+                objectIndices[i] = reader.ReadUInt32();
+            }
+
+            // Read BoundingSphere
+            BoundingSphere = new BoundingSphere(
+                new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                    reader.ReadSingle()),
+                reader.ReadSingle());
+
+            // Read MeshCameras
+            int meshCameraCount = reader.ReadInt32();
+            if (meshCameraCount == 0)
+            {
+                MeshCameras = null;
+            }
+            else
+            {
+                MeshCameras = new MeshCamera[meshCameraCount];
+                for (int i = 0; i < meshCameraCount; i++)
                 {
-                    MeshCameras = null;
+                    MeshCameras[i] = new MeshCamera();
+                    MeshCameras[i].Translation = new Vector3(
+                        reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+                    MeshCameras[i].CameraType = (MeshCameraType)reader.ReadInt32();
                 }
-                else
-                {
-                    MeshCameras = new MeshCamera[meshCameraCount];
-                    for (int i = 0; i < meshCameraCount; i++)
-                    {
-                        MeshCameras[i] = new MeshCamera();
-                        MeshCameras[i].Translation = new Vector3(
-                            reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-                        MeshCameras[i].CameraType = (MeshCameraType)reader.ReadInt32();
-                    }
-                }
-
-
             }
 
             // Create XNA buffers and fill them
@@ -247,7 +235,6 @@ namespace AlkaronEngine.Assets.Meshes
             mesh.CreateBoundingSphere();
             //mesh.CreateRuntimeCollisionData(CollisionType.Vertices);
 
-            mesh.PackageName = "Transient";
             mesh.Name = mesh.GetType().ToString();
 
             return mesh;
@@ -258,11 +245,9 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Saves the static mesh into its binary representation
         /// </summary>
-        public override void Save(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer)
         {
-            writer.Write("AEAF".ToCharArray());
-            writer.Write(MaxAssetVersion);
-            writer.Write(OriginalFilename);
+            base.Serialize(writer);
 
             writer.Write(NumberOfFaces);
             writer.Write(objectVertices.Length);
@@ -316,20 +301,6 @@ namespace AlkaronEngine.Assets.Meshes
             {
                 writer.Write((Int32)0);
             }
-
-            // Write collision info
-            // New in version 4
-            //WriteCollisionData(writer, CollisionData);
-
-            // New in version 7
-            //writer.Write((int)customCollisions.Count);
-            //for (int i = 0; i < customCollisions.Count; i++)
-            {
-                //WriteCollisionData(writer, customCollisions[i]);
-            }
-
-            // Write node material name
-            //writer.Write(nodeMaterial != null ? nodeMaterial.Fullname : "");
         }
         #endregion
 

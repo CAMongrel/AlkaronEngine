@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,6 +11,12 @@ using AlkaronEngine.Assets;
 
 namespace AlkaronEngine
 {
+    public enum GraphicsLibrary
+    {
+        DirectX11,
+        OpenGL
+    }
+
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
@@ -27,6 +33,16 @@ namespace AlkaronEngine
         public string ContentDirectory { get; protected set; }
 
         public PackageManager PackageManager { get; private set; }
+
+        public AssetManager AssetManager { get; private set; }
+
+        public GraphicsLibrary GraphicsLibrary
+        {
+            get
+            {
+                return GraphicsLibrary.OpenGL;            
+            } 
+        }
 
         public AlkaronCoreGame(int setPreferredBackbufferWidth = 1280,
                                int setPreferredBackbufferHeight = 720,
@@ -48,6 +64,9 @@ namespace AlkaronEngine
             graphics.PreferredBackBufferHeight = setPreferredBackbufferHeight;
             graphics.ApplyChanges();
 
+            // Replace ContentManager with custom implementation using
+            // the ServiceProvider of the default ContentManager
+            Content = new AlkaronContentManager(Content.ServiceProvider);
             Content.RootDirectory = setContentFolder;
         }
 
@@ -68,6 +87,8 @@ namespace AlkaronEngine
         {
             base.Initialize();
 
+            AssetManager = new AssetManager();
+
             PackageManager = new PackageManager();
             PackageManager.BuildPackageMap();
 
@@ -75,7 +96,9 @@ namespace AlkaronEngine
 
             ScreenQuad.Initialize(SceneManager);
             Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
-            SceneManager.PrimitiveRenderManager.EngineFont = Content.Load<SpriteFont>("DefaultFont");
+
+            DefaultFont = Content.Load<SpriteFont>("DefaultFont");
+            SceneManager.PrimitiveRenderManager.EngineFont = DefaultFont;
 
             RasterizerState rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.CullClockwiseFace;

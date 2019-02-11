@@ -1,11 +1,40 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace AlkaronEngine.Assets
 {
 	public delegate void ChangedDelegate(Package package, bool NeedsSave);
 
+    /// <summary>
+    /// A package containing assets.
+    /// 
+    /// Can be a real package stored persistently on disk or a transient package
+    /// that cannot be saved an only exists at runtime (i.e. created through
+    /// dynamic logic)
+    /// 
+    /// How assets are managed:
+    /// The "LoadedAssets" dictionary contains all assets that are currently
+    /// loaded into memory. This is different (any may be even distinct) from 
+    /// what is stored in the "AssetOffsetMap" dictionary which defines where
+    /// a specific asset (identified by name) is stored on disk inside the 
+    /// package file.
+    /// 
+    /// Example:
+    /// The "AssetOffsetMap" contains a few "Surface2D" assets which are stored
+    /// in the actual package file on disk. When the package is initially loaded, the
+    /// "AssetOffsetMap" is filled, but the "LoadedAssets" dictionary is empty,
+    /// because none of the Surface2Ds were so far needed by other parts of the 
+    /// program.
+    /// Then a new "Material" asset is created at runtime and added to this package.
+    /// This Material will be part of the "LoadedAssets" dictionary (because it
+    /// was created at runtime and exists in memory), but it's not part of the
+    /// AssetOffsetMap, because the package has not been written to disk yet.
+    /// If one of the Surface2Ds in the "AssetOffsetMap" is needed, it will be loaded
+    /// from disk and added to the "LoadedAssets" dictionary as well. It is then
+    /// present in both dictionaries.
+    /// </summary>
 	public class Package : IDisposable
 	{
 		#region Members
@@ -56,7 +85,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Is Package loaded?
         /// </summary>
-		private bool IsLoaded;
+		private bool IsFullyLoaded;
 
         /// <summary>
         /// Is Package currently loading?
@@ -80,7 +109,7 @@ namespace AlkaronEngine.Assets
 			PackageVersion = MaxPackageVersion;
 
 			IsLoading = false;
-			IsLoaded = false;
+            IsFullyLoaded = true;
 		}
 		
 		public Package(string filename)
@@ -93,12 +122,22 @@ namespace AlkaronEngine.Assets
 			PackageVersion = MaxPackageVersion;
 
 			IsLoading = false;
-			IsLoaded = false;
+            IsFullyLoaded = false;
 			
 			isTransient = false;
 
 			SetNeedsSave(false);
-		}
+
+            if (File.Exists(fullFilename))
+            {
+                Open();
+            }
+            else
+            {
+                // If this is a fresh package, mark it as fully loaded
+                IsFullyLoaded = true;
+            }
+        }
 		#endregion
 		
 		#region CreateTransient
@@ -110,7 +149,7 @@ namespace AlkaronEngine.Assets
 			Package pkg = new Package();
 			pkg.fullFilename = "";
 			pkg.isTransient = true;
-			pkg.IsLoaded = true;
+			pkg.IsFullyLoaded = true;
 			pkg.NeedsSave = false;
 			return pkg;
 		}
@@ -122,20 +161,63 @@ namespace AlkaronEngine.Assets
 			// Clear asset list
 			foreach (KeyValuePair<string, Asset> pair in LoadedAssets)
 			{
+                pair.Value.SetPackageOwner(null);
 				pair.Value.Dispose();
 			}
 			LoadedAssets.Clear();
 		}
-		#endregion
+        #endregion
 
-		#region Load
-		/// <summary>
-		/// Loads all assets in the package
-		/// </summary>
-		public void Load()
+        #region Open
+        /// <summary>
+        /// Opens the package, reading the Asset index, but does not load
+        /// any assets.
+        /// </summary>
+        public void Open()
+        {
+            if (File.Exists(fullFilename) == false)
+            {
+                return;
+            }
+
+            AssetOffsetMap.Clear();
+
+            using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
+            {
+                string magic = reader.ReadString();
+                PackageVersion = reader.ReadInt32();
+
+                int numberOfAssets = reader.ReadInt32();
+                int offsetOffsetMap = reader.ReadInt32();
+
+                // We have to store the offsets seperately for the loading process
+                // to be able to skip assets that fail to load
+                int[] offsets = new int[numberOfAssets];
+
+                long curPos = reader.BaseStream.Position;
+                reader.BaseStream.Seek(offsetOffsetMap, SeekOrigin.Begin);
+
+                for (int i = 0; i < numberOfAssets; i++)
+                {
+                    string assetName = reader.ReadString();
+                    int offset = reader.ReadInt32();
+
+                    offsets[i] = offset;
+
+                    AssetOffsetMap.Add(assetName, offset);
+                }
+            }
+        }
+        #endregion
+
+        #region Load
+        /// <summary>
+        /// Loads all assets in the package
+        /// </summary>
+        public void LoadAllAssets()
 		{
 			if (File.Exists(fullFilename) == false ||
-				IsLoaded == true)
+				IsFullyLoaded == true)
             {
                 return;
             }
@@ -146,8 +228,7 @@ namespace AlkaronEngine.Assets
 			{
 				AssetOffsetMap.Clear();
 
-				using (BinaryReader reader =
-					new BinaryReader(File.OpenRead(fullFilename)))
+				using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
 				{
 					string magic = reader.ReadString();
 					PackageVersion = reader.ReadInt32();
@@ -191,7 +272,7 @@ namespace AlkaronEngine.Assets
 					}
 				}
 
-				IsLoaded = true;
+                IsFullyLoaded = true;
 			}
 			finally
 			{
@@ -210,7 +291,6 @@ namespace AlkaronEngine.Assets
 
 			try
 			{
-				assetName = reader.ReadString();
 				string assetTypeName = reader.ReadString();
 
 				Type assetType = Type.GetType(assetTypeName);
@@ -224,7 +304,10 @@ namespace AlkaronEngine.Assets
 				Asset newAsset = assetType.InvokeMember(null,
 					System.Reflection.BindingFlags.CreateInstance, null,
 					null, new object[] { }) as Asset;
-				newAsset.Load(PackageName, assetName, reader.BaseStream);
+				newAsset.Deserialize(reader);
+                newAsset.SetPackageOwner(this);
+
+                assetName = newAsset.Name;
 
 				if (LoadedAssets.ContainsKey(assetName))
                 {
@@ -267,8 +350,7 @@ namespace AlkaronEngine.Assets
 
             long offset = AssetOffsetMap[assetName];
 
-			using (BinaryReader reader =
-					new BinaryReader(File.OpenRead(fullFilename)))
+			using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
 			{
 				reader.BaseStream.Seek(offset, SeekOrigin.Begin);
 
@@ -289,40 +371,17 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		public Asset GetAsset(string assetName)
 		{
-			if (IsLoaded == false)
-			{
-				// If we have loaded the package partially already,
-				// we may habe loaded the asset, so return it in that case.
-				if (LoadedAssets.ContainsKey(assetName) == true)
-                {
-                    return LoadedAssets[assetName];
-                }
-
-                if (IsLoading)
-				{
-					if (LoadAsset(assetName) == false)
-					{
-						// We're currently in the process of loading this package
-						// and need an asset which hasn't been loaded yet.
-						// This is a fatal error and we cannot continue.
-						return null;
-					}
-
-					// Return the loaded asset
-					return LoadedAssets[assetName];
-				}
-
-				Load();
-
-				if (IsLoaded == false)
-                {
-                    return null;
-                }
+            // If we have alread loaded the asset previously, then just return it.
+            if (LoadedAssets.ContainsKey(assetName) == true)
+            {
+                return LoadedAssets[assetName];
             }
 
-			if (LoadedAssets.ContainsKey(assetName) == false)
+            bool result = LoadAsset(assetName);
+            if (result == false)
             {
-                return null;
+                // Couldn't load the asset from disk.
+                return null; 
             }
 
             return LoadedAssets[assetName];
@@ -345,13 +404,16 @@ namespace AlkaronEngine.Assets
                 return false;
             }
 
-            if (IsLoaded == false)
+            if (IsFullyLoaded == false)
 			{
-				Load();
+                // Before saving, we need to fully load the package, to 
+                // correctly save all assets
+
+				LoadAllAssets();
 
                 // If IsLoaded is still false after trying to load the package,
                 // then something went wrong and we can't continue
-                if (IsLoaded == false)
+                if (IsFullyLoaded == false)
                 {
                     AlkaronCoreGame.Core.Log("Saving package failed");
                     return false;
@@ -379,9 +441,8 @@ namespace AlkaronEngine.Assets
 				{
 					AssetOffsetMap.Add(pair.Key, (int)writer.BaseStream.Position);
 
-					writer.Write(pair.Key);
 					writer.Write(pair.Value.GetType().ToString());
-					pair.Value.Save(writer);
+					pair.Value.Serialize(writer);
 				}
 
 				long curPos = writer.BaseStream.Position;
@@ -410,8 +471,15 @@ namespace AlkaronEngine.Assets
 		/// <summary>
 		/// Stores the asset in the package
 		/// </summary>
-		public void StoreAsset(string assetName, Asset asset)
+		public void StoreAsset(Asset asset)
 		{
+            if (asset == null)
+            {
+                throw new ArgumentNullException(nameof(asset)); 
+            }
+
+            string assetName = asset.Name;
+
 			if (LoadedAssets.ContainsKey(assetName))
 			{
 				if (LoadedAssets[assetName] != asset)
@@ -425,23 +493,26 @@ namespace AlkaronEngine.Assets
 				LoadedAssets.Add(assetName, asset);
 			}
 
+            asset.SetPackageOwner(this);
+
 			SetNeedsSave(true);
 		}
         #endregion
 
         #region StoreAsset
 		/// <summary>
-		/// Removes an asset from the package
+		/// Removes an asset from the package. This requires loading all
+        /// assets in the package.
 		/// </summary>
 		internal void DeleteAsset(Asset SelectedAsset)
 		{
-			if (IsLoaded == false)
+			if (IsFullyLoaded == false)
 			{
-				Load();
+				LoadAllAssets();
 
                 // If IsLoaded is still false after trying to load the package,
                 // then something went wrong and we can't continue
-                if (IsLoaded == false)
+                if (IsFullyLoaded == false)
                 {
                     AlkaronCoreGame.Core.Log("Delete package failed");
                     return;
@@ -454,8 +525,9 @@ namespace AlkaronEngine.Assets
             }
 
             LoadedAssets.Remove(SelectedAsset.Name);
+            SelectedAsset.SetPackageOwner(null);
 
-			SetNeedsSave(true);
+            SetNeedsSave(true);
 		}
         #endregion
 
@@ -468,17 +540,24 @@ namespace AlkaronEngine.Assets
 			// Clear asset list
 			foreach (KeyValuePair<string, Asset> pair in LoadedAssets)
 			{
+                pair.Value.SetPackageOwner(null);
 				pair.Value.Dispose();
 			}
 			LoadedAssets.Clear();
 
 			using (BinaryWriter writer = new BinaryWriter(File.Create(fullFilename)))
 			{
-				// Write empty number of assets
-				writer.Write(LoadedAssets.Count);
-			}
+                // Base header
+                writer.Write("HPKG");
+                writer.Write(MaxPackageVersion);
+                // Empty asset list
+                writer.Write(LoadedAssets.Count);
 
-			IsLoaded = true;
+                long offsetMapPos = writer.BaseStream.Position;
+                writer.Write((int)0);       // Offset of the AssetOffsetMap
+            }
+
+            IsFullyLoaded = true;
 
 			SetNeedsSave(true);
 		}
@@ -541,13 +620,9 @@ namespace AlkaronEngine.Assets
 		{
 			type = type.ToLowerInvariant();
 
-			List<Asset> resultList = new List<Asset>();
-			foreach (KeyValuePair<string, Asset> pair in LoadedAssets)
-			{
-				if (pair.Value.AssetType.ToLowerInvariant() == type)
-					resultList.Add(pair.Value);
-			}
-			return resultList.ToArray();
+            return (from a in LoadedAssets.Values
+                    where a.AssetType.ToLowerInvariant() == type
+                    select a).ToArray();
 		}
         #endregion
 

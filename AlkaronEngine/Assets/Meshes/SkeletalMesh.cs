@@ -458,187 +458,187 @@ namespace AlkaronEngine.Assets.Meshes
 			Name = assetName;
 			PackageName = Path.GetFileNameWithoutExtension(packageName);
 
-			BinaryReader reader = new BinaryReader(stream);
-			{
-				string magic = reader.ReadString();
-				assetVersion = reader.ReadInt32();
+            using (BinaryReader reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true))
+            {
+                string magic = reader.ReadString();
+                assetVersion = reader.ReadInt32();
 
-				// Skip the original filename on the Xbox, remember on PC
+                // Skip the original filename on the Xbox, remember on PC
 #if (WINDOWS)
 				OriginalFilename = reader.ReadString();
 #else
-				reader.ReadString();
+                reader.ReadString();
 #endif
 
-				// Read mesh data
-				numOfVertices = reader.ReadInt32();
-				vertices = new SkinnedTangentVertex[numOfVertices];
-				for (int i = 0; i < vertices.Length; i++)
-				{
-					vertices[i] = new SkinnedTangentVertex(
-						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle()),
-						new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle()),
-						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle()),
-						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle()),
-						new Vector4(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle(), reader.ReadSingle()),
-						new Vector4(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle(), reader.ReadSingle()));
-				} // for (int)
+                // Read mesh data
+                numOfVertices = reader.ReadInt32();
+                vertices = new SkinnedTangentVertex[numOfVertices];
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] = new SkinnedTangentVertex(
+                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle()),
+                        new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle()),
+                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle()),
+                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle()),
+                        new Vector4(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle(), reader.ReadSingle()),
+                        new Vector4(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle(), reader.ReadSingle()));
+                } // for (int)
 
-				numOfIndices = reader.ReadInt32();
-				objectIndices = new int[numOfIndices];
-				for (int i = 0; i < objectIndices.Length; i++)
-				{
-					objectIndices[i] = reader.ReadInt32();
-				} // for (int)
+                numOfIndices = reader.ReadInt32();
+                objectIndices = new int[numOfIndices];
+                for (int i = 0; i < objectIndices.Length; i++)
+                {
+                    objectIndices[i] = reader.ReadInt32();
+                } // for (int)
 
-				if (assetVersion == 1)
-				{
-					boundingSphere = new BoundingSphere(
-						new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-							reader.ReadSingle()),
-						reader.ReadSingle());
-				} // if (assetVersion)
-				else if (assetVersion == 2 || assetVersion == 3)
-				{
-					CollisionType collisionType = (CollisionType)reader.ReadInt32();
-					int vertCount = reader.ReadInt32();
-					Vector2[] collisionVertices = new Vector2[vertCount];
-					for (int i = 0; i < vertCount; i++)
-					{
-						collisionVertices[i] = new Vector2(
-							reader.ReadSingle(), reader.ReadSingle());
-					} // for (int)
-				} // else if
-				else
-				{
-					// Read collision data
-					collisionData = ReadCollisionData(reader);
+                if (assetVersion == 1)
+                {
+                    boundingSphere = new BoundingSphere(
+                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                            reader.ReadSingle()),
+                        reader.ReadSingle());
+                } // if (assetVersion)
+                else if (assetVersion == 2 || assetVersion == 3)
+                {
+                    CollisionType collisionType = (CollisionType)reader.ReadInt32();
+                    int vertCount = reader.ReadInt32();
+                    Vector2[] collisionVertices = new Vector2[vertCount];
+                    for (int i = 0; i < vertCount; i++)
+                    {
+                        collisionVertices[i] = new Vector2(
+                            reader.ReadSingle(), reader.ReadSingle());
+                    } // for (int)
+                } // else if
+                else
+                {
+                    // Read collision data
+                    collisionData = ReadCollisionData(reader);
 
-					if (assetVersion >= 8)
-					{
-						// Read custom collisions
-						int numColl = reader.ReadInt32();
-						for (int i = 0; i < numColl; i++)
-						{
-							customCollisions.Add(ReadCollisionData(reader));
-						} // for (int)
-					} // if (assetVersion)
+                    if (assetVersion >= 8)
+                    {
+                        // Read custom collisions
+                        int numColl = reader.ReadInt32();
+                        for (int i = 0; i < numColl; i++)
+                        {
+                            customCollisions.Add(ReadCollisionData(reader));
+                        } // for (int)
+                    } // if (assetVersion)
 
-					if (assetVersion >= 5)
-					{
-						// Read animation data
-						runtimeAnimations.Clear();
+                    if (assetVersion >= 5)
+                    {
+                        // Read animation data
+                        runtimeAnimations.Clear();
 
-						int numAnim = reader.ReadInt32();
-						for (int i = 0; i < numAnim; i++)
-						{
-							RuntimeAnimation anim = new RuntimeAnimation();
-							anim.Name = reader.ReadString();
-							anim.Start = reader.ReadInt32();
-							anim.End = reader.ReadInt32();
-							runtimeAnimations.Add(anim);
-						} // for (int)
-					} // if (assetVersion)
-				} // else
+                        int numAnim = reader.ReadInt32();
+                        for (int i = 0; i < numAnim; i++)
+                        {
+                            RuntimeAnimation anim = new RuntimeAnimation();
+                            anim.Name = reader.ReadString();
+                            anim.Start = reader.ReadInt32();
+                            anim.End = reader.ReadInt32();
+                            runtimeAnimations.Add(anim);
+                        } // for (int)
+                    } // if (assetVersion)
+                } // else
 
-				if (assetVersion < 4)
-					CreateRuntimeCollisionData(CollisionType);
+                if (assetVersion < 4)
+                    CreateRuntimeCollisionData(CollisionType);
 
-				if (assetVersion < 7)
-				{
-					string semantic = reader.ReadString();
-					string defaultDiffuseTexture = reader.ReadString();
-					semantic = reader.ReadString();
-					string defaultNormalTexture = reader.ReadString();
-				} // if (assetVersion)
+                if (assetVersion < 7)
+                {
+                    string semantic = reader.ReadString();
+                    string defaultDiffuseTexture = reader.ReadString();
+                    semantic = reader.ReadString();
+                    string defaultNormalTexture = reader.ReadString();
+                } // if (assetVersion)
 
-				objectMatrix = ReadMatrixHelper(reader);
+                objectMatrix = ReadMatrixHelper(reader);
 
-				numOfAnimations = reader.ReadInt32();
+                numOfAnimations = reader.ReadInt32();
 
-				int boneCnt = reader.ReadInt32();
-				bones = new RuntimeBone[boneCnt];
-				// Precreate empty bones
-				for (int i = 0; i < boneCnt; i++)
-				{
-					bones[i] = new RuntimeBone();
-				} // for (int)
-				// Now read bones
-				for (int i = 0; i < boneCnt; i++)
-				{
-					bones[i].id = reader.ReadString();
-					bones[i].parent = ReadBoneRef(reader);
-					int childCnt = reader.ReadInt32();
-					bones[i].children = new RuntimeBone[childCnt];
-					for (int j = 0; j < childCnt; j++)
-					{
-						bones[i].children[j] = ReadBoneRef(reader);
-					} // for (int)
-					bones[i].initialMatrix = ReadMatrixHelper(reader);
-					bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
-					int aninMatCnt = reader.ReadInt32();
-					bones[i].animationMatrices = new Matrix[aninMatCnt];
-					for (int j = 0; j < aninMatCnt; j++)
-					{
-						bones[i].animationMatrices[j] =
-							ReadMatrixHelper(reader);
-					} // for (int)
-				} // for (int)
+                int boneCnt = reader.ReadInt32();
+                bones = new RuntimeBone[boneCnt];
+                // Precreate empty bones
+                for (int i = 0; i < boneCnt; i++)
+                {
+                    bones[i] = new RuntimeBone();
+                } // for (int)
+                  // Now read bones
+                for (int i = 0; i < boneCnt; i++)
+                {
+                    bones[i].id = reader.ReadString();
+                    bones[i].parent = ReadBoneRef(reader);
+                    int childCnt = reader.ReadInt32();
+                    bones[i].children = new RuntimeBone[childCnt];
+                    for (int j = 0; j < childCnt; j++)
+                    {
+                        bones[i].children[j] = ReadBoneRef(reader);
+                    } // for (int)
+                    bones[i].initialMatrix = ReadMatrixHelper(reader);
+                    bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
+                    int aninMatCnt = reader.ReadInt32();
+                    bones[i].animationMatrices = new Matrix[aninMatCnt];
+                    for (int j = 0; j < aninMatCnt; j++)
+                    {
+                        bones[i].animationMatrices[j] =
+                            ReadMatrixHelper(reader);
+                    } // for (int)
+                } // for (int)
 
-				for (int i = 0; i < bones.Length; i++)
-				{
-					RuntimeBone bone = bones[i];
+                for (int i = 0; i < bones.Length; i++)
+                {
+                    RuntimeBone bone = bones[i];
 
-					// Just assign the final matrix from the animation matrices.
-					bone.finalMatrix = bone.animationMatrices[0];
+                    // Just assign the final matrix from the animation matrices.
+                    bone.finalMatrix = bone.animationMatrices[0];
 
-					// Also use parent matrix if we got one
-					// This will always work because all the bones are in order.
-					if (bone.parent != null)
-						bone.finalMatrix *=
-							bone.parent.finalMatrix;
-				} // for (int)
+                    // Also use parent matrix if we got one
+                    // This will always work because all the bones are in order.
+                    if (bone.parent != null)
+                        bone.finalMatrix *=
+                            bone.parent.finalMatrix;
+                } // for (int)
 
-				if (assetVersion >= 6)
-				{
-					// Read node material
-					string nodeMaterialName = reader.ReadString();
-					if (string.IsNullOrEmpty(nodeMaterialName) ||
-						nodeMaterialName == "Materials.DefaultMaterial.NodeMaterial")
-						nodeMaterialName = "Engine.DefaultMaterial.NodeMaterial";
+                if (assetVersion >= 6)
+                {
+                    // Read node material
+                    string nodeMaterialName = reader.ReadString();
+                    if (string.IsNullOrEmpty(nodeMaterialName) ||
+                        nodeMaterialName == "Materials.DefaultMaterial.NodeMaterial")
+                        nodeMaterialName = "Engine.DefaultMaterial.NodeMaterial";
 
-					SetMaterialByName(nodeMaterialName);
-				} // if (assetVersion)
+                    SetMaterialByName(nodeMaterialName);
+                } // if (assetVersion)
 
-				if (nodeMaterial == null)
-				{
-					// Create default one
-					nodeMaterial = AssetManager.Load<NodeMaterial>(
-						"Engine.DefaultMaterial.NodeMaterial");
-				} // if (nodeMaterial)
+                if (nodeMaterial == null)
+                {
+                    // Create default one
+                    nodeMaterial = AssetManager.Load<NodeMaterial>(
+                        "Engine.DefaultMaterial.NodeMaterial");
+                } // if (nodeMaterial)
 
-				// Read sockets
-				if (assetVersion >= 9)
-				{
-					sockets = new RuntimeSocket[reader.ReadInt32()];
-					for (int i = 0; i < sockets.Length; i++)
-					{
-						sockets[i] = new RuntimeSocket();
-						sockets[i].LoadFromStream(reader, bones);
-					} // for (int)
-				} // if (assetVersion)
-				else
-					sockets = new RuntimeSocket[0];
+                // Read sockets
+                if (assetVersion >= 9)
+                {
+                    sockets = new RuntimeSocket[reader.ReadInt32()];
+                    for (int i = 0; i < sockets.Length; i++)
+                    {
+                        sockets[i] = new RuntimeSocket();
+                        sockets[i].LoadFromStream(reader, bones);
+                    } // for (int)
+                } // if (assetVersion)
+                else
+                    sockets = new RuntimeSocket[0];
 
-				GenerateVertexAndIndexBuffers();
-			} // block
+                GenerateVertexAndIndexBuffers();
+            } // block
 
 			CreateBoundingSphere();
 

@@ -20,10 +20,27 @@
     <Compile Remove="Graphics2D\DDSImage.cs" />
     <Compile Remove="Graphics3D\Geometry\StaticMesh.cs" />
     <Compile Remove="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
+    <Compile Remove="Graphics3D\EffectLibrary.cs" />
+    <Compile Remove="Graphics2D\MaterialLibrary.cs" />
+    <Compile Remove="Graphics2D\Material.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\DefaultFont.xnb" />
+    <None Remove="Resources\EngineMaterials.package" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Meshes\SkeletalMesh.cs" />
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Graphics3D\EffectLibrary.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Graphics2D\MaterialLibrary.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Graphics2D\Material.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\DefaultFont.xnb" />
+    <EmbeddedResource Include="Resources\EngineMaterials.package" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

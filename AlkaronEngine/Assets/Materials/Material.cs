@@ -1,20 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AlkaronEngine.Util;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Assets.Materials
 {
     public class Material : Asset
     {
-        private const int MaxAssetVersion = 1;
-
-        internal enum GraphicsLibrary
-        {
-            DirectX,
-            OpenGL 
-        }
+        protected override int MaxAssetVersion => 1;
 
         internal enum CodeType
         {
@@ -41,27 +36,36 @@ namespace AlkaronEngine.Assets.Materials
 
         public override bool IsValid => Effect != null;
 
-        public override void Load(string packageName, string assetName, Stream stream)
+        private void CreateShader()
+        {
+            GraphicsLibrary graphicsLibrary = AlkaronCoreGame.Core.GraphicsLibrary;
+            EffectCode effectCode = GetEffectCode(graphicsLibrary, CodeType.XNAEffect);
+            if (effectCode == null)
+            {
+                Log.Error("Could not load Shader for platform: " + graphicsLibrary + " in Material: " + this.Name);
+                return;
+            }
+
+            Effect = new Effect(AlkaronCoreGame.Core.GraphicsDevice, effectCode.ByteCode);
+        }
+
+        public override void Deserialize(BinaryReader reader)
         {
             EffectCodeList.Clear();
 
-            using (BinaryReader reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true))
-            {
-                string magic = new string(reader.ReadChars(4));
-                AssetVersion = reader.ReadInt32();
-                var originalFilename = reader.ReadString();
+            base.Deserialize(reader);
 
-                int count = reader.ReadInt32();
-                EffectCodeList = new List<EffectCode>(count);
-                for (int i = 0; i < count; i++)
-                {
-                    EffectCode code = new EffectCode();
-                    code.GraphicsLibrary = (GraphicsLibrary)reader.ReadInt32();
-                    code.CodeType = (CodeType)reader.ReadInt32();
-                    code.ByteCode = reader.ReadBytes(reader.ReadInt32());
-                    EffectCodeList.Add(code);
-                }
+            int count = reader.ReadInt32();
+            EffectCodeList = new List<EffectCode>(count);
+            for (int i = 0; i < count; i++)
+            {
+                AddBinaryCode(
+                    (GraphicsLibrary)reader.ReadInt32(),
+                    (CodeType)reader.ReadInt32(),
+                    reader.ReadBytes(reader.ReadInt32()));
             }
+
+            CreateShader();
         }
 
         private EffectCode GetEffectCode(GraphicsLibrary graphicsLibrary, CodeType codeType)
@@ -72,16 +76,29 @@ namespace AlkaronEngine.Assets.Materials
                     select e).FirstOrDefault();
         }
 
-        internal void AddBinaryCode(GraphicsLibrary graphicsLibrary, CodeType codeType, byte[] binaryCode)
+        internal bool AddBinaryCode(GraphicsLibrary graphicsLibrary, CodeType codeType, byte[] binaryCode)
         {
-            EffectCode existingEntry = GetEffectCode(graphicsLibrary, codeType);
-            if (existingEntry != null)
+            EffectCode codeEntry = GetEffectCode(graphicsLibrary, codeType);
+            if (codeEntry != null)
             {
+                // If an entry with this combination already exists, skip it
+
                 // TODO Handle error
-                return; 
+                return false; 
             }
 
+            codeEntry = new EffectCode();
+            codeEntry.ByteCode = binaryCode;
+            codeEntry.CodeType = codeType;
+            codeEntry.GraphicsLibrary = graphicsLibrary;
+            EffectCodeList.Add(codeEntry);
 
+            if (graphicsLibrary == AlkaronCoreGame.Core.GraphicsLibrary)
+            {
+                CreateShader(); 
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -101,11 +118,9 @@ namespace AlkaronEngine.Assets.Materials
             return material;
         }
 
-        public override void Save(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer)
         {
-            writer.Write("AEAF".ToCharArray());
-            writer.Write(MaxAssetVersion);
-            writer.Write(OriginalFilename);
+            base.Serialize(writer);
 
             writer.Write(EffectCodeList.Count);
             for (int i = 0; i < EffectCodeList.Count; i++)

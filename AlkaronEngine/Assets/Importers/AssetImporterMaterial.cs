@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using AlkaronEngine.Assets.Materials;
@@ -48,7 +48,7 @@ namespace AlkaronEngine.Assets.Importers
 
             if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName);
+                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
             }
             else
             {
@@ -63,13 +63,29 @@ namespace AlkaronEngine.Assets.Importers
             }
 
             // Create the actual input file names
-            string dxFilename = GetGraphicsProfileFilename("dx11", fullFilename);
+            string dx11Filename = GetGraphicsProfileFilename("dx11", fullFilename);
             string oglFilename = GetGraphicsProfileFilename("ogl", fullFilename);
 
             try
             {
                 Material mat = new Material();
+                mat.OriginalFilename = dx11Filename ?? (oglFilename ?? string.Empty);
+                mat.Name = assetName;
 
+                if (dx11Filename != null)
+                {
+                    byte[] allBytes = File.ReadAllBytes(dx11Filename);
+                    mat.AddBinaryCode(GraphicsLibrary.DirectX11, Material.CodeType.XNAEffect,
+                        allBytes);
+                }
+                if (oglFilename != null)
+                {
+                    byte[] allBytes = File.ReadAllBytes(oglFilename);
+                    mat.AddBinaryCode(GraphicsLibrary.OpenGL, Material.CodeType.XNAEffect,
+                        allBytes);
+                }
+
+                packageToSaveIn.StoreAsset(mat);
             }
             catch (Exception ex)
             {
