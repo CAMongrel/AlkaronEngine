@@ -98,45 +98,65 @@ namespace AlkaronEngine.Assets
 		public bool NeedsSave { get; private set; }
 		
 		public int PackageVersion { get; private set; }
+
+        /// <summary>
+        /// Indicates whether this package is readonly, i.e. it cannot be modified.
+        /// 
+        /// Packages loaded from an embedded resource have this flag set to
+        /// true.
+        /// </summary>
+        public bool IsReadOnly { get; private set; }
 		#endregion
 
 		#region Package
-		private Package()
+		private Package(bool setIsReadOnly)
 		{
-			AssetOffsetMap = new Dictionary<string, int>();
+            IsReadOnly = setIsReadOnly;
+
+            AssetOffsetMap = new Dictionary<string, int>();
 			LoadedAssets = new Dictionary<string, Asset>();
 
 			PackageVersion = MaxPackageVersion;
 
 			IsLoading = false;
             IsFullyLoaded = true;
-		}
-		
-		public Package(string filename)
+
+            isTransient = false;
+
+            SetNeedsSave(false);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:AlkaronEngine.Assets.Package"/> class.
+        /// 
+        /// Sets the filename as the origin and loads the index of the contained
+        /// assets, but does not load the package completely.
+        /// </summary>
+        public Package(string filename, bool isReadOnly = false)
+            : this(isReadOnly)
 		{
 			fullFilename = filename;
 
-			AssetOffsetMap = new Dictionary<string, int>();
-			LoadedAssets = new Dictionary<string, Asset>();
-			
-			PackageVersion = MaxPackageVersion;
-
-			IsLoading = false;
-            IsFullyLoaded = false;
-			
-			isTransient = false;
-
-			SetNeedsSave(false);
-
             if (File.Exists(fullFilename))
             {
-                Open();
+                // Set FullyLoaded as false, when setting a filename
+                IsFullyLoaded = false;
+
+                Open(File.OpenRead(fullFilename));
             }
             else
             {
                 // If this is a fresh package, mark it as fully loaded
                 IsFullyLoaded = true;
             }
+        }
+
+        public Package(Stream str, bool isReadOnly = false)
+            : this(isReadOnly)
+        {
+            fullFilename = null;
+            IsFullyLoaded = false;
+            LoadAllAssets(str);
         }
 		#endregion
 		
@@ -146,7 +166,7 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		internal static Package CreateTransient()
 		{
-			Package pkg = new Package();
+			Package pkg = new Package(false);
 			pkg.fullFilename = "";
 			pkg.isTransient = true;
 			pkg.IsFullyLoaded = true;
@@ -173,16 +193,11 @@ namespace AlkaronEngine.Assets
         /// Opens the package, reading the Asset index, but does not load
         /// any assets.
         /// </summary>
-        public void Open()
+        public void Open(Stream stream)
         {
-            if (File.Exists(fullFilename) == false)
-            {
-                return;
-            }
-
             AssetOffsetMap.Clear();
 
-            using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
+            using (BinaryReader reader = new BinaryReader(stream))
             {
                 string magic = reader.ReadString();
                 PackageVersion = reader.ReadInt32();
@@ -214,63 +229,73 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Loads all assets in the package
         /// </summary>
-        public void LoadAllAssets()
+        public void LoadAllAssets(Stream stream = null)
 		{
-			if (File.Exists(fullFilename) == false ||
-				IsFullyLoaded == true)
+			if (IsFullyLoaded == true)
             {
                 return;
             }
 
-            IsLoading = true;
-
 			try
 			{
-				AssetOffsetMap.Clear();
+                if (stream == null)
+                {
+                    if (File.Exists(fullFilename) == false)
+                    {
+                        // TODO: Return error information
+                        return;
+                    }
 
-				using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
-				{
-					string magic = reader.ReadString();
-					PackageVersion = reader.ReadInt32();
+                    stream = File.OpenRead(fullFilename);
+                }
 
-					int numberOfAssets = reader.ReadInt32();
-					int offsetOffsetMap = reader.ReadInt32();
+                IsLoading = true;
 
-					// We have to store the offsets seperately for the loading process
-					// to be able to skip assets that fail to load
-					int[] offsets = new int[numberOfAssets];
+                AssetOffsetMap.Clear();
 
-					long curPos = reader.BaseStream.Position;
-					reader.BaseStream.Seek(offsetOffsetMap, SeekOrigin.Begin);
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    string magic = reader.ReadString();
+                    PackageVersion = reader.ReadInt32();
 
-					for (int i = 0; i < numberOfAssets; i++)
-					{
-						string assetName = reader.ReadString();
-						int offset = reader.ReadInt32();
+                    int numberOfAssets = reader.ReadInt32();
+                    int offsetOffsetMap = reader.ReadInt32();
 
-						offsets[i] = offset;
+                    // We have to store the offsets seperately for the loading process
+                    // to be able to skip assets that fail to load
+                    int[] offsets = new int[numberOfAssets];
 
-						AssetOffsetMap.Add(assetName, offset);
-					}
+                    long curPos = reader.BaseStream.Position;
+                    reader.BaseStream.Seek(offsetOffsetMap, SeekOrigin.Begin);
 
-					reader.BaseStream.Seek(curPos, SeekOrigin.Begin);
-					for (int i = 0; i < numberOfAssets; i++)
-					{
-						if (LoadAssetInternal(reader) == false)
-						{
-							// Asset failed to load. We have to skip it.
+                    for (int i = 0; i < numberOfAssets; i++)
+                    {
+                        string assetName = reader.ReadString();
+                        int offset = reader.ReadInt32();
 
-							// If this is the last one, just abort loading.
-							if (i == numberOfAssets - 1)
+                        offsets[i] = offset;
+
+                        AssetOffsetMap.Add(assetName, offset);
+                    }
+
+                    reader.BaseStream.Seek(curPos, SeekOrigin.Begin);
+                    for (int i = 0; i < numberOfAssets; i++)
+                    {
+                        if (LoadAssetInternal(reader) == false)
+                        {
+                            // Asset failed to load. We have to skip it.
+
+                            // If this is the last one, just abort loading.
+                            if (i == numberOfAssets - 1)
                             {
                                 break;
                             }
 
                             // Else we have to seek to the next asset
                             reader.BaseStream.Seek(offsets[i + 1], SeekOrigin.Begin);
-						}
-					}
-				}
+                        }
+                    }
+                }
 
                 IsFullyLoaded = true;
 			}
@@ -348,6 +373,11 @@ namespace AlkaronEngine.Assets
                 return false;
             }
 
+            if (File.Exists(fullFilename) == false)
+            {
+                return false;
+            }
+
             long offset = AssetOffsetMap[assetName];
 
 			using (BinaryReader reader = new BinaryReader(File.OpenRead(fullFilename)))
@@ -394,7 +424,7 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		public bool Save()
 		{
-			if (isTransient)
+			if (isTransient || IsReadOnly)
             {
                 return false;
             }
@@ -478,6 +508,11 @@ namespace AlkaronEngine.Assets
                 throw new ArgumentNullException(nameof(asset)); 
             }
 
+            if (IsReadOnly)
+            {
+                return; 
+            }
+
             string assetName = asset.Name;
 
 			if (LoadedAssets.ContainsKey(assetName))
@@ -506,6 +541,11 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		internal void DeleteAsset(Asset SelectedAsset)
 		{
+            if (IsReadOnly)
+            {
+                return; 
+            }
+
 			if (IsFullyLoaded == false)
 			{
 				LoadAllAssets();
@@ -572,6 +612,12 @@ namespace AlkaronEngine.Assets
 		{
 			if (isTransient)
             {
+                return;
+            }
+
+            if (IsReadOnly)
+            {
+                NeedsSave = false;
                 return;
             }
 

@@ -37,7 +37,32 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		public void BuildPackageMap()
 		{
-			string[] packages = Directory.GetFiles(
+            // Load packages from embedded resources first
+            // Implementation note:
+            // This prevents packages with the same name being loaded from
+            // disk, which is important for engine related packages like
+            // EngineMaterials.package, etc.
+            string[] embeddedPackages = AlkaronCoreGame.Core.AlkaronContent.GetResourcesByType(
+                ".package");
+            for (int i = 0; i < embeddedPackages.Length; i++)
+            {
+                string packageName = AlkaronContentManager.GetResourceFilename(embeddedPackages[i]);
+
+                if (PackageMap.ContainsKey(packageName))
+                {
+                    AlkaronCoreGame.Core.Log("Found duplicate package '" +
+                        packageName + "' at \r\n" +
+                        embeddedPackages[i] + "\r\nUsing the already loaded package at\r\n" +
+                        PackageMap[packageName]);
+
+                    continue;
+                }
+
+                PackageMap.Add(packageName, embeddedPackages[i]);
+            }
+
+            // Load packages from disk
+            string[] packages = Directory.GetFiles(
                 AlkaronCoreGame.Core.ContentDirectory,
 				"*.package", SearchOption.AllDirectories);
 
@@ -88,10 +113,20 @@ namespace AlkaronEngine.Assets
 					packageName + "'");
 				return null;
 			}
-				
-			Package pkg = new Package(filename);
+
+            bool isResource = AlkaronCoreGame.Core.AlkaronContent.IsResource(filename);
+
+            Package pkg = null;
+            if (isResource)
+            {
+                pkg = new Package(AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename), true);
+            }
+            else
+            {
+                pkg = new Package(filename);
+            }
 			LoadedPackages.Add(packageName, pkg);
-            if (loadFully)
+            if (loadFully && isResource == false)
             {
                 pkg.LoadAllAssets();
             }

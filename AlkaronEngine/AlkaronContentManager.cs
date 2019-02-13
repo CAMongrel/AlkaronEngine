@@ -1,12 +1,15 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using Microsoft.Xna.Framework.Content;
 
 namespace AlkaronEngine
 {
     public class AlkaronContentManager : ContentManager
     {
+        internal static string ResourcesPrefix = "AlkaronEngine.Resources.";
+
         private string[] resourceNames;
 
         public AlkaronContentManager(IServiceProvider serviceProvider) 
@@ -17,7 +20,7 @@ namespace AlkaronEngine
 
         private string FindResource(string assetName)
         {
-            string namesp = "AlkaronEngine.Resources.";
+            string namesp = ResourcesPrefix;
             string fullAssetNameWithOrgExt = namesp + assetName;
             string assetNameWithXNBExt = Path.ChangeExtension(assetName, ".xnb");
             string fullAssetNameWithXNBExt = namesp + assetNameWithXNBExt;
@@ -65,6 +68,43 @@ namespace AlkaronEngine
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Returns true if the resource identified by its full resource path
+        /// (e.g. "AlkaronEngine.Resources.EngineMaterials.package") is actually
+        /// a resource inside the binary.
+        /// </summary>
+        internal bool IsResource(string fullResourceName)
+        {
+            return resourceNames.Contains(fullResourceName); 
+        }
+
+        /// <summary>
+        /// Returns the "filename" of an embedded resource, e.g.
+        /// "AlkaronEngine.Resources.EngineMaterials.package" becomes
+        /// "EngineMaterials.package".
+        /// </summary>
+        internal static string GetResourceFilename(string fullResourceName)
+        {
+            if (fullResourceName.StartsWith(ResourcesPrefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return fullResourceName.Substring(ResourcesPrefix.Length);
+            }
+
+            return fullResourceName;
+        }
+
+        /// <summary>
+        /// Returns an array of the resources ending with "extension".
+        /// </summary>
+        internal string[] GetResourcesByType(string extension)
+        {
+            extension = extension.ToLowerInvariant();
+
+            return (from r in resourceNames
+                    where r.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase)
+                    select r).ToArray();
         }
     }
 }

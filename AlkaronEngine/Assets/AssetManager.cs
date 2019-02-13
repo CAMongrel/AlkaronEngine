@@ -35,13 +35,13 @@ namespace AlkaronEngine.Assets
             Package pkg = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
 			if (pkg == null)
             {
-                return new T();
+                return default(T);
             }
 
             T asset = pkg.GetAsset(assetName) as T;
 			if (asset == null)
             {
-                return new T();
+                return default(T);
             }
 
             return asset;

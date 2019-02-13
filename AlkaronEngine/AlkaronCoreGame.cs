@@ -36,6 +36,8 @@ namespace AlkaronEngine
 
         public AssetManager AssetManager { get; private set; }
 
+        public AlkaronContentManager AlkaronContent { get; private set; }
+
         public GraphicsLibrary GraphicsLibrary
         {
             get
@@ -66,7 +68,8 @@ namespace AlkaronEngine
 
             // Replace ContentManager with custom implementation using
             // the ServiceProvider of the default ContentManager
-            Content = new AlkaronContentManager(Content.ServiceProvider);
+            AlkaronContent = new AlkaronContentManager(Content.ServiceProvider);
+            Content = AlkaronContent;
             Content.RootDirectory = setContentFolder;
         }
 
@@ -90,6 +93,8 @@ namespace AlkaronEngine
             AssetManager = new AssetManager();
 
             PackageManager = new PackageManager();
+            // "AlkaronContent" must be initialized before calling this, because
+            // BuildPackageMap depends on it.
             PackageManager.BuildPackageMap();
 
             SceneManager = new SceneManager(GraphicsDevice);

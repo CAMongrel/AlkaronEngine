@@ -335,8 +335,8 @@ namespace AlkaronEngine.Graphics3D
                 Material materialToUse = proxy.Material;
                 if (proxy.Material == null)
                 {
-                    materialToUse = AlkaronCoreGame.Core.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
-                    //materialToUse = MaterialLibrary.GetMaterialByName(MaterialLibrary.DefaultMaterialName);
+                    materialToUse = AlkaronCoreGame.Core.AssetManager.Load<Material>(
+                        "EngineMaterials.BasicEffect.material");
                 }
 
                 RenderPass passToUse = null;
