@@ -1,22 +1,9 @@
-// Project: Hellspawn, File: SkeletalMesh.cs
-// Namespace: HellspawnEngine.Assets.Meshes, Class: SkeletalMesh
-// Path: D:\Projekte\Hellspawn\Code\Hellspawn\Assets\Meshes, Author: Henning
-// Code lines: 1341, Size of file: 36,92 KB
-// Creation date: 23.04.2010 21:22
-// Last modified: 10.05.2010 15:01
-// Generated with Commenter by abi.exDream.com
-
-#region Using directives
-using HellspawnEngine.Assets.Materials;
-using HellspawnEngine.Assets.Meshes.Collision;
-using HellspawnEngine.Graphics;
-using HellspawnEngine.Scenes;
+using AlkaronEngine.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
-#endregion
 
 namespace AlkaronEngine.Assets.Meshes
 {
@@ -30,12 +17,7 @@ namespace AlkaronEngine.Assets.Meshes
 	/// </summary>
 	public class SkeletalMesh : MeshAsset
 	{
-		/// <summary>
-		/// v07: ...
-		/// v08: Added custom collisions
-		/// v09: Added sockets
-		/// </summary>
-		public const int MaxAssetVersion = 9;
+        protected override int MaxAssetVersion => 1;
 	
 		#region Triangle helper class
 		struct Triangle
@@ -312,45 +294,45 @@ namespace AlkaronEngine.Assets.Meshes
 		/// <summary>
 		/// Vertices for the main mesh (we only support one mesh here!).
 		/// </summary>
-		SkinnedTangentVertex[] vertices;
+		private SkinnedTangentVertex[] vertices;
 
-		/// <summary>
-		/// Number of vertices and number of indices we got in the
-		/// vertex and index buffers.
-		/// </summary>
-		int numOfVertices = 0,
+        /// <summary>
+        /// Number of vertices and number of indices we got in the
+        /// vertex and index buffers.
+        /// </summary>
+        private int numOfVertices = 0,
 			numOfIndices = 0;
 
-		/// <summary>
-		/// Object matrix for our mesh. Often used to fix mesh to bone skeleton.
-		/// </summary>
-		Matrix objectMatrix = Matrix.Identity;
+        /// <summary>
+        /// Object matrix for our mesh. Often used to fix mesh to bone skeleton.
+        /// </summary>
+        private Matrix objectMatrix = Matrix.Identity;
 
-		/// <summary>
-		/// Flat list of bones, the first bone is always the root bone, all
-		/// children can be accessed from here. The main reason for having a flat
-		/// list is easy access to all bones for showing bone previous and of
-		/// course to quickly access all animation matrices.
-		/// </summary>
-		RuntimeBone[] bones;
+        /// <summary>
+        /// Flat list of bones, the first bone is always the root bone, all
+        /// children can be accessed from here. The main reason for having a flat
+        /// list is easy access to all bones for showing bone previous and of
+        /// course to quickly access all animation matrices.
+        /// </summary>
+        private RuntimeBone[] bones;
 
-		/// <summary>
-		/// Number of values in the animationMatrices in each bone.
-		/// TODO: Split the animations up into several states (stay, stay to walk,
-		/// walk, fight, etc.), but not required here in this test app yet ^^
-		/// </summary>
-		int numOfAnimations = 1;
+        /// <summary>
+        /// Number of values in the animationMatrices in each bone.
+        /// TODO: Split the animations up into several states (stay, stay to walk,
+        /// walk, fight, etc.), but not required here in this test app yet ^^
+        /// </summary>
+        private int numOfAnimations = 1;
 
-		/// <summary>
-		/// Get frame rate from Collada file, should always be 30, but sometimes
-		/// test models might have different times (like 24).
-		/// </summary>
-		float frameRate = 30;
-		
-		/// <summary>
-		/// BoundingSphere
-		/// </summary>
-		BoundingSphere boundingSphere;
+        /// <summary>
+        /// Get frame rate from Collada file, should always be 30, but sometimes
+        /// test models might have different times (like 24).
+        /// </summary>
+        private float frameRate = 30;
+
+        /// <summary>
+        /// BoundingSphere
+        /// </summary>
+        private BoundingSphere boundingSphere;
 		
 		/// <summary>
 		/// List of all animations this mesh has.
@@ -440,205 +422,125 @@ namespace AlkaronEngine.Assets.Meshes
 		/// <param name="setName">Set name</param>
 		public SkeletalMesh()
 		{
-			collisionData = null;
-
 			sockets = new RuntimeSocket[0];
-			customCollisions = new List<CollisionData>();
 			runtimeAnimations = new List<RuntimeAnimation>();
 		} // ColladaModel(setFilename)
-		#endregion
+        #endregion
 
-		#region Load
-		/// <summary>
-		/// Load
-		/// </summary>
-		public override void Load(string packageName, string assetName,
-			Stream stream)
-		{
-			Name = assetName;
-			PackageName = Path.GetFileNameWithoutExtension(packageName);
+        #region Load
+        /// <summary>
+        /// Load
+        /// </summary>
+        public override void Deserialize(BinaryReader reader)
+        {
+            base.Deserialize(reader);
 
-            using (BinaryReader reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true))
+            // Read mesh data
+            numOfVertices = reader.ReadInt32();
+            vertices = new SkinnedTangentVertex[numOfVertices];
+            for (int i = 0; i < vertices.Length; i++)
             {
-                string magic = reader.ReadString();
-                assetVersion = reader.ReadInt32();
+                vertices[i] = new SkinnedTangentVertex(
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle()),
+                    new Vector4(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle(), reader.ReadSingle()),
+                    new Vector4(reader.ReadSingle(), reader.ReadSingle(),
+                        reader.ReadSingle(), reader.ReadSingle()));
+            } // for (int)
 
-                // Skip the original filename on the Xbox, remember on PC
-#if (WINDOWS)
-				OriginalFilename = reader.ReadString();
-#else
-                reader.ReadString();
-#endif
+            numOfIndices = reader.ReadInt32();
+            objectIndices = new uint[numOfIndices];
+            for (int i = 0; i < objectIndices.Length; i++)
+            {
+                objectIndices[i] = reader.ReadUInt32();
+            } // for (int)
 
-                // Read mesh data
-                numOfVertices = reader.ReadInt32();
-                vertices = new SkinnedTangentVertex[numOfVertices];
-                for (int i = 0; i < vertices.Length; i++)
+            boundingSphere = new BoundingSphere(
+                new Vector3(reader.ReadSingle(), reader.ReadSingle(),
+                    reader.ReadSingle()),
+                reader.ReadSingle());
+
+            // Read animation data
+            runtimeAnimations.Clear();
+
+            int numAnim = reader.ReadInt32();
+            for (int i = 0; i < numAnim; i++)
+            {
+                RuntimeAnimation anim = new RuntimeAnimation();
+                anim.Name = reader.ReadString();
+                anim.Start = reader.ReadInt32();
+                anim.End = reader.ReadInt32();
+                runtimeAnimations.Add(anim);
+            } // for (int)
+
+            string semantic = reader.ReadString();
+            string defaultDiffuseTexture = reader.ReadString();
+            semantic = reader.ReadString();
+            string defaultNormalTexture = reader.ReadString();
+
+            objectMatrix = ReadMatrixHelper(reader);
+
+            numOfAnimations = reader.ReadInt32();
+
+            int boneCnt = reader.ReadInt32();
+            bones = new RuntimeBone[boneCnt];
+            // Precreate empty bones
+            for (int i = 0; i < boneCnt; i++)
+            {
+                bones[i] = new RuntimeBone();
+            } // for (int)
+              // Now read bones
+            for (int i = 0; i < boneCnt; i++)
+            {
+                bones[i].id = reader.ReadString();
+                bones[i].parent = ReadBoneRef(reader);
+                int childCnt = reader.ReadInt32();
+                bones[i].children = new RuntimeBone[childCnt];
+                for (int j = 0; j < childCnt; j++)
                 {
-                    vertices[i] = new SkinnedTangentVertex(
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        new Vector4(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle(), reader.ReadSingle()),
-                        new Vector4(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle(), reader.ReadSingle()));
+                    bones[i].children[j] = ReadBoneRef(reader);
                 } // for (int)
-
-                numOfIndices = reader.ReadInt32();
-                objectIndices = new int[numOfIndices];
-                for (int i = 0; i < objectIndices.Length; i++)
+                bones[i].initialMatrix = ReadMatrixHelper(reader);
+                bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
+                int aninMatCnt = reader.ReadInt32();
+                bones[i].animationMatrices = new Matrix[aninMatCnt];
+                for (int j = 0; j < aninMatCnt; j++)
                 {
-                    objectIndices[i] = reader.ReadInt32();
+                    bones[i].animationMatrices[j] =
+                        ReadMatrixHelper(reader);
                 } // for (int)
+            } // for (int)
 
-                if (assetVersion == 1)
-                {
-                    boundingSphere = new BoundingSphere(
-                        new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                            reader.ReadSingle()),
-                        reader.ReadSingle());
-                } // if (assetVersion)
-                else if (assetVersion == 2 || assetVersion == 3)
-                {
-                    CollisionType collisionType = (CollisionType)reader.ReadInt32();
-                    int vertCount = reader.ReadInt32();
-                    Vector2[] collisionVertices = new Vector2[vertCount];
-                    for (int i = 0; i < vertCount; i++)
-                    {
-                        collisionVertices[i] = new Vector2(
-                            reader.ReadSingle(), reader.ReadSingle());
-                    } // for (int)
-                } // else if
-                else
-                {
-                    // Read collision data
-                    collisionData = ReadCollisionData(reader);
+            for (int i = 0; i < bones.Length; i++)
+            {
+                RuntimeBone bone = bones[i];
 
-                    if (assetVersion >= 8)
-                    {
-                        // Read custom collisions
-                        int numColl = reader.ReadInt32();
-                        for (int i = 0; i < numColl; i++)
-                        {
-                            customCollisions.Add(ReadCollisionData(reader));
-                        } // for (int)
-                    } // if (assetVersion)
+                // Just assign the final matrix from the animation matrices.
+                bone.finalMatrix = bone.animationMatrices[0];
 
-                    if (assetVersion >= 5)
-                    {
-                        // Read animation data
-                        runtimeAnimations.Clear();
+                // Also use parent matrix if we got one
+                // This will always work because all the bones are in order.
+                if (bone.parent != null)
+                    bone.finalMatrix *=
+                        bone.parent.finalMatrix;
+            } // for (int)
 
-                        int numAnim = reader.ReadInt32();
-                        for (int i = 0; i < numAnim; i++)
-                        {
-                            RuntimeAnimation anim = new RuntimeAnimation();
-                            anim.Name = reader.ReadString();
-                            anim.Start = reader.ReadInt32();
-                            anim.End = reader.ReadInt32();
-                            runtimeAnimations.Add(anim);
-                        } // for (int)
-                    } // if (assetVersion)
-                } // else
+            sockets = new RuntimeSocket[reader.ReadInt32()];
+            for (int i = 0; i < sockets.Length; i++)
+            {
+                sockets[i] = new RuntimeSocket();
+                sockets[i].LoadFromStream(reader, bones);
+            } // for (int)
 
-                if (assetVersion < 4)
-                    CreateRuntimeCollisionData(CollisionType);
-
-                if (assetVersion < 7)
-                {
-                    string semantic = reader.ReadString();
-                    string defaultDiffuseTexture = reader.ReadString();
-                    semantic = reader.ReadString();
-                    string defaultNormalTexture = reader.ReadString();
-                } // if (assetVersion)
-
-                objectMatrix = ReadMatrixHelper(reader);
-
-                numOfAnimations = reader.ReadInt32();
-
-                int boneCnt = reader.ReadInt32();
-                bones = new RuntimeBone[boneCnt];
-                // Precreate empty bones
-                for (int i = 0; i < boneCnt; i++)
-                {
-                    bones[i] = new RuntimeBone();
-                } // for (int)
-                  // Now read bones
-                for (int i = 0; i < boneCnt; i++)
-                {
-                    bones[i].id = reader.ReadString();
-                    bones[i].parent = ReadBoneRef(reader);
-                    int childCnt = reader.ReadInt32();
-                    bones[i].children = new RuntimeBone[childCnt];
-                    for (int j = 0; j < childCnt; j++)
-                    {
-                        bones[i].children[j] = ReadBoneRef(reader);
-                    } // for (int)
-                    bones[i].initialMatrix = ReadMatrixHelper(reader);
-                    bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
-                    int aninMatCnt = reader.ReadInt32();
-                    bones[i].animationMatrices = new Matrix[aninMatCnt];
-                    for (int j = 0; j < aninMatCnt; j++)
-                    {
-                        bones[i].animationMatrices[j] =
-                            ReadMatrixHelper(reader);
-                    } // for (int)
-                } // for (int)
-
-                for (int i = 0; i < bones.Length; i++)
-                {
-                    RuntimeBone bone = bones[i];
-
-                    // Just assign the final matrix from the animation matrices.
-                    bone.finalMatrix = bone.animationMatrices[0];
-
-                    // Also use parent matrix if we got one
-                    // This will always work because all the bones are in order.
-                    if (bone.parent != null)
-                        bone.finalMatrix *=
-                            bone.parent.finalMatrix;
-                } // for (int)
-
-                if (assetVersion >= 6)
-                {
-                    // Read node material
-                    string nodeMaterialName = reader.ReadString();
-                    if (string.IsNullOrEmpty(nodeMaterialName) ||
-                        nodeMaterialName == "Materials.DefaultMaterial.NodeMaterial")
-                        nodeMaterialName = "Engine.DefaultMaterial.NodeMaterial";
-
-                    SetMaterialByName(nodeMaterialName);
-                } // if (assetVersion)
-
-                if (nodeMaterial == null)
-                {
-                    // Create default one
-                    nodeMaterial = AssetManager.Load<NodeMaterial>(
-                        "Engine.DefaultMaterial.NodeMaterial");
-                } // if (nodeMaterial)
-
-                // Read sockets
-                if (assetVersion >= 9)
-                {
-                    sockets = new RuntimeSocket[reader.ReadInt32()];
-                    for (int i = 0; i < sockets.Length; i++)
-                    {
-                        sockets[i] = new RuntimeSocket();
-                        sockets[i].LoadFromStream(reader, bones);
-                    } // for (int)
-                } // if (assetVersion)
-                else
-                    sockets = new RuntimeSocket[0];
-
-                GenerateVertexAndIndexBuffers();
-            } // block
+            GenerateVertexAndIndexBuffers();
 
 			CreateBoundingSphere();
 
@@ -873,61 +775,6 @@ namespace AlkaronEngine.Assets.Meshes
 		#endregion
 #endif
 
-		#region CreateRuntimeCollisionData
-		/// <summary>
-		/// Create runtime collision data
-		/// </summary>
-		/// <param name="collType">Coll type</param>
-		internal override void CreateRuntimeCollisionData(CollisionType collType)
-		{
-			// Note: Also update AssetImporterSkeletalMesh
-
-			// Create 2D version of the mesh (individual triangles)
-			Vector2[] allVertices2D = new Vector2[objectIndices.Length];
-			for (int i = 0; i < objectIndices.Length; i++)
-			{
-				allVertices2D[i] = new Vector2(
-					vertices[objectIndices[i]].pos.X,
-					vertices[objectIndices[i]].pos.Y);
-			} // for (int)
-			// Create 3D version of the mesh
-			Vector3[] allVertices3D = new Vector3[vertices.Length];
-			for (int i = 0; i < allVertices3D.Length; i++)
-			{
-				allVertices3D[i] = new Vector3(
-					vertices[i].pos.X, vertices[i].pos.Y,
-					vertices[i].pos.Z);
-			} // for (int)
-
-			switch (collType)
-			{
-				case CollisionType.BoundingBox:
-					collisionData = CollisionDataBox.FromMesh(allVertices2D, allVertices3D);
-					break;
-
-				case CollisionType.BoundingEllipse:
-					collisionData = CollisionDataEllipse.FromMesh(allVertices2D, allVertices3D);
-					break;
-
-				case CollisionType.BoundingSphere:
-					collisionData = CollisionDataSphere.FromMesh(allVertices2D, allVertices3D);
-					break;
-
-				case CollisionType.ConvexHull:
-					collisionData = CollisionDataConvexHull.FromMesh(allVertices2D, allVertices3D);
-					break;
-
-				case CollisionType.SkeletonBox:
-					collisionData = CollisionDataSkeletonBox.FromMesh(allVertices2D, allVertices3D);
-					break;
-
-				case CollisionType.Vertices:
-					collisionData = CollisionDataVertices.FromMesh(allVertices2D, allVertices3D);
-					break;
-			} // switch
-		} // CreateRuntimeCollisionData(collType)
-		#endregion
-
 		#region CreateBoundingSphere
 		internal override void CreateBoundingSphere()
 		{
@@ -1020,7 +867,7 @@ namespace AlkaronEngine.Assets.Meshes
 		#endregion
 
 		#region intersect_triangle
-		bool intersect_triangle(Ray ray, int vert0, int vert1, int vert2,
+		bool intersect_triangle(Ray ray, uint vert0, uint vert1, uint vert2,
 			out float t, out float u, out float v, ref Vector3 scaling)
 		{
 			Vector3 edge1, edge2, tvec, pvec, qvec;
@@ -1084,24 +931,24 @@ namespace AlkaronEngine.Assets.Meshes
 				indexBuffer.Dispose();
 				indexBuffer = null;
 			}
-		
-			// Create the vertex buffer from our vertices.
-			vertexBuffer = new VertexBuffer(
-				Program.Game.GraphicsDevice,
-				typeof(SkinnedTangentVertex),
-				vertices.Length,
-				BufferUsage.WriteOnly);
+
+            vertexBuffer = new VertexBuffer(
+                AlkaronCoreGame.Core.GraphicsDevice,
+                SkinnedTangentVertex.VertexDecl,
+                SkinnedTangentVertex.SizeInBytes * vertices.Length,
+                BufferUsage.WriteOnly);
 			vertexBuffer.SetData<SkinnedTangentVertex>(vertices);
 
-			// Create the index buffer from our indices (Note: While the indices
-			// will point only to 16bit (ushort) vertices, we can have a lot
-			// more indices in this list than just 65535).
-			indexBuffer = new IndexBuffer(
-				Program.Game.GraphicsDevice,
-				typeof(int),
-				objectIndices.Length,
-				BufferUsage.WriteOnly);
-			indexBuffer.SetData<int>(objectIndices);
+            // Create the index buffer from our indices (Note: While the indices
+            // will point only to 16bit (ushort) vertices, we can have a lot
+            // more indices in this list than just 65535).
+            indexBuffer = new IndexBuffer(
+                AlkaronCoreGame.Core.GraphicsDevice,
+                IndexElementSize.ThirtyTwoBits,
+                objectIndices.Length, 
+                BufferUsage.WriteOnly);
+			indexBuffer.SetData<uint>(objectIndices);
+
 			numOfIndices = objectIndices.Length;
 		} // GenerateVertexAndIndexBuffers()
 		#endregion
@@ -1127,9 +974,6 @@ namespace AlkaronEngine.Assets.Meshes
 		/// Update animation. Will do nothing if animation stayed the same since
 		/// last time we called this method.
 		/// </summary>
-		/// <param name="renderMatrix">Render matrix just for adding some
-		/// offset value to the animation time, remove if you allow moving
-		/// objects, this is just for testing!</param>
 		private void UpdateAnimation()
 		{
 			for (int i = 0; i < bones.Length; i++)
@@ -1142,8 +986,10 @@ namespace AlkaronEngine.Assets.Meshes
 				// Also use parent matrix if we got one
 				// This will always work because all the bones are in order.
 				if (bone.parent != null)
-					bone.finalMatrix *= bone.parent.finalMatrix;
-			} // foreach
+                {
+                    bone.finalMatrix *= bone.parent.finalMatrix;
+                }
+            } // foreach
 		} // UpdateAnimation()
 		#endregion
 
@@ -1157,22 +1003,24 @@ namespace AlkaronEngine.Assets.Meshes
 		private Matrix[] GetBoneMatrices(Matrix renderMatrix)
 		{
 			// And get all bone matrices, we support max. 80 (see shader).
-			Matrix[] matrices = new Matrix[Math.Min(80, bones.Length)];
+			Matrix[] matrices = new Matrix[Math.Min(SkinnedEffect.MaxBones, bones.Length)];
 			for (int num = 0; num < matrices.Length; num++)
-				// The matrices are constructed from the invBoneSkinMatrix and
-				// the finalMatrix, which holds the recursively added animation matrices
-				// and finally we add the render matrix too here.
-				matrices[num] = 
-					bones[num].invBoneSkinMatrix * 
-					bones[num].finalMatrix * 
-					renderMatrix;
+            {
+                // The matrices are constructed from the invBoneSkinMatrix and
+                // the finalMatrix, which holds the recursively added animation matrices
+                // and finally we add the render matrix too here.
+                matrices[num] =
+                    bones[num].invBoneSkinMatrix *
+                    bones[num].finalMatrix *
+                    renderMatrix;
+            }
 
-			return matrices;
+            return matrices;
 		} // GetBoneMatrices()
 		#endregion
 
 		#region SetBoneMatrices
-		internal void SetBoneMatrices(Matrix[] matrices, HVertexShader vertexShader)
+		internal void SetBoneMatrices(Matrix[] matrices, SkinnedEffect skinnedEffect)//, HVertexShader vertexShader)
 		{
 			Vector4[] values = new Vector4[matrices.Length * 3];
 			for (int i = 0; i < matrices.Length; i++)
@@ -1188,8 +1036,9 @@ namespace AlkaronEngine.Assets.Meshes
 				values[i * 3 + 2] = new Vector4(
 					matrices[i].M13, matrices[i].M23, matrices[i].M33, matrices[i].M43);
 			} // for
-			vertexShader.SetValue("skinnedMatricesVS20", values);
-		}
+              //vertexShader.SetValue("skinnedMatricesVS20", values);
+            skinnedEffect.SetBoneTransforms(matrices);
+        }
 		#endregion // SetBoneMatrices(matrices)
 
 		#region RenderSkeleton
@@ -1198,14 +1047,14 @@ namespace AlkaronEngine.Assets.Meshes
 		/// </summary>
 		public void RenderSkeleton(Matrix worldMatrix)
 		{
-			CompareFunction oldFunc =
-				Program.Game.GraphicsDevice.RenderState.DepthBufferFunction;
-			Program.Game.GraphicsDevice.RenderState.DepthBufferFunction =
+            CompareFunction oldFunc =
+				AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction;
+            AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction =
 				CompareFunction.Always;
 
 			RenderBone(worldMatrix, bones[0]);
 
-			Program.Game.GraphicsDevice.RenderState.DepthBufferFunction =
+            AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction =
 				oldFunc;
 		}
 		#endregion
@@ -1219,11 +1068,12 @@ namespace AlkaronEngine.Assets.Meshes
 			for (int childIdx = 0; childIdx < bone.children.Length; childIdx++)
 			{
 				// Draw line to child
-				PrimitiveRenderer.DrawLine(
+                // TODO!!!
+				/*PrimitiveRenderer.DrawLine(
 					worldMatrix,
 					bone.finalMatrix.Translation,
 					bone.children[childIdx].finalMatrix.Translation,
-					new Vector4(1, 0, 0, 1));
+					new Vector4(1, 0, 0, 1));*/
 
 				// Render childs of child
 				RenderBone(worldMatrix, bone.children[childIdx]);
@@ -1310,20 +1160,22 @@ namespace AlkaronEngine.Assets.Meshes
 		/// with the DiffuseSpecular20 technique.
 		/// </summary>
 		/// <param name="renderMatrix">Render matrix</param>
-		internal void Render(HVertexShader vertexShader,
+		internal void Render(SkinnedEffect effect,
 			Matrix renderMatrix, GameTime gameTime)
 		{
 			if (IsValid == false)
-				return;
+            {
+                return;
+            }
 
-			// Make sure we use the correct vertex declaration for our shader.
-			Program.Game.GraphicsDevice.VertexDeclaration =
-				SkinnedTangentVertex.VertexDecl;
+            // Make sure we use the correct vertex declaration for our shader.
+            /*AlkaronCoreGame.Core.GraphicsDevice.VertexDeclaration =
+				SkinnedTangentVertex.VertexDecl;*/
 
 			Matrix[] boneMats = GetBoneMatrices(renderMatrix);
 
 			// Set custom skinnedMatrices
-			SetBoneMatrices(boneMats, vertexShader);
+			SetBoneMatrices(boneMats, effect);
 
 			// Render the mesh
 			RenderVertices();
@@ -1334,13 +1186,11 @@ namespace AlkaronEngine.Assets.Meshes
 		/// </summary>
 		private void RenderVertices()
 		{
-			Program.Game.GraphicsDevice.Vertices[0].SetSource(vertexBuffer, 0,
-				SkinnedTangentVertex.SizeInBytes);
-			Program.Game.GraphicsDevice.Indices = indexBuffer;
-			Program.Game.GraphicsDevice.DrawIndexedPrimitives(
+            AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
+            AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(
 				PrimitiveType.TriangleList,
-				0, 0, numOfVertices,
-				0, numOfIndices / 3);
+				0, 0, numOfIndices / 3);
 		} // RenderVertices()
 		#endregion
 	}

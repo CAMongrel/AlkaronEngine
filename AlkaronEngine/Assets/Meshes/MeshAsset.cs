@@ -1,13 +1,6 @@
-// Project: Hellspawn
-
-#region Using directives
 using AlkaronEngine.Assets.Materials;
-using AlkaronEngine.Graphics2D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
-using System.IO;
-#endregion
 
 namespace AlkaronEngine.Assets.Meshes
 {

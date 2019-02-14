@@ -1,21 +1,14 @@
 using AlkaronEngine.Graphics;
-using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace AlkaronEngine.Assets.Meshes
 {
     public class StaticMesh : MeshAsset
     {
-        /// <summary>
-        /// v06: ...
-        /// v07: Added custom collision
-        /// </summary>
-        public const int MaxAssetVersion = 1;
+        protected override int MaxAssetVersion => 1;
 
         #region Members
         protected TangentVertex[] objectVertices;

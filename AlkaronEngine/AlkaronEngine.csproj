@@ -16,7 +16,6 @@
     <PackageReference Include="BepuPhysics" Version="2.0.0-beta" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Assets\Meshes\SkeletalMesh.cs" />
     <Compile Remove="Graphics2D\DDSImage.cs" />
     <Compile Remove="Graphics3D\Geometry\StaticMesh.cs" />
     <Compile Remove="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
@@ -27,7 +26,6 @@
     <None Remove="Resources\EngineMaterials.package" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Meshes\SkeletalMesh.cs" />
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
     <None Include="Graphics2D\PbrMaterial.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
   </ItemGroup>
