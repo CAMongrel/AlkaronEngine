@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,31 +15,31 @@ namespace AlkaronEngine.Graphics
 		/// <summary>
 		/// Position
 		/// </summary>
-		public Vector3 pos;
+		public Vector3 Position;
 		/// <summary>
 		/// Texture coordinates
 		/// </summary>
-		public Vector2 uv;
+		public Vector2 TexCoord;
 		/// <summary>
 		/// Tangent
 		/// </summary>
-		public Vector3 normal;
+		public Vector3 Normal;
 		/// <summary>
 		/// Normal
 		/// </summary>
-		public Vector3 tangent;
+		public Vector3 Tangent;
 		/// <summary>
 		/// Tangent
 		/// </summary>
-		public Vector3 bitangent;
+		public Vector3 BiTangent;
 		/// <summary>
 		/// Bone/Joint indices
 		/// </summary>
-		public Vector4 jointIndices;
+		public Vector4 JointIndices;
 		/// <summary>
 		/// Bone/Joint weights
 		/// </summary>
-		public Vector4 jointWeights;
+		public Vector4 JointWeights;
 		#endregion
 
 		#region Properties
@@ -57,30 +57,6 @@ namespace AlkaronEngine.Graphics
 				return 4 * (3 + 2 + 3 + 3 + 3 + 4 + 4);
 			} // get
 		} // StrideSize
-
-		/// <summary>
-		/// U texture coordinate
-		/// </summary>
-		/// <returns>Float</returns>
-		public float U
-		{
-			get
-			{
-				return uv.X;
-			} // get
-		} // U
-
-		/// <summary>
-		/// V texture coordinate
-		/// </summary>
-		/// <returns>Float</returns>
-		public float V
-		{
-			get
-			{
-				return uv.Y;
-			} // get
-		} // V
 		#endregion
 
 		#region Methods
@@ -102,13 +78,13 @@ namespace AlkaronEngine.Graphics
 			Vector4 setJointIndices,
 			Vector4 setJointWeights)
 		{
-			pos = setPos;
-			uv = new Vector2(setU, setV);
-			normal = setNormal;
-			tangent = setTangent;
-			bitangent = setBitangent;
-			jointIndices = setJointIndices;
-			jointWeights = setJointWeights;
+			Position = setPos;
+			TexCoord = new Vector2(setU, setV);
+			Normal = setNormal;
+			Tangent = setTangent;
+			BiTangent = setBitangent;
+			JointIndices = setJointIndices;
+			JointWeights = setJointWeights;
 		} // TangentVertex(setPos, setU, setV)
 
 		/// <summary>
@@ -127,13 +103,13 @@ namespace AlkaronEngine.Graphics
 			Vector4 setJointIndices,
 			Vector4 setJointWeights)
 		{
-			pos = setPos;
-			uv = setUv;
-			normal = setNormal;
-			tangent = setTangent;
-			bitangent = setBitangent;
-			jointIndices = setJointIndices;
-			jointWeights = setJointWeights;
+			Position = setPos;
+			TexCoord = setUv;
+			Normal = setNormal;
+			Tangent = setTangent;
+			BiTangent = setBitangent;
+			JointIndices = setJointIndices;
+			JointWeights = setJointWeights;
 		} // TangentVertex(setPos, setUv, setNormal)
 		#endregion
 
@@ -143,14 +119,14 @@ namespace AlkaronEngine.Graphics
 		/// </summary>
 		public override string ToString()
 		{
-			return "SkinnedTangentVertex(pos=" + pos + ", " +
-				"u=" + uv.X + ", " +
-				"v=" + uv.Y + ", " +
-				"normal=" + normal + ", " +
-				"tangent=" + tangent + ", " +
-				"bitangent=" + bitangent + ", " +
-				"jointIndices=" + jointIndices + ", " +
-				"jointWeights=" + jointWeights + ")";
+			return "SkinnedTangentVertex(pos=" + Position + ", " +
+				"u=" + TexCoord.X + ", " +
+				"v=" + TexCoord.Y + ", " +
+				"normal=" + Normal + ", " +
+				"tangent=" + Tangent + ", " +
+				"bitangent=" + BiTangent + ", " +
+				"jointIndices=" + JointIndices + ", " +
+				"jointWeights=" + JointWeights + ")";
 		} // ToString()
 		#endregion
 
@@ -211,16 +187,16 @@ namespace AlkaronEngine.Graphics
 			//  " with b=" + b.pos + ", " + b.uv+ ", "+b.normal);
 			//return false;
 			// Position has to match, else it is just different vertex
-			return a.pos == b.pos &&
+			return a.Position == b.Position &&
 				// Ignore blend indices and blend weights, they are the same
 				// anyway, because they are calculated from the bone distances.
-				Math.Abs(a.uv.X - b.uv.X) < 0.001f &&
-				Math.Abs(a.uv.Y - b.uv.Y) < 0.001f &&
+				Math.Abs(a.TexCoord.X - b.TexCoord.X) < 0.001f &&
+				Math.Abs(a.TexCoord.Y - b.TexCoord.Y) < 0.001f &&
 				// Normals and tangents do not have to be very close, we can't see
 				// any difference between small variations here, but by optimizing
 				// similar vertices we can improve the overall rendering performance.
-				(a.normal - b.normal).Length() < 0.1f &&
-				(a.tangent - b.tangent).Length() < 0.1f;
+				(a.Normal - b.Normal).Length() < 0.1f &&
+				(a.Tangent - b.Tangent).Length() < 0.1f;
 			//SkinningWithColladaModelsInXna.Helpers.Log.Write("ret=" + ret);
 			//			return ret;
 		} // NearlyEqual(a, b)

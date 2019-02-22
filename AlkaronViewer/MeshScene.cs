@@ -111,16 +111,24 @@ namespace AlkaronViewer
 
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
-            PresentModel("Box", GltfModelEntryType.Base);
+            PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
         }
 
-        private void PresentModel(string name, GltfModelEntryType type = GltfModelEntryType.Base)
+        private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
         {
             string file = modelManager.GetModelPath(name, type);
 
             string assetName = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
 
-            var res = AssetImporterStaticMesh.Import(file, assetName, assetName, out List<AlkaronEngine.Assets.Asset> importedAssets);
+            List<AlkaronEngine.Assets.Asset> importedAssets = null;
+            if (isSkeletalMesh)
+            {
+                AssetImporterSkeletalMesh.Import(file, assetName, assetName, out importedAssets);
+            }
+            else
+            {
+                AssetImporterStaticMesh.Import(file, assetName, assetName, out importedAssets);
+            }
 
             for (int i = 0; i < importedAssets.Count; i++)
             {

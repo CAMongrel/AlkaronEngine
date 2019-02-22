@@ -1,18 +1,13 @@
 using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
-using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Graphics3D.Geometry;
 using glTFLoader.Schema;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace AlkaronEngine.Assets.Importers
 {
