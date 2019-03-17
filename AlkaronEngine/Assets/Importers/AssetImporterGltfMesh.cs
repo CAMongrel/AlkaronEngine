@@ -228,13 +228,20 @@ namespace AlkaronEngine.Assets.Importers
         private static string GetImageAssetName(Image img, int index, string fullFilename)
         {
             string surfaceAssetName = "";
-            if (img.Uri.StartsWith("data:", StringComparison.InvariantCultureIgnoreCase))
+            if (img.Uri != null)
             {
-                surfaceAssetName = Path.GetFileNameWithoutExtension(Path.GetFileName(fullFilename)) + "_image_" + index;
+                if (img.Uri.StartsWith("data:", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    surfaceAssetName = Path.GetFileNameWithoutExtension(Path.GetFileName(fullFilename)) + "_image_" + index;
+                }
+                else
+                {
+                    surfaceAssetName = Path.GetFileNameWithoutExtension(img.Uri);
+                }
             }
             else
             {
-                surfaceAssetName = Path.GetFileNameWithoutExtension(img.Uri);
+                surfaceAssetName = "surface" + index;
             }
             return surfaceAssetName;
         }
@@ -258,7 +265,7 @@ namespace AlkaronEngine.Assets.Importers
                 Image img = context.Model.Images[imageIndex];
 
                 using (Stream str = glTFLoader.Interface.OpenImageFile(context.Model, imageIndex, context.FullFilename))
-                {
+                {                    
                     string surfaceAssetName = GetImageAssetName(img, imageIndex, context.FullFilename);
 
                     AssetImporterSurface2D.Import(str, surfaceAssetName, context.PackageToSaveIn.PackageName, context.FullFilename, out Surface2D surface);

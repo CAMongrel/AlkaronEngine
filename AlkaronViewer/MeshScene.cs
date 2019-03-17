@@ -18,16 +18,15 @@ namespace AlkaronViewer
     {
         private GltfModelManager modelManager;
 
-        private BaseActor focusActor;
+        //private BaseActor focusActor;
 
         public MeshScene()
         {
-            focusActor = null;
-
             string baseModelFolder = "";
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 baseModelFolder = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\";
+                baseModelFolder = @"D:\Temp\";
             }
             else
             {
@@ -110,7 +109,18 @@ namespace AlkaronViewer
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
             //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
-            PresentModel("Monster", false, GltfModelEntryType.Base);
+            //PresentModel("Monster", false, GltfModelEntryType.Base);
+            
+            var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
+            var meshes = package.GetAssetsByType("StaticMesh");
+
+            for (int i = 0; i < meshes.Length; i++)
+            {
+                if (meshes[i] is StaticMesh)
+                {
+                    AddStaticMesh(meshes[i] as StaticMesh);
+                }
+            }
         }
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
@@ -136,10 +146,12 @@ namespace AlkaronViewer
             {
                 if (importedAssets[i] is StaticMesh)
                 {
-                    //SetStaticMesh(importedAssets[i] as StaticMesh);
-                    break; 
+                    AddStaticMesh(importedAssets[i] as StaticMesh);
                 }
             }
+
+            var package = MainGame.Instance.PackageManager.LoadPackage(assetName, false);
+            package.Save();
         }
 
         protected override void InitUI()
@@ -147,22 +159,14 @@ namespace AlkaronViewer
             base.InitUI();
         }
 
-        public void SetStaticMesh(StaticMesh mesh)
+        public void AddStaticMesh(StaticMesh mesh)
         {
-            if (focusActor != null &&
-                focusActor.IsAddedToSceneGraph)
-            {
-                SceneGraph.RemoveActor(focusActor);
-
-                focusActor = null;
-            }
-
             if (mesh == null)
             {
                 return;
             }
 
-            focusActor = new StaticMeshActor();
+            StaticMeshActor focusActor = new StaticMeshActor();
             ((StaticMeshActor)focusActor).StaticMeshComponent.AddStaticMesh(mesh);
 
             SceneGraph.AddActor(focusActor);

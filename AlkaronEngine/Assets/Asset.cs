@@ -132,7 +132,7 @@ namespace AlkaronEngine.Assets
             writer.Write("AEAF".ToCharArray());
             writer.Write(MaxAssetVersion);
             writer.Write(Name);
-            writer.Write(OriginalFilename);
+            writer.Write(OriginalFilename ?? string.Empty);
         }
 
         /// <summary>

@@ -45,7 +45,15 @@ namespace AlkaronViewer
                 }
                 else
                 {
-                    return null; 
+                    if (entry.Types.Contains(GltfModelEntryType.Unknown))
+                    {
+                        int index = entry.Types.IndexOf(GltfModelEntryType.Unknown);
+                        return entry.Files[index];
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
             }
             else
