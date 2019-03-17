@@ -36,7 +36,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         protected uint[] objectIndices;
 
-        public Material Material { get; set; }
+        public IMaterial Material { get; set; }
 
         protected const float EPSILON = 0.000001f;
 
@@ -48,7 +48,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Integrated cameras for this mesh. Can be used for model viewers, etc.
         /// 
-        /// Will be null, if there are no cameras
+        /// Will be null if there are no cameras.
         /// </summary>
         public MeshCamera[] MeshCameras { get; protected set; }
 

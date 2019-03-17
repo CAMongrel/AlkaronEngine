@@ -427,6 +427,70 @@ namespace AlkaronEngine.Assets.Meshes
         } // ColladaModel(setFilename)
         #endregion
 
+        #region FromVertices
+        /// <summary>
+        /// Creates a static mesh directly from vertices (triangles only)
+        /// </summary>
+        public static SkeletalMesh FromVertices(Vector3[] vertices)
+        {
+            SkinnedTangentVertex[] verts = new SkinnedTangentVertex[vertices.Length];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = new SkinnedTangentVertex(
+                    vertices[i], Vector2.Zero, new Vector3(0, 1, 0),
+                    Vector3.Zero, Vector3.Zero,
+                    Vector4.Zero, Vector4.One);
+            }
+
+            return FromVertices(verts);
+        }
+
+        /// <summary>
+        /// Creates a static mesh directly from tangent vertices (triangles only)
+        /// </summary>
+        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices)
+        {
+            uint[] indices = new uint[vertices.Length];
+            for (uint i = 0; i < vertices.Length; i++)
+            {
+                indices[i] = i;
+            }
+
+            return FromVertices(vertices, indices);
+        }
+
+        /// <summary>
+        /// Creates a static mesh directly from vertices and indices
+        /// </summary>
+        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices,
+            uint[] indices)
+        {
+            SkeletalMesh mesh = new SkeletalMesh();
+
+            mesh.vertices = vertices;
+            mesh.objectIndices = indices;
+
+            mesh.vertexBuffer = new VertexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
+                    SkinnedTangentVertex.VertexDecl,
+                    SkinnedTangentVertex.SizeInBytes * mesh.vertices.Length,
+                    BufferUsage.WriteOnly);
+
+            mesh.indexBuffer = new IndexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
+                IndexElementSize.ThirtyTwoBits,
+                mesh.objectIndices.Length, BufferUsage.WriteOnly);
+
+            mesh.vertexBuffer.SetData<SkinnedTangentVertex>(mesh.vertices);
+            mesh.indexBuffer.SetData<uint>(mesh.objectIndices);
+
+            mesh.CreateBoundingSphere();
+            //mesh.CreateRuntimeCollisionData(CollisionType.Vertices);
+
+            mesh.Name = mesh.GetType().ToString();
+
+            return mesh;
+        }
+        #endregion
+
         #region Load
         /// <summary>
         /// Load
@@ -1135,7 +1199,9 @@ namespace AlkaronEngine.Assets.Meshes
 
             if (socket == null ||
                 socket.OwnerBone == null)
+            {
                 return Vector3.Zero;
+            }
 
             return socket.OwnerBone.finalMatrix.Translation + socket.Translation;
         } // GetSocketLocation(SocketName)
@@ -1160,8 +1226,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// with the DiffuseSpecular20 technique.
         /// </summary>
         /// <param name="renderMatrix">Render matrix</param>
-        internal void Render(SkinnedEffect effect,
-            Matrix renderMatrix, GameTime gameTime)
+        internal void Render(SkinnedEffect effect, Matrix renderMatrix, GameTime gameTime)
         {
             if (IsValid == false)
             {

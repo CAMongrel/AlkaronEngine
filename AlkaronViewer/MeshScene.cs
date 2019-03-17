@@ -3,7 +3,6 @@ using AlkaronEngine.Assets.Importers;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Components;
 using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Input;
 using AlkaronEngine.Scene;
 using Microsoft.Xna.Framework;
@@ -11,7 +10,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace AlkaronViewer
 {
@@ -111,7 +109,8 @@ namespace AlkaronViewer
 
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
-            PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
+            //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
+            PresentModel("Monster", false, GltfModelEntryType.Base);
         }
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
@@ -123,18 +122,21 @@ namespace AlkaronViewer
             List<AlkaronEngine.Assets.Asset> importedAssets = null;
             if (isSkeletalMesh)
             {
-                AssetImporterSkeletalMesh.Import(file, assetName, assetName, out importedAssets);
+                //AssetImporterSkeletalMesh.Import(file, assetName, assetName, out importedAssets);
             }
             else
             {
-                AssetImporterStaticMesh.Import(file, assetName, assetName, out importedAssets);
+                AssetImporterGltfMesh.Import(file, assetName, assetName, (obj) =>
+                {
+                    Console.WriteLine("Import state: " + obj.State);
+                }, out importedAssets);
             }
 
             for (int i = 0; i < importedAssets.Count; i++)
             {
                 if (importedAssets[i] is StaticMesh)
                 {
-                    SetStaticMesh(importedAssets[i] as StaticMesh);
+                    //SetStaticMesh(importedAssets[i] as StaticMesh);
                     break; 
                 }
             }

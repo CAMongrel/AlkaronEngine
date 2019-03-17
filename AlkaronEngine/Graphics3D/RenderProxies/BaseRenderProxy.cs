@@ -16,7 +16,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         /// </summary>
         protected object lockObj = new Object();
 
-        public Material Material { get; set; }
+        public IMaterial Material { get; set; }
         public Matrix WorldMatrix { get; set; }
         public BoundingBox BoundingBox { get; set; }
 
@@ -26,7 +26,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             WorldMatrix = Matrix.Identity;
         }
 
-        public virtual void Render(IRenderConfiguration renderConfig, RenderManager renderManager, Material materialToUse)
+        public virtual void Render(IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
         {
         }
 

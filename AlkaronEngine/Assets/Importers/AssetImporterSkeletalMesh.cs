@@ -211,6 +211,20 @@ namespace AlkaronEngine.Assets.Importers
                     throw new InvalidDataException("TANGENT accessor must have type VEC4");
                 }
 
+                Accessor weightsAccessor = GetAccessorByType("WEIGHTS_0", model, prim);
+                if (weightsAccessor != null &&
+                    weightsAccessor.Type != Accessor.TypeEnum.VEC4)
+                {
+                    throw new InvalidDataException("WEIGHTS_0 accessor must have type VEC4");
+                }
+
+                Accessor jointsAccessor = GetAccessorByType("JOINTS_0", model, prim);
+                if (jointsAccessor != null &&
+                    jointsAccessor.Type != Accessor.TypeEnum.VEC4)
+                {
+                    throw new InvalidDataException("JOINTS_0 accessor must have type VEC4");
+                }
+
                 SkinnedTangentVertex[] vertices = new SkinnedTangentVertex[positionAccessor.Count];
                 BufferView positionBufferView = model.BufferViews[positionAccessor.BufferView.Value];
                 BufferView normalsBufferView = null;
@@ -227,6 +241,16 @@ namespace AlkaronEngine.Assets.Importers
                 if (tangentAccessor != null)
                 {
                     tangentBufferView = model.BufferViews[tangentAccessor.BufferView.Value];
+                }
+                BufferView weightsBufferView = null;
+                if (weightsAccessor != null)
+                {
+                    weightsBufferView = model.BufferViews[weightsAccessor.BufferView.Value];
+                }
+                BufferView jointsBufferView = null;
+                if (jointsAccessor != null)
+                {
+                    jointsBufferView = model.BufferViews[jointsAccessor.BufferView.Value];
                 }
 
                 ReadOnlySpan<Vector3> positionSpan = MemoryMarshal.Cast<byte, Vector3>(
@@ -248,6 +272,18 @@ namespace AlkaronEngine.Assets.Importers
                 {
                     tangentSpan = MemoryMarshal.Cast<byte, Vector4>(
                         new ReadOnlySpan<byte>(rawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
+                }
+                ReadOnlySpan<Vector4> weightsSpan = null;
+                if (weightsBufferView != null)
+                {
+                    weightsSpan = MemoryMarshal.Cast<byte, Vector4>(
+                        new ReadOnlySpan<byte>(rawBuffers[weightsBufferView.Buffer], weightsBufferView.ByteOffset + weightsAccessor.ByteOffset, weightsAccessor.Count * 16));
+                }
+                ReadOnlySpan<Vector4> jointsSpan = null;
+                if (jointsBufferView != null)
+                {
+                    jointsSpan = MemoryMarshal.Cast<byte, Vector4>(
+                        new ReadOnlySpan<byte>(rawBuffers[jointsBufferView.Buffer], jointsBufferView.ByteOffset + jointsAccessor.ByteOffset, jointsAccessor.Count * 16));
                 }
 
                 for (int v = 0; v < vertices.Length; v++)
@@ -278,7 +314,7 @@ namespace AlkaronEngine.Assets.Importers
 
                 if (prim.Indices == null)
                 {
-                    //staticMesh = StaticMesh.FromVertices(vertices);
+                    skeletalMesh = SkeletalMesh.FromVertices(vertices);
                 }
                 else
                 {
@@ -333,7 +369,7 @@ namespace AlkaronEngine.Assets.Importers
                                 throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
                         }
 
-                        //staticMesh = StaticMesh.FromVertices(vertices, indices);
+                        skeletalMesh = SkeletalMesh.FromVertices(vertices, indices);
                     }
                 }
 
@@ -342,6 +378,7 @@ namespace AlkaronEngine.Assets.Importers
                 meshes.Add(skeletalMesh);
 
                 Materials.Material material = CreateMaterialForMesh(prim, model);
+                skeletalMesh.Material = material;
             }
 
             return meshes;
@@ -349,6 +386,8 @@ namespace AlkaronEngine.Assets.Importers
 
         private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
         {
+
+
             Materials.Material result = null; //new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
             //result.Effect = AlkaronCoreGame.Core.SceneManager.RenderManager.
 

@@ -1,10 +1,11 @@
 using System;
 using AlkaronEngine.Assets.Materials;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static AlkaronEngine.Assets.Meshes.SkeletalMesh;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
@@ -25,7 +26,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             SkeletalMesh = setSkeletalMesh;
         }
 
-        private void RenderMeshPart(SkeletalMeshPart part, 
+        /*private void RenderMeshPart(SkeletalMeshPart part, 
                                     RenderManager renderManager,
                                     Graphics2D.IRenderConfiguration renderConfig, 
                                     Material materialToUse)
@@ -60,11 +61,11 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 
             renderConfig.GraphicsDevice.SetVertexBuffer(part.VertexBuffer);
             renderConfig.GraphicsDevice.DrawPrimitives(part.PrimitiveType, 0, part.PrimitiveCount);
-        }
+        }*/
 
-        private void DrawBone(SkeletalMeshBone bone, RenderManager renderManager, IRenderConfiguration renderConfig)
+        private void DrawBone(RuntimeBone bone, RenderManager renderManager, IRenderConfiguration renderConfig)
         {
-            if (effect == null)
+            /*if (effect == null)
             {
                 effect = new BasicEffect(renderConfig.GraphicsDevice);
             }
@@ -106,14 +107,23 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             for (int i = 0; i < bone.ChildBones.Length; i++)
             {
                 DrawBone(bone.ChildBones[i], renderManager, renderConfig);
-            }
+            }*/
         }
 
-        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager, Material materialToUse)
+        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
         {
             base.Render(renderConfig, renderManager, materialToUse);
 
-            SkeletalMesh.SetAnimationTime(AnimationTime);
+            Performance.StartAppendAggreate("Setup");
+            Matrix worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
+            materialToUse.ApplyParameters(worldViewProj);
+            Performance.EndAppendAggreate("Setup");
+
+            Performance.StartAppendAggreate("Render Mesh");
+            //SkeletalMesh.Render();
+            Performance.EndAppendAggreate("Render Mesh");
+
+            /*SkeletalMesh.SetAnimationTime(AnimationTime);
             for (int i = 0; i < SkeletalMesh.MeshParts.Count; i++)
             {
                 RenderMeshPart(SkeletalMesh.MeshParts[i], renderManager, renderConfig, materialToUse);
@@ -122,7 +132,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             for (int i = 0; i < SkeletalMesh.RootBone.ChildBones.Length; i++)
             {
                 //DrawBone(SkeletalMesh.RootBone.ChildBones[i], renderManager, renderConfig);
-            }
+            }*/
         }
 
         internal override void Update(double deltaTime)

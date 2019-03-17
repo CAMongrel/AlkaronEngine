@@ -11,13 +11,36 @@ using System.Runtime.InteropServices;
 
 namespace AlkaronEngine.Assets.Importers
 {
-    public static class AssetImporterStaticMesh
+    public class AssetImporterGltfMeshProgress
     {
+        public string State;
+    }
+
+    public static class AssetImporterGltfMesh
+    {
+        class AssetImporterGltfMeshContext
+        {
+            internal string BaseFolder;
+            internal string FullFilename;
+            internal string BaseAssetName;
+            internal Package PackageToSaveIn = null;
+            internal List<Asset> ImportedAssets = new List<Asset>();
+            internal bool ImportStaticMeshOnly;
+            internal bool ImportAsSkeletalMesh;
+
+            internal Gltf Model;
+            internal List<byte[]> RawBuffers = new List<byte[]>();
+
+            internal Action<AssetImporterGltfMeshProgress> ProgressCallback;
+        }
+
         private static readonly string[] allowedExtensions = new string[] { ".gltf", ".glb" };
 
         public static bool Import(string fullFilename,
-            string setAssetName,
+            string setBaseAssetName,
             string setPackageName,
+            bool importStaticMeshOnly,
+            Action<AssetImporterGltfMeshProgress> progressCallback,
             out List<Asset> importedAssets)
         {
             importedAssets = new List<Asset>();
@@ -44,25 +67,28 @@ namespace AlkaronEngine.Assets.Importers
                 return false;
             }
 
-            // Create asset and package names
-            string assetName = setAssetName;
+            // Create context
+            AssetImporterGltfMeshContext context = new AssetImporterGltfMeshContext();
+            context.ProgressCallback = progressCallback;
+            context.FullFilename = fullFilename;
+            context.BaseAssetName = setBaseAssetName;
+            context.BaseFolder = Path.GetDirectoryName(fullFilename);
+            context.ImportStaticMeshOnly = importStaticMeshOnly;
+            context.ImportAsSkeletalMesh = !context.ImportStaticMeshOnly;
+
             string packageName = setPackageName;
-
-            Package packageToSaveIn = null;
-
-            assetName = Path.ChangeExtension(assetName, ".staticMesh");
 
             if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
+                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
             }
             else
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(packageName,
+                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(packageName,
                     Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName));
             }
 
-            if (packageToSaveIn == null)
+            if (context.PackageToSaveIn == null)
             {
                 AlkaronCoreGame.Core.Log("Unable to create or find the package for this asset");
                 return false;
@@ -73,7 +99,7 @@ namespace AlkaronEngine.Assets.Importers
                 if (extension == ".gltf" ||
                     extension == ".glb")
                 {
-                    ImportGLTFFile(fullFilename, assetName, packageToSaveIn, importedAssets);
+                    ImportGLTFFile(context); //fullFilename, assetName, packageToSaveIn, importedAssets);
                 }
                 else
                 {
@@ -90,25 +116,113 @@ namespace AlkaronEngine.Assets.Importers
         }
 
         #region ImportGLTFFile
-        private static void ImportGLTFFile(string fullFilename, string assetName, Package packageToSaveIn, List<Asset> importedAssets)
+        private static void ReportProgress(AssetImporterGltfMeshContext context, string state)
         {
-            string baseFolder = Path.GetDirectoryName(fullFilename);
+            context.ProgressCallback?.Invoke(new AssetImporterGltfMeshProgress() { State = state });
+        }
 
-            var model = glTFLoader.Interface.LoadModel(fullFilename);
+        private static void ImportGLTFFile(AssetImporterGltfMeshContext context) //string fullFilename, string assetName, Package packageToSaveIn, List<Asset> importedAssets)
+        {
+            ReportProgress(context, "Deserializing GLTF model");
+
+            context.Model = glTFLoader.Interface.LoadModel(context.FullFilename);
+
+            ReportProgress(context, "Loading buffers");
 
             // Load all binary referenced buffers (vertices, indices, animations, etc.)
-            List<byte[]> rawBuffers = LoadBuffers(model, fullFilename);
+            LoadBuffers(context);
+
+            ReportProgress(context, "Loading textures");
 
             // Import all textures as Surface2D assets
-            importedAssets.AddRange(LoadTextures(packageToSaveIn, model, fullFilename));
+            LoadTextures(context);
 
-            // Import all meshes
-            for (int i = 0; i < model.Meshes.Length; i++)
+            ReportProgress(context, "Loading materials");
+
+            // Import all materials
+            LoadMaterials(context);
+
+            // Load all scenes
+            LoadScenes(context);
+
+            ReportProgress(context, "Finished");
+        }
+
+        private static void LoadMaterials(AssetImporterGltfMeshContext context)
+        {
+            for (int i = 0; i < context.Model.Materials.Length; i++)
             {
-                var mesh = model.Meshes[i];
-
-                importedAssets.AddRange(LoadMesh(packageToSaveIn, model, rawBuffers, mesh));
+                glTFLoader.Schema.Material mat = context.Model.Materials[i];
             }
+        }
+
+        private static void LoadScenes(AssetImporterGltfMeshContext context)
+        {
+            for (int i = 0; i < context.Model.Scenes.Length; i++)
+            {
+                ReportProgress(context, "Loading scene #" + i);
+
+                // Load all nodes
+                for (int j = 0; j < context.Model.Scenes[i].Nodes.Length; j++)
+                {
+                    var node = context.Model.Nodes[context.Model.Scenes[i].Nodes[j]];
+
+                    LoadNode(context, node, Matrix.Identity);
+                }
+            }
+        }
+
+        private static Matrix GetWorldMatrix(Node node)
+        {
+            if (node.Matrix != null)
+            {
+                return new Matrix(node.Matrix[ 0], node.Matrix[ 1], node.Matrix[ 2], node.Matrix[ 3],
+                                  node.Matrix[ 4], node.Matrix[ 5], node.Matrix[ 6], node.Matrix[ 7],
+                                  node.Matrix[ 8], node.Matrix[ 9], node.Matrix[10], node.Matrix[11],
+                                  node.Matrix[12], node.Matrix[13], node.Matrix[14], node.Matrix[15]);
+            }
+            else
+            {
+                Matrix resultMatrix = Matrix.Identity;
+
+                if (node.Translation != null)
+                {
+                    Matrix translationMat = Matrix.CreateTranslation(node.Translation[0], node.Translation[1], node.Translation[2]);
+                    resultMatrix *= translationMat;
+                }
+
+                if (node.Rotation != null)
+                {
+                    Matrix rotationMat = Matrix.CreateFromQuaternion(new Quaternion(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]));
+                    resultMatrix *= rotationMat;
+                }
+
+                if (node.Scale != null)
+                {
+                    Matrix scaleMat = Matrix.CreateScale(node.Scale[0], node.Scale[1], node.Scale[2]);
+                    resultMatrix *= scaleMat;
+                }
+
+                return resultMatrix;
+            }
+        }
+
+        private static void LoadNode(AssetImporterGltfMeshContext context, Node node, Matrix parentMatrix)
+        {
+            Matrix worldMatrix = parentMatrix * GetWorldMatrix(node);
+
+            if (node.Camera.HasValue)
+            {
+                LoadCamera(context, node.Camera.Value, worldMatrix);
+            } else if (node.Mesh.HasValue)
+            {
+                LoadMesh(context, node.Mesh.Value, worldMatrix);
+            }
+        }
+
+        private static void LoadCamera(AssetImporterGltfMeshContext context, int cameraIndex, Matrix worldMatrix)
+        {
+            var camera = context.Model.Cameras[cameraIndex];
         }
 
         private static string GetImageAssetName(Image img, int index, string fullFilename)
@@ -125,54 +239,48 @@ namespace AlkaronEngine.Assets.Importers
             return surfaceAssetName;
         }
 
-        private static List<Surface2D> LoadTextures(Package packageToSaveIn, Gltf model, string fullFilename)
+        private static void LoadTextures(AssetImporterGltfMeshContext context)
         {
-            List<Surface2D> resultList = new List<Surface2D>();
-
-            if (model.Textures == null)
+            if (context.Model.Textures == null)
             {
-                return resultList; 
+                return; 
             }
 
-            for (int t = 0; t < model.Textures.Length; t++)
+            for (int t = 0; t < context.Model.Textures.Length; t++)
             {
-                glTFLoader.Schema.Texture tex = model.Textures[t];
+                glTFLoader.Schema.Texture tex = context.Model.Textures[t];
                 if (tex.Source == null)
                 {
                     continue; 
                 }
 
                 int imageIndex = tex.Source.Value;
-                Image img = model.Images[imageIndex];
+                Image img = context.Model.Images[imageIndex];
 
-                using (Stream str = glTFLoader.Interface.OpenImageFile(model, imageIndex, fullFilename))
+                using (Stream str = glTFLoader.Interface.OpenImageFile(context.Model, imageIndex, context.FullFilename))
                 {
-                    string surfaceAssetName = GetImageAssetName(img, imageIndex, fullFilename);
+                    string surfaceAssetName = GetImageAssetName(img, imageIndex, context.FullFilename);
 
-                    AssetImporterSurface2D.Import(str, surfaceAssetName, packageToSaveIn.PackageName, fullFilename, out Surface2D surface);
+                    AssetImporterSurface2D.Import(str, surfaceAssetName, context.PackageToSaveIn.PackageName, context.FullFilename, out Surface2D surface);
                     if (surface != null)
                     {
-                        resultList.Add(surface); 
+                        context.ImportedAssets.Add(surface);
                     }
                 }
             }
-
-            return resultList;
         }
 
-        private static List<byte[]> LoadBuffers(Gltf model, string fullFilename)
+        private static void LoadBuffers(AssetImporterGltfMeshContext context)
         {
-            List<byte[]> rawBuffers = new List<byte[]>();
-            for (int i = 0; i < model.Buffers.Length; i++)
+            for (int i = 0; i < context.Model.Buffers.Length; i++)
             {
-                rawBuffers.Add(glTFLoader.Interface.LoadBinaryBuffer(model, i, fullFilename));
+                context.RawBuffers.Add(glTFLoader.Interface.LoadBinaryBuffer(context.Model, i, context.FullFilename));
             }
-            return rawBuffers;
         }
 
-        private static List<StaticMesh> LoadMesh(Package packageToSaveIn, Gltf model, List<byte[]> rawBuffers, Mesh mesh)
+        private static void LoadMesh(AssetImporterGltfMeshContext context, int meshIndex, Matrix worldMatrix)
         {
-            List<StaticMesh> staticMeshes = new List<StaticMesh>();
+            Mesh mesh = context.Model.Meshes[meshIndex];
 
             for (int p = 0; p < mesh.Primitives.Length; p++)
             {
@@ -183,27 +291,27 @@ namespace AlkaronEngine.Assets.Importers
                     throw new NotImplementedException("Modes other than TRIANGLES are not implemented (yet)");
                 }
 
-                Accessor positionAccessor = GetAccessorByType("POSITION", model, prim);
+                Accessor positionAccessor = GetAccessorByType("POSITION", context.Model, prim);
                 if (positionAccessor.Type != Accessor.TypeEnum.VEC3)
                 {
                     throw new InvalidDataException("POSITION accessor must have type VEC3");
                 }
 
-                Accessor normalAccessor = GetAccessorByType("NORMAL", model, prim);
+                Accessor normalAccessor = GetAccessorByType("NORMAL", context.Model, prim);
                 if (normalAccessor != null &&
                     normalAccessor.Type != Accessor.TypeEnum.VEC3)
                 {
                     throw new InvalidDataException("NORMAL accessor must have type VEC3");
                 }
 
-                Accessor texcoordAccessor = GetAccessorByType("TEXCOORD_0", model, prim);
+                Accessor texcoordAccessor = GetAccessorByType("TEXCOORD_0", context.Model, prim);
                 if (texcoordAccessor != null &&
                     texcoordAccessor.Type != Accessor.TypeEnum.VEC2)
                 {
                     throw new InvalidDataException("TEXCOORD accessor must have type VEC2");
                 }
 
-                Accessor tangentAccessor = GetAccessorByType("TANGENT", model, prim);
+                Accessor tangentAccessor = GetAccessorByType("TANGENT", context.Model, prim);
                 if (tangentAccessor != null &&
                     tangentAccessor.Type != Accessor.TypeEnum.VEC4)
                 {
@@ -211,42 +319,42 @@ namespace AlkaronEngine.Assets.Importers
                 }
 
                 TangentVertex[] vertices = new TangentVertex[positionAccessor.Count];
-                BufferView positionBufferView = model.BufferViews[positionAccessor.BufferView.Value];
+                BufferView positionBufferView = context.Model.BufferViews[positionAccessor.BufferView.Value];
                 BufferView normalsBufferView = null;
                 if (normalAccessor != null)
                 {
-                    normalsBufferView = model.BufferViews[normalAccessor.BufferView.Value];
+                    normalsBufferView = context.Model.BufferViews[normalAccessor.BufferView.Value];
                 }
                 BufferView texCoordBufferView = null;
                 if (texcoordAccessor != null)
                 {
-                    texCoordBufferView = model.BufferViews[texcoordAccessor.BufferView.Value];
+                    texCoordBufferView = context.Model.BufferViews[texcoordAccessor.BufferView.Value];
                 }
                 BufferView tangentBufferView = null;
                 if (tangentAccessor != null)
                 {
-                    tangentBufferView = model.BufferViews[tangentAccessor.BufferView.Value];
+                    tangentBufferView = context.Model.BufferViews[tangentAccessor.BufferView.Value];
                 }
 
                 ReadOnlySpan<Vector3> positionSpan = MemoryMarshal.Cast<byte, Vector3>(
-                    new ReadOnlySpan<byte>(rawBuffers[positionBufferView.Buffer], positionBufferView.ByteOffset + positionAccessor.ByteOffset, positionAccessor.Count * 12));
+                    new ReadOnlySpan<byte>(context.RawBuffers[positionBufferView.Buffer], positionBufferView.ByteOffset + positionAccessor.ByteOffset, positionAccessor.Count * 12));
                 ReadOnlySpan<Vector3> normalsSpan = null;
                 if (normalsBufferView != null)
                 {
                     normalsSpan = MemoryMarshal.Cast<byte, Vector3>(
-                        new ReadOnlySpan<byte>(rawBuffers[normalsBufferView.Buffer], normalsBufferView.ByteOffset + normalAccessor.ByteOffset, normalAccessor.Count * 12));
+                        new ReadOnlySpan<byte>(context.RawBuffers[normalsBufferView.Buffer], normalsBufferView.ByteOffset + normalAccessor.ByteOffset, normalAccessor.Count * 12));
                 }
                 ReadOnlySpan<Vector2> texCoordSpan = null;
                 if (texCoordBufferView != null)
                 {
                     texCoordSpan = MemoryMarshal.Cast<byte, Vector2>(
-                        new ReadOnlySpan<byte>(rawBuffers[texCoordBufferView.Buffer], texCoordBufferView.ByteOffset + texcoordAccessor.ByteOffset, texcoordAccessor.Count * 8));
+                        new ReadOnlySpan<byte>(context.RawBuffers[texCoordBufferView.Buffer], texCoordBufferView.ByteOffset + texcoordAccessor.ByteOffset, texcoordAccessor.Count * 8));
                 }
                 ReadOnlySpan<Vector4> tangentSpan = null;
                 if (tangentBufferView != null)
                 {
                     tangentSpan = MemoryMarshal.Cast<byte, Vector4>(
-                        new ReadOnlySpan<byte>(rawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
+                        new ReadOnlySpan<byte>(context.RawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
                 }
 
                 for (int v = 0; v < vertices.Length; v++)
@@ -282,7 +390,7 @@ namespace AlkaronEngine.Assets.Importers
                 else
                 {
                     int primIndex = prim.Indices.Value;
-                    Accessor indexAccessor = GetAccessorByIndex(primIndex, model);
+                    Accessor indexAccessor = GetAccessorByIndex(primIndex, context.Model);
                     if (indexAccessor != null)
                     {
                         if (indexAccessor.Type != Accessor.TypeEnum.SCALAR)
@@ -292,13 +400,13 @@ namespace AlkaronEngine.Assets.Importers
 
                         uint[] indices = new uint[indexAccessor.Count];
 
-                        BufferView indexBufferView = model.BufferViews[indexAccessor.BufferView.Value];
+                        BufferView indexBufferView = context.Model.BufferViews[indexAccessor.BufferView.Value];
                         switch (indexAccessor.ComponentType)
                         {
                             case Accessor.ComponentTypeEnum.UNSIGNED_BYTE:
                                 {
                                     ReadOnlySpan<byte> indexSpan =
-                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count);
+                                        new ReadOnlySpan<byte>(context.RawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count);
 
                                     for (int idx = 0; idx < indices.Length; idx++)
                                     {
@@ -310,7 +418,7 @@ namespace AlkaronEngine.Assets.Importers
                             case Accessor.ComponentTypeEnum.UNSIGNED_SHORT:
                                 {
                                     ReadOnlySpan<ushort> indexSpan = MemoryMarshal.Cast<byte, ushort>(
-                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 2));
+                                        new ReadOnlySpan<byte>(context.RawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 2));
 
                                     for (int idx = 0; idx < indices.Length; idx++)
                                     {
@@ -322,7 +430,7 @@ namespace AlkaronEngine.Assets.Importers
                             case Accessor.ComponentTypeEnum.UNSIGNED_INT:
                                 {
                                     ReadOnlySpan<uint> indexSpan = MemoryMarshal.Cast<byte, uint>(
-                                        new ReadOnlySpan<byte>(rawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 4));
+                                        new ReadOnlySpan<byte>(context.RawBuffers[indexBufferView.Buffer], indexBufferView.ByteOffset + indexAccessor.ByteOffset, indexAccessor.Count * 4));
 
                                     indices = indexSpan.ToArray();
                                 }
@@ -337,18 +445,20 @@ namespace AlkaronEngine.Assets.Importers
                 }
 
                 staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
-                packageToSaveIn.StoreAsset(staticMesh);
-                staticMeshes.Add(staticMesh);
+                context.PackageToSaveIn.StoreAsset(staticMesh);
 
-                Materials.Material material = CreateMaterialForMesh(prim, model);
+                Materials.Material material = CreateMaterialForMesh(prim, context.Model);
+                staticMesh.Material = material;
+
+                context.ImportedAssets.Add(staticMesh);
             }
-
-            return staticMeshes;
         }
 
         private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
         {
-            Materials.Material result = null; //new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
+            var mat = AlkaronCoreGame.Core.AssetManager.Load<Materials.Material>("EngineMaterials.BasicEffect.material");
+
+            Materials.Material result = mat; //new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
             //result.Effect = AlkaronCoreGame.Core.SceneManager.RenderManager.
 
             return result;

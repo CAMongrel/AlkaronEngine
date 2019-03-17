@@ -20,6 +20,8 @@
     <Compile Remove="Graphics3D\Geometry\StaticMesh.cs" />
     <Compile Remove="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
     <Compile Remove="Graphics2D\PbrMaterial.cs" />
+    <Compile Remove="Graphics3D\Geometry\SkeletalMesh.cs" />
+    <Compile Remove="Assets\Importers\AssetImporterSkeletalMesh.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\DefaultFont.xnb" />
@@ -28,6 +30,8 @@
   <ItemGroup>
     <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
     <None Include="Graphics2D\PbrMaterial.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Graphics3D\Geometry\SkeletalMesh.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Assets\Importers\AssetImporterSkeletalMesh.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />

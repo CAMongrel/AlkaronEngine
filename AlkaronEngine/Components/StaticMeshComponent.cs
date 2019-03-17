@@ -1,11 +1,7 @@
-﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Assets.Meshes;
-using AlkaronEngine.Graphics3D;
-using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Components
 {

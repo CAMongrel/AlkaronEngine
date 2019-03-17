@@ -9,7 +9,6 @@ using AlkaronEngine.Actors;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using System.Threading;
 using AlkaronEngine.Gui;
-using AlkaronEngine.Graphics3D.Geometry;
 using AlkaronEngine.Assets.Materials;
 
 namespace AlkaronEngine.Graphics3D
@@ -310,7 +309,7 @@ namespace AlkaronEngine.Graphics3D
             renderPasses.Clear();
         }
 
-        private RenderPass CreateAndAddRenderPassForMaterial(Material material)
+        private RenderPass CreateAndAddRenderPassForMaterial(IMaterial material)
         {
             RenderPass renderPass = new RenderPass(material);
             renderPasses.Add(renderPass);
@@ -326,13 +325,13 @@ namespace AlkaronEngine.Graphics3D
         {
             // Apply stage to current process
 
-            Dictionary<Material, RenderPass> renderPassDict = new Dictionary<Material, RenderPass>();
+            Dictionary<IMaterial, RenderPass> renderPassDict = new Dictionary<IMaterial, RenderPass>();
 
             for (int p = 0; p < renderProxyStagingArea.Count; p++)
             {
                 BaseRenderProxy proxy = renderProxyStagingArea[p];
 
-                Material materialToUse = proxy.Material;
+                IMaterial materialToUse = proxy.Material;
                 if (proxy.Material == null)
                 {
                     materialToUse = AlkaronCoreGame.Core.AssetManager.Load<Material>(

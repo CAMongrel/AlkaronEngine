@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using AlkaronEngine.Graphics3D.Geometry;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using Microsoft.Xna.Framework;
 
@@ -41,7 +41,7 @@ namespace AlkaronEngine.Components
                 SkeletalMeshRenderProxy proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = SkeletalMesh.Material;
-                proxy.BoundingBox = new BoundingBox(Center + SkeletalMesh.BoundingBox.Min, Center + SkeletalMesh.BoundingBox.Max);
+                proxy.BoundingBox = BoundingBox.CreateFromSphere(new BoundingSphere(Center, SkeletalMesh.BoundingSphere.Radius));
 
                 resultList.Add(proxy);
             }

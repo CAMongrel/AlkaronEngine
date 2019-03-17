@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace AlkaronEngine.Assets.Materials
 {
-    public class Material : Asset
+    public class Material : Asset, IMaterial
     {
         protected override int MaxAssetVersion => 2;
 
@@ -133,7 +134,13 @@ namespace AlkaronEngine.Assets.Materials
             return material;
         }
 
-        internal virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        public void ApplyParameters(Matrix worldViewProjectio)
+        {
+            Effect.Parameters["WorldViewProj"].SetValue(worldViewProjectio);
+            Effect.CurrentTechnique.Passes[0].Apply();
+        }
+
+        public virtual void SetupEffectForRenderPass(RenderPass renderPass)
         {
             AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
             AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;

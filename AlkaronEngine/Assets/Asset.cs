@@ -48,7 +48,8 @@ namespace AlkaronEngine.Assets
 		
 		/// <summary>
 		/// Returns the fully qualified name of this asset, which
-		/// can be used to reference this asset in actors.
+		/// can be used to reference this asset in other assets or runtime
+        /// objects (like actors).
 		/// </summary>
 		public string Fullname
 		{

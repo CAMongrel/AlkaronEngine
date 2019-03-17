@@ -11,7 +11,7 @@ namespace AlkaronEngine.Graphics3D
 {
     public class RenderPass
     {
-        public Material Material { get; private set; }
+        public IMaterial Material { get; private set; }
 
         public bool PerformDepthSorting { get; set; }
 
@@ -19,7 +19,7 @@ namespace AlkaronEngine.Graphics3D
 
         private List<BaseRenderProxy> proxies;
 
-        public RenderPass(Material setMaterial)
+        public RenderPass(IMaterial setMaterial)
         {
             WorldOriginForDepthSorting = Vector3.Zero;
             PerformDepthSorting = setMaterial.RequiresOrderingBackToFront;
