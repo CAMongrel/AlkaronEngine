@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Numerics;
 using AlkaronEngine.Input;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using Veldrid;
 
 namespace AlkaronEngine.Components
 {
@@ -15,8 +15,8 @@ namespace AlkaronEngine.Components
         public float NearClip { get; private set; }
         public float FarClip { get; private set; }
 
-        public Matrix ViewMatrix { get; private set; }
-        public Matrix ProjectionMatrix { get; private set; }
+        public Matrix4x4 ViewMatrix { get; private set; }
+        public Matrix4x4 ProjectionMatrix { get; private set; }
 
         public float SpeedModifier { get; set; }
 
@@ -36,14 +36,14 @@ namespace AlkaronEngine.Components
 
             ScreenSize = setScreenSize;
 
-            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60.0f),
+            ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(BepuUtilities.MathHelper.ToRadians(60.0f),
                                                                    ScreenSize.X / ScreenSize.Y, NearClip, FarClip);
-            ViewMatrix = Matrix.CreateLookAt(Center, LookAt, UpVector);
+            ViewMatrix = Matrix4x4.CreateLookAt(Center, LookAt, UpVector);
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
 
             UpdateMatrices();
         }
@@ -52,14 +52,14 @@ namespace AlkaronEngine.Components
         {
             Vector3 camVector = Center - LookAt;
             float length = camVector.Length() + absoluteDelta;
-            camVector.Normalize();
+            camVector = Vector3.Normalize(camVector);
             Center = LookAt + camVector * length;
         }
 
         private void UpdateMatrices()
         {
-            ViewMatrix = Matrix.CreateLookAt(Center, LookAt, UpVector);
-            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60.0f),
+            ViewMatrix = Matrix4x4.CreateLookAt(Center, LookAt, UpVector);
+            ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(BepuUtilities.MathHelper.ToRadians(60.0f),
                                                                    ScreenSize.X / ScreenSize.Y, NearClip, FarClip);
         }
 
@@ -83,12 +83,12 @@ namespace AlkaronEngine.Components
             return false;
         }
 
-        public virtual bool KeyPressed(Keys key)
+        public virtual bool KeyPressed(Key key)
         {
             return false;
         }
 
-        public virtual bool KeyReleased(Keys key)
+        public virtual bool KeyReleased(Key key)
         {
             return false;
         }

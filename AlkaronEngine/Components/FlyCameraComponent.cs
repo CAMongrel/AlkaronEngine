@@ -1,5 +1,5 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Components
 {
@@ -18,7 +18,7 @@ namespace AlkaronEngine.Components
 
         public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
                                float setNearClip, float setFarClip)
-           : base(setCenter, Vector3.Up, setCenter + Vector3.Forward, setScreenSize,
+           : base(setCenter, Vector3.UnitY, setCenter + Vector3.UnitZ, setScreenSize,
                   setNearClip, setFarClip)
         {
             yaw = 0;
@@ -28,11 +28,11 @@ namespace AlkaronEngine.Components
             moveForward = moveBackward = strafeLeft = strafeRight = false;
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
 
-            Vector3 camVec = (LookAt - Center) * SpeedModifier * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Vector3 camVec = (LookAt - Center) * SpeedModifier * (float)deltaTime;
             if (moveForward)
             {
                 Center += camVec;
@@ -69,8 +69,9 @@ namespace AlkaronEngine.Components
             yaw -= delta.X;
             pitch -= delta.Y;
 
-            Matrix rotMat = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), MathHelper.ToRadians(roll));
-            Vector3 newPosition = Vector3.Transform(Vector3.Forward, rotMat);
+            Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(BepuUtilities.MathHelper.ToRadians(yaw), 
+                BepuUtilities.MathHelper.ToRadians(pitch), BepuUtilities.MathHelper.ToRadians(roll));
+            Vector3 newPosition = Vector3.Transform(Vector3.UnitZ, rotMat);
 
             LookAt = Center + newPosition;
 
@@ -104,29 +105,29 @@ namespace AlkaronEngine.Components
             return true;
         }
 
-        public override bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key)
+        public override bool KeyPressed(Key key)
         {
-            if (key == Microsoft.Xna.Framework.Input.Keys.W)
+            if (key == Key.W)
             {
                 moveForward = true;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.S)
+            if (key == Key.S)
             {
                 moveBackward = true;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.A)
+            if (key == Key.A)
             {
                 strafeLeft = true;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.D)
+            if (key == Key.D)
             {
                 strafeRight = true;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.LeftShift)
+            if (key == Key.ShiftLeft)
             {
                 SpeedModifier *= 3.0f;
                 return true;
@@ -135,29 +136,29 @@ namespace AlkaronEngine.Components
             return false;
         }
 
-        public override bool KeyReleased(Microsoft.Xna.Framework.Input.Keys key)
+        public override bool KeyReleased(Key key)
         {
-            if (key == Microsoft.Xna.Framework.Input.Keys.W)
+            if (key == Key.W)
             {
                 moveForward = false;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.S)
+            if (key == Key.S)
             {
                 moveBackward = false;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.A)
+            if (key == Key.A)
             {
                 strafeLeft = false;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.D)
+            if (key == Key.D)
             {
                 strafeRight = false;
                 return true;
             }
-            if (key == Microsoft.Xna.Framework.Input.Keys.LeftShift)
+            if (key == Key.ShiftLeft)
             {
                 SpeedModifier /= 3.0f;
                 return true;

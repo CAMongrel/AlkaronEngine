@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Xna.Framework;
+using System.Numerics;
 
 namespace AlkaronEngine.Components
 {
@@ -19,12 +19,12 @@ namespace AlkaronEngine.Components
            : base(Vector3.Zero, Vector3.UnitY, setLookAt, setScreenSize,
                   setNearClip, setFarClip)
         {
-            yawRadians = MathHelper.ToRadians(setYawDegrees);
-            pitchRadians = MathHelper.ToRadians(setPitchDegrees);
-            rollRadians = MathHelper.ToRadians(setRollDegrees);
+            yawRadians = BepuUtilities.MathHelper.ToRadians(setYawDegrees);
+            pitchRadians = BepuUtilities.MathHelper.ToRadians(setPitchDegrees);
+            rollRadians = BepuUtilities.MathHelper.ToRadians(setRollDegrees);
 
             Quaternion quaternion = Quaternion.CreateFromYawPitchRoll(yawRadians, pitchRadians, rollRadians);
-            Vector3 backward = Vector3.Backward;
+            Vector3 backward = Vector3.UnitZ;
 
             Vector3 directionVec = Vector3.Transform(backward, quaternion);
 
@@ -52,14 +52,14 @@ namespace AlkaronEngine.Components
 
             Vector2 delta = position - startPos;
 
-            yawRadians -= MathHelper.ToRadians(delta.X);
-            pitchRadians -= MathHelper.ToRadians(delta.Y);
+            yawRadians -= BepuUtilities.MathHelper.ToRadians(delta.X);
+            pitchRadians -= BepuUtilities.MathHelper.ToRadians(delta.Y);
 
             Vector3 camVector = Center - LookAt;
             float distance = camVector.Length();
 
-            Matrix rotMat = Matrix.CreateFromYawPitchRoll(yawRadians, pitchRadians, rollRadians);
-            Vector3 newPosition = Vector3.Transform(Vector3.Backward, rotMat);
+            Matrix4x4 rotMat = Matrix4x4.CreateFromYawPitchRoll(yawRadians, pitchRadians, rollRadians);
+            Vector3 newPosition = Vector3.Transform(Vector3.UnitZ, rotMat);
             newPosition *= distance;
             newPosition += LookAt;
 

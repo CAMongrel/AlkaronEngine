@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Components;
-using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
 using BepuPhysics.Collidables;
-using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Actors
 {
@@ -20,11 +18,11 @@ namespace AlkaronEngine.Actors
             IsAddedToSceneGraph = false;
         }
 
-        internal virtual void Update(GameTime gameTime)
+        internal virtual void Update(double deltaTime)
         {
             for (int i = 0; i < attachedComponents.Count; i++)
             {
-                attachedComponents[i].Update(gameTime);
+                attachedComponents[i].Update(deltaTime);
             }
         }
 
@@ -49,7 +47,7 @@ namespace AlkaronEngine.Actors
             return null; 
         }
 
-        internal IEnumerable<BaseRenderProxy> GetRenderProxies()
+        /*internal IEnumerable<BaseRenderProxy> GetRenderProxies()
         {
             List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
@@ -65,7 +63,7 @@ namespace AlkaronEngine.Actors
             }
 
             return resultList;
-        }
+        }*/
 
         public void AttachComponent(BaseComponent component)
         {

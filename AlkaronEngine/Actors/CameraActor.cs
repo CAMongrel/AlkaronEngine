@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Numerics;
 using AlkaronEngine.Components;
 using AlkaronEngine.Input;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using Veldrid;
 
 namespace AlkaronEngine.Actors
 {
@@ -36,12 +35,12 @@ namespace AlkaronEngine.Actors
             return CameraComponent?.PointerWheelChanged(position) ?? false;
         }
 
-        public virtual bool KeyPressed(Keys key)
+        public virtual bool KeyPressed(Key key)
         {
             return CameraComponent?.KeyPressed(key) ?? false;
         }
 
-        public virtual bool KeyReleased(Keys key)
+        public virtual bool KeyReleased(Key key)
         {
             return CameraComponent?.KeyReleased(key) ?? false;
         }

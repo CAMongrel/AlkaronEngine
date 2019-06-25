@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Numerics;
 using AlkaronEngine.Components;
-using Microsoft.Xna.Framework;
 
 namespace AlkaronEngine.Actors
 {

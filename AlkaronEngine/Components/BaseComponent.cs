@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using AlkaronEngine.Graphics3D;
+using System.Numerics;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
-using Microsoft.Xna.Framework;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Components
 {
@@ -33,7 +33,7 @@ namespace AlkaronEngine.Components
             BoundingBox = new BoundingBox();
         }
 
-        public virtual void Update(GameTime gameTime)
+        public virtual void Update(double deltaTime)
         {
             //
         }

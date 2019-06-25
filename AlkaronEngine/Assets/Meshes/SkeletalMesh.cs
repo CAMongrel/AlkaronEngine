@@ -1,9 +1,10 @@
 using AlkaronEngine.Graphics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
+using Veldrid;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Assets.Meshes
 {
@@ -58,7 +59,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// the start position and is used for the calculation to get the
             /// absolute and final matrices (see below).
             /// </summary>
-            public Matrix initialMatrix;
+            public Matrix4x4 initialMatrix;
 
             /// <summary>
             /// Id and name of this bone, makes debugging and testing easier, but
@@ -72,7 +73,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// These matrices must be set each frame (use time) in order
             /// for the animation to work.
             /// </summary>
-            public Matrix[] animationMatrices;
+            public Matrix4x4[] animationMatrices;
 
             /// <summary>
             /// invBoneMatrix is a special helper matrix loaded directly from
@@ -83,7 +84,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// center, but thanks to this inverted skin matrix the correct
             /// rotation points are used.
             /// </summary>
-            public Matrix invBoneSkinMatrix;
+            public Matrix4x4 invBoneSkinMatrix;
 
             /// <summary>
             /// Final absolute matrix, which is calculated in UpdateAnimation each
@@ -92,7 +93,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// to apply the invBoneSkinMatrix first to transform all vertices into
             /// the local space.
             /// </summary>
-            public Matrix finalMatrix;
+            public Matrix4x4 finalMatrix;
             #endregion
 
             #region Constructor
@@ -107,7 +108,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// <param name="setParentBone">Set parent bone</param>
             /// <param name="setNum">Set number</param>
             /// <param name="setId">Set id name</param>
-            public RuntimeBone(Matrix setMatrix, RuntimeBone setParentBone,
+            public RuntimeBone(Matrix4x4 setMatrix, RuntimeBone setParentBone,
                 int setNum, string setId)
             {
                 initialMatrix = setMatrix;
@@ -115,7 +116,7 @@ namespace AlkaronEngine.Assets.Meshes
                 parent = setParentBone;
                 id = setId;
 
-                invBoneSkinMatrix = Matrix.Identity;
+                invBoneSkinMatrix = Matrix4x4.Identity;
             } // Bone(setMatrix, setParentBone, setNum)
             #endregion
 
@@ -124,9 +125,9 @@ namespace AlkaronEngine.Assets.Meshes
             /// Get matrix recursively
             /// </summary>
             /// <returns>Matrix</returns>
-            public Matrix GetMatrixRecursively()
+            public Matrix4x4 GetMatrixRecursively()
             {
-                Matrix ret = initialMatrix;
+                Matrix4x4 ret = initialMatrix;
 
                 // If we have a parent mesh, we have to multiply the matrix with the
                 // parent matrix.
@@ -190,14 +191,14 @@ namespace AlkaronEngine.Assets.Meshes
             /// Transform matrix
             /// </summary>
             /// <returns>Matrix</returns>
-            public Matrix TransformMatrix
+            public Matrix4x4 TransformMatrix
             {
                 get
                 {
                     // TODO: Cache this
-                    return Matrix.CreateScale(Scaling) *
-                        Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
-                        Matrix.CreateTranslation(Translation);
+                    return Matrix4x4.CreateScale(Scaling) *
+                        Matrix4x4.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+                        Matrix4x4.CreateTranslation(Translation);
                 } // get
             } // TransformMatrix
             #endregion
@@ -294,7 +295,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Vertices for the main mesh (we only support one mesh here!).
         /// </summary>
-        private SkinnedTangentVertex[] vertices;
+        private SkinnedTangentVertex[] objectVertices;
 
         /// <summary>
         /// Number of vertices and number of indices we got in the
@@ -306,7 +307,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Object matrix for our mesh. Often used to fix mesh to bone skeleton.
         /// </summary>
-        private Matrix objectMatrix = Matrix.Identity;
+        private Matrix4x4 objectMatrix = Matrix4x4.Identity;
 
         /// <summary>
         /// Flat list of bones, the first bone is always the root bone, all
@@ -431,7 +432,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Creates a static mesh directly from vertices (triangles only)
         /// </summary>
-        public static SkeletalMesh FromVertices(Vector3[] vertices)
+        public static SkeletalMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice)
         {
             SkinnedTangentVertex[] verts = new SkinnedTangentVertex[vertices.Length];
             for (int i = 0; i < verts.Length; i++)
@@ -442,13 +443,13 @@ namespace AlkaronEngine.Assets.Meshes
                     Vector4.Zero, Vector4.One);
             }
 
-            return FromVertices(verts);
+            return FromVertices(verts, graphicsDevice);
         }
 
         /// <summary>
         /// Creates a static mesh directly from tangent vertices (triangles only)
         /// </summary>
-        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices)
+        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices, GraphicsDevice graphicsDevice)
         {
             uint[] indices = new uint[vertices.Length];
             for (uint i = 0; i < vertices.Length; i++)
@@ -456,31 +457,28 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices);
+            return FromVertices(vertices, indices, graphicsDevice);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
         public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices,
-            uint[] indices)
+            uint[] indices, GraphicsDevice graphicsDevice)
         {
             SkeletalMesh mesh = new SkeletalMesh();
 
-            mesh.vertices = vertices;
+            mesh.objectVertices = vertices;
             mesh.objectIndices = indices;
 
-            mesh.vertexBuffer = new VertexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                    SkinnedTangentVertex.VertexDecl,
-                    SkinnedTangentVertex.SizeInBytes * mesh.vertices.Length,
-                    BufferUsage.WriteOnly);
+            BufferDescription vertexBufferDesc = new BufferDescription((uint)(SkinnedTangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
+            mesh.vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
 
-            mesh.indexBuffer = new IndexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                IndexElementSize.ThirtyTwoBits,
-                mesh.objectIndices.Length, BufferUsage.WriteOnly);
+            BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(int) * mesh.objectIndices.Length), BufferUsage.IndexBuffer);
+            mesh.indexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(indexBufferDesc);
 
-            mesh.vertexBuffer.SetData<SkinnedTangentVertex>(mesh.vertices);
-            mesh.indexBuffer.SetData<uint>(mesh.objectIndices);
+            graphicsDevice.UpdateBuffer(mesh.vertexBuffer, 0, mesh.objectVertices);
+            graphicsDevice.UpdateBuffer(mesh.indexBuffer, 0, mesh.objectIndices);
 
             mesh.CreateBoundingSphere();
             //mesh.CreateRuntimeCollisionData(CollisionType.Vertices);
@@ -495,16 +493,16 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Load
         /// </summary>
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
-            base.Deserialize(reader);
+            base.Deserialize(reader, assetSettings);
 
             // Read mesh data
             numOfVertices = reader.ReadInt32();
-            vertices = new SkinnedTangentVertex[numOfVertices];
-            for (int i = 0; i < vertices.Length; i++)
+            objectVertices = new SkinnedTangentVertex[numOfVertices];
+            for (int i = 0; i < objectVertices.Length; i++)
             {
-                vertices[i] = new SkinnedTangentVertex(
+                objectVertices[i] = new SkinnedTangentVertex(
                     new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle()),
                     new Vector2(reader.ReadSingle(), reader.ReadSingle()),
@@ -575,7 +573,7 @@ namespace AlkaronEngine.Assets.Meshes
                 bones[i].initialMatrix = ReadMatrixHelper(reader);
                 bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
                 int aninMatCnt = reader.ReadInt32();
-                bones[i].animationMatrices = new Matrix[aninMatCnt];
+                bones[i].animationMatrices = new Matrix4x4[aninMatCnt];
                 for (int j = 0; j < aninMatCnt; j++)
                 {
                     bones[i].animationMatrices[j] =
@@ -604,7 +602,7 @@ namespace AlkaronEngine.Assets.Meshes
                 sockets[i].LoadFromStream(reader, bones);
             } // for (int)
 
-            GenerateVertexAndIndexBuffers();
+            GenerateVertexAndIndexBuffers(assetSettings.GraphicsDevice);
 
             CreateBoundingSphere();
 
@@ -699,19 +697,17 @@ namespace AlkaronEngine.Assets.Meshes
         }
         #endregion
 
-#if WINDOWS
         #region Save
 		/// <summary>
 		/// Save
 		/// </summary>
 		/// <param name="writer">Writer</param>
-		public override void Save(BinaryWriter writer)
+		public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
 		{
-			writer.Write("HAF ");
-			writer.Write(MaxAssetVersion);
-			writer.Write(OriginalFilename);
+            base.Serialize(writer, assetSettings);
 
-        #region Write vertex data
+            /*
+            #region Write vertex data
 			writer.Write(vertices.Length);
 			for (int i = 0; i < vertices.Length; i++)
 			{
@@ -744,17 +740,17 @@ namespace AlkaronEngine.Assets.Meshes
 				writer.Write(vertices[i].jointWeights.Z);
 				writer.Write(vertices[i].jointWeights.W);
 			} // for (int)
-        #endregion
+            #endregion
 
-        #region Write indices
+            #region Write indices
 			writer.Write(objectIndices.Length);
 			for (int i = 0; i < objectIndices.Length; i++)
 			{
 				writer.Write(objectIndices[i]);
 			} // for (int)
-        #endregion
+            #endregion
 
-        #region Write collision data
+            #region Write collision data
 			// Write collision info
 			// New in version 4
 			WriteCollisionData(writer, collisionData);
@@ -765,9 +761,9 @@ namespace AlkaronEngine.Assets.Meshes
 			{
 				WriteCollisionData(writer, customCollisions[i]);
 			} // for (int)
-        #endregion
+            #endregion
 
-        #region Write animation data
+            #region Write animation data
 			// New in version 5
 			writer.Write(runtimeAnimations.Count);
 			for (int i = 0; i < runtimeAnimations.Count; i++)
@@ -776,16 +772,16 @@ namespace AlkaronEngine.Assets.Meshes
 				writer.Write(runtimeAnimations[i].Start);
 				writer.Write(runtimeAnimations[i].End);
 			} // for (int)
-        #endregion
+            #endregion
 
-        #region Write object matrix
+            #region Write object matrix
 			HellspawnEngine.Assets.Importers.AssetImporterMesh.
 				WriteMatrixHelper(writer, objectMatrix);
-        #endregion
+            #endregion
 
 			writer.Write(numOfAnimations);
 
-        #region Write bone list
+            #region Write bone list
 			writer.Write(bones.Length);
 			for (int i = 0; i < bones.Length; i++)
 			{
@@ -807,18 +803,19 @@ namespace AlkaronEngine.Assets.Meshes
 						WriteMatrixHelper(writer, bones[i].animationMatrices[j]);
 				} // for (int)
 			} // for (int)
-        #endregion
+            #endregion
 
 			// Write node material name
 			writer.Write(nodeMaterial != null ? nodeMaterial.Fullname : "");
 
-        #region Write sockets
+            #region Write sockets
 			writer.Write(sockets.Length);
 			for (int i = 0; i < sockets.Length; i++)
 			{
 				sockets[i].SaveToStream(writer);
 			} // for (int)
-        #endregion
+            #endregion
+            */
 		} // Save(writer)
         #endregion
 		
@@ -837,18 +834,17 @@ namespace AlkaronEngine.Assets.Meshes
 			writer.Write((int)-1);
 		}
         #endregion
-#endif
 
         #region CreateBoundingSphere
         internal override void CreateBoundingSphere()
         {
             // Create 3D version of the mesh
-            Vector3[] allVertices3D = new Vector3[vertices.Length];
+            Vector3[] allVertices3D = new Vector3[objectVertices.Length];
             for (int i = 0; i < allVertices3D.Length; i++)
             {
                 allVertices3D[i] = new Vector3(
-                    vertices[i].Position.X, vertices[i].Position.Y,
-                    vertices[i].Position.Z);
+                    objectVertices[i].Position.X, objectVertices[i].Position.Y,
+                    objectVertices[i].Position.Z);
             }
 
             boundingSphere = BoundingSphere.CreateFromPoints(allVertices3D);
@@ -856,9 +852,9 @@ namespace AlkaronEngine.Assets.Meshes
         #endregion
 
         #region ReadMatrixHelper
-        private static Matrix ReadMatrixHelper(BinaryReader reader)
+        private static Matrix4x4 ReadMatrixHelper(BinaryReader reader)
         {
-            return new Matrix(
+            return new Matrix4x4(
                 reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
                 reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
                 reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
@@ -940,10 +936,10 @@ namespace AlkaronEngine.Assets.Meshes
             t = u = v = 0;
 
             // precache scaling of vert0
-            Vector3 scaledVert0 = vertices[vert0].Position * scaling;
+            Vector3 scaledVert0 = objectVertices[vert0].Position * scaling;
             // find vectors for two edges sharing vert0
-            edge1 = (vertices[vert1].Position * scaling) - scaledVert0;
-            edge2 = (vertices[vert2].Position * scaling) - scaledVert0;
+            edge1 = (objectVertices[vert1].Position * scaling) - scaledVert0;
+            edge2 = (objectVertices[vert2].Position * scaling) - scaledVert0;
 
             // begin calculating determinant - also used to calculate U parameter
             pvec = Vector3.Cross(ray.Direction, edge2);
@@ -957,7 +953,7 @@ namespace AlkaronEngine.Assets.Meshes
             inv_det = 1.0f / det;
 
             // calculate distance from vert0 to ray origin
-            tvec = ray.Position - scaledVert0;
+            tvec = ray.Origin - scaledVert0;
 
             // calculate U parameter and test bounds
             u = Vector3.Dot(tvec, pvec) * inv_det;
@@ -983,7 +979,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Generate vertex and index buffers
         /// </summary>
-        private void GenerateVertexAndIndexBuffers()
+        private void GenerateVertexAndIndexBuffers(GraphicsDevice graphicsDevice)
         {
             if (vertexBuffer != null)
             {
@@ -996,22 +992,14 @@ namespace AlkaronEngine.Assets.Meshes
                 indexBuffer = null;
             }
 
-            vertexBuffer = new VertexBuffer(
-                AlkaronCoreGame.Core.GraphicsDevice,
-                SkinnedTangentVertex.VertexDecl,
-                SkinnedTangentVertex.SizeInBytes * vertices.Length,
-                BufferUsage.WriteOnly);
-            vertexBuffer.SetData<SkinnedTangentVertex>(vertices);
+            BufferDescription vertexBufferDesc = new BufferDescription((uint)(SkinnedTangentVertex.SizeInBytes * objectVertices.Length), BufferUsage.VertexBuffer);
+            vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
 
-            // Create the index buffer from our indices (Note: While the indices
-            // will point only to 16bit (ushort) vertices, we can have a lot
-            // more indices in this list than just 65535).
-            indexBuffer = new IndexBuffer(
-                AlkaronCoreGame.Core.GraphicsDevice,
-                IndexElementSize.ThirtyTwoBits,
-                objectIndices.Length,
-                BufferUsage.WriteOnly);
-            indexBuffer.SetData<uint>(objectIndices);
+            BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(int) * objectIndices.Length), BufferUsage.IndexBuffer);
+            indexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(indexBufferDesc);
+
+            graphicsDevice.UpdateBuffer(vertexBuffer, 0, objectVertices);
+            graphicsDevice.UpdateBuffer(indexBuffer, 0, objectIndices);
 
             numOfIndices = objectIndices.Length;
         } // GenerateVertexAndIndexBuffers()
@@ -1064,10 +1052,10 @@ namespace AlkaronEngine.Assets.Meshes
         /// all the animation data (see UpdateAnimation).
         /// </summary>
         /// <returns></returns>
-        private Matrix[] GetBoneMatrices(Matrix renderMatrix)
+        private Matrix4x4[] GetBoneMatrices(Matrix4x4 renderMatrix)
         {
             // And get all bone matrices, we support max. 80 (see shader).
-            Matrix[] matrices = new Matrix[Math.Min(SkinnedEffect.MaxBones, bones.Length)];
+            Matrix4x4[] matrices = new Matrix4x4[Math.Min(80/*SkinnedEffect.MaxBones*/, bones.Length)];
             for (int num = 0; num < matrices.Length; num++)
             {
                 // The matrices are constructed from the invBoneSkinMatrix and
@@ -1084,7 +1072,7 @@ namespace AlkaronEngine.Assets.Meshes
         #endregion
 
         #region SetBoneMatrices
-        internal void SetBoneMatrices(Matrix[] matrices, SkinnedEffect skinnedEffect)//, HVertexShader vertexShader)
+        internal void SetBoneMatrices(Matrix4x4[] matrices)//, HVertexShader vertexShader)
         {
             Vector4[] values = new Vector4[matrices.Length * 3];
             for (int i = 0; i < matrices.Length; i++)
@@ -1100,8 +1088,8 @@ namespace AlkaronEngine.Assets.Meshes
                 values[i * 3 + 2] = new Vector4(
                     matrices[i].M13, matrices[i].M23, matrices[i].M33, matrices[i].M43);
             } // for
-              //vertexShader.SetValue("skinnedMatricesVS20", values);
-            skinnedEffect.SetBoneTransforms(matrices);
+            //vertexShader.SetValue("skinnedMatricesVS20", values);
+            //skinnedEffect.SetBoneTransforms(matrices);
         }
         #endregion // SetBoneMatrices(matrices)
 
@@ -1109,9 +1097,9 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Renders the skeleton of this skeletal mesh
         /// </summary>
-        public void RenderSkeleton(Matrix worldMatrix)
+        public void RenderSkeleton(Matrix4x4 worldMatrix)
         {
-            CompareFunction oldFunc =
+            /*CompareFunction oldFunc =
                 AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction;
             AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction =
                 CompareFunction.Always;
@@ -1119,7 +1107,7 @@ namespace AlkaronEngine.Assets.Meshes
             RenderBone(worldMatrix, bones[0]);
 
             AlkaronCoreGame.Core.GraphicsDevice.DepthStencilState.DepthBufferFunction =
-                oldFunc;
+                oldFunc;*/
         }
         #endregion
 
@@ -1127,7 +1115,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Renders a single bone and all its childs using lines.
         /// </summary>
-        private void RenderBone(Matrix worldMatrix, RuntimeBone bone)
+        private void RenderBone(Matrix4x4 worldMatrix, RuntimeBone bone)
         {
             for (int childIdx = 0; childIdx < bone.children.Length; childIdx++)
             {
@@ -1226,7 +1214,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// with the DiffuseSpecular20 technique.
         /// </summary>
         /// <param name="renderMatrix">Render matrix</param>
-        internal void Render(SkinnedEffect effect, Matrix renderMatrix, GameTime gameTime)
+        internal void Render(Matrix4x4 renderMatrix, double deltaTime)
         {
             if (IsValid == false)
             {
@@ -1237,10 +1225,10 @@ namespace AlkaronEngine.Assets.Meshes
             /*AlkaronCoreGame.Core.GraphicsDevice.VertexDeclaration =
 				SkinnedTangentVertex.VertexDecl;*/
 
-            Matrix[] boneMats = GetBoneMatrices(renderMatrix);
+            Matrix4x4[] boneMats = GetBoneMatrices(renderMatrix);
 
             // Set custom skinnedMatrices
-            SetBoneMatrices(boneMats, effect);
+            //SetBoneMatrices(boneMats, effect);
 
             // Render the mesh
             RenderVertices();
@@ -1251,11 +1239,11 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         private void RenderVertices()
         {
-            AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            /*AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
             AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(
                 PrimitiveType.TriangleList,
-                0, 0, numOfIndices / 3);
+                0, 0, numOfIndices / 3);*/
         } // RenderVertices()
         #endregion
     }

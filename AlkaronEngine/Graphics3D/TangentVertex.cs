@@ -1,10 +1,8 @@
 ﻿#region Using directives
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System.Numerics;
+using Veldrid;
 #endregion
 
 namespace AlkaronEngine.Graphics
@@ -35,7 +33,7 @@ namespace AlkaronEngine.Graphics
         /// <summary>
         /// Tangent
         /// </summary>
-        public Vector3 BiTangent;
+        public Vector3 Bitangent;
         #endregion
 
         #region Properties
@@ -74,7 +72,7 @@ namespace AlkaronEngine.Graphics
             TexCoord = new Vector2(setU, setV);
             Normal = setNormal;
             Tangent = setTangent;
-            BiTangent = setBitangent;
+            Bitangent = setBitangent;
         } // TangentVertex(setPos, setU, setV)
 
         /// <summary>
@@ -95,7 +93,7 @@ namespace AlkaronEngine.Graphics
             TexCoord = setUv;
             Normal = setNormal;
             Tangent = setTangent;
-            BiTangent = setBitangent;
+            Bitangent = setBitangent;
         } // TangentVertex(setPos, setUv, setNormal)
         #endregion
 
@@ -110,7 +108,7 @@ namespace AlkaronEngine.Graphics
                 "v=" + TexCoord.Y + ", " +
                 "normal=" + Normal + ", " +
                 "tangent=" + Tangent + ", " +
-                "bitangent=" + BiTangent + ")";
+                "bitangent=" + Bitangent + ")";
         } // ToString()
         #endregion
 
@@ -118,52 +116,25 @@ namespace AlkaronEngine.Graphics
         /// <summary>
         /// Vertex elements for Mesh.Clone
         /// </summary>
-        public static readonly VertexDeclaration VertexDecl =
-            GenerateVertexDeclaration();
+        public static readonly VertexLayoutDescription VertexLayout =
+            GenerateVertexLayoutDescription();
 
         /// <summary>
         /// Generate vertex declaration
         /// </summary>
-        private static VertexDeclaration GenerateVertexDeclaration()
+        private static VertexLayoutDescription GenerateVertexLayoutDescription()
         {
-            VertexElement[] decl = new VertexElement[]
-                {
-                    new VertexElement(0, VertexElementFormat.Vector3,
-                                            VertexElementUsage.Position, 0),
+            VertexLayoutDescription result = new VertexLayoutDescription(new VertexElementDescription[]
+            {
+                new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position),
+                new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate),
+                new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("Tangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("Bitangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+            });
 
-                    new VertexElement(12, VertexElementFormat.Vector2,
-                                             VertexElementUsage.TextureCoordinate, 0),
-
-                    new VertexElement(20, VertexElementFormat.Vector3,
-                                             VertexElementUsage.Normal, 0),
-
-                    new VertexElement(32, VertexElementFormat.Vector3,
-                                             VertexElementUsage.Tangent, 0),
-
-                    new VertexElement(44, VertexElementFormat.Vector3,
-                                             VertexElementUsage.Binormal, 1)
-                };
-
-            return new VertexDeclaration(decl);
+            return result;
         } // GenerateVertexElements()
-        #endregion
-
-        #region Is declaration tangent vertex declaration
-        /*
-		/// <summary>
-		/// Returns true if declaration is tangent vertex declaration.
-		/// </summary>
-		public static bool IsTangentVertexDeclaration(
-			InputElement[] declaration)
-		{
-			return
-				declaration.Length == 4 &&
-				declaration[0].SemanticName == "position" &&
-				declaration[1].SemanticName == "normal" &&
-				declaration[2].SemanticName == "tangent" &&
-				declaration[3].SemanticName == "texcoord";
-		} // IsTangentVertexDeclaration(declaration)
-		*/
         #endregion
         #endregion
     }

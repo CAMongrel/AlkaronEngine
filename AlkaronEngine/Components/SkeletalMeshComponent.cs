@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics3D.RenderProxies;
-using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Components
 {
@@ -14,7 +15,7 @@ namespace AlkaronEngine.Components
         public SkeletalMesh SkeletalMesh { get; private set; }
 
         // Reference to the rendering proxy
-        //private SkeletalMeshRenderProxy proxy;
+        private SkeletalMeshRenderProxy proxy;
 
         public SkeletalMeshComponent(Vector3 setCenter)
            : base(setCenter)
@@ -34,14 +35,14 @@ namespace AlkaronEngine.Components
 
             if (SkeletalMesh != null)
             {
-                Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
-                       Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
-                       Matrix.CreateTranslation(Center);
+                Matrix4x4 worldMatrix = Matrix4x4.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+                       Matrix4x4.CreateScale(Scale.X, Scale.Y, Scale.Z) *
+                       Matrix4x4.CreateTranslation(Center);
 
                 SkeletalMeshRenderProxy proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = SkeletalMesh.Material;
-                proxy.BoundingBox = BoundingBox.CreateFromSphere(new BoundingSphere(Center, SkeletalMesh.BoundingSphere.Radius));
+                //proxy.BoundingBox = BoundingBox.CreateFromSphere(new BoundingSphere(Center, SkeletalMesh.BoundingSphere.Radius));
 
                 resultList.Add(proxy);
             }
@@ -49,9 +50,9 @@ namespace AlkaronEngine.Components
             renderProxies = resultList.ToArray();
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
 
             /*if (proxy != null)
             {

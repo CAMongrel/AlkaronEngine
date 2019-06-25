@@ -1,7 +1,7 @@
 using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
+using System.Numerics;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
@@ -16,18 +16,18 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             Material = StaticMesh.Material;
         }
 
-        public override void Render(Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
+        public override void Render()//Graphics2D.IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
         {
             /*if (StaticMesh.IsCollisionOnly)
             {
                 return;
             }*/
 
-            base.Render(renderConfig, renderManager, materialToUse);
+            base.Render();//renderConfig, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            Matrix worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
-            materialToUse.ApplyParameters(worldViewProj);
+            //Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
+            //materialToUse.ApplyParameters(worldViewProj);
             Performance.EndAppendAggreate("Setup");
 
             /*if (StaticMesh.DiffuseTexture != null)

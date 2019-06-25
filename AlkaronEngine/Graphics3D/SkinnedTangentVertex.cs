@@ -1,7 +1,7 @@
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Veldrid;
 
 namespace AlkaronEngine.Graphics
 {
@@ -31,7 +31,7 @@ namespace AlkaronEngine.Graphics
 		/// <summary>
 		/// Tangent
 		/// </summary>
-		public Vector3 BiTangent;
+		public Vector3 Bitangent;
 		/// <summary>
 		/// Bone/Joint indices
 		/// </summary>
@@ -82,7 +82,7 @@ namespace AlkaronEngine.Graphics
 			TexCoord = new Vector2(setU, setV);
 			Normal = setNormal;
 			Tangent = setTangent;
-			BiTangent = setBitangent;
+			Bitangent = setBitangent;
 			JointIndices = setJointIndices;
 			JointWeights = setJointWeights;
 		} // TangentVertex(setPos, setU, setV)
@@ -107,7 +107,7 @@ namespace AlkaronEngine.Graphics
 			TexCoord = setUv;
 			Normal = setNormal;
 			Tangent = setTangent;
-			BiTangent = setBitangent;
+			Bitangent = setBitangent;
 			JointIndices = setJointIndices;
 			JointWeights = setJointWeights;
 		} // TangentVertex(setPos, setUv, setNormal)
@@ -124,51 +124,38 @@ namespace AlkaronEngine.Graphics
 				"v=" + TexCoord.Y + ", " +
 				"normal=" + Normal + ", " +
 				"tangent=" + Tangent + ", " +
-				"bitangent=" + BiTangent + ", " +
+				"bitangent=" + Bitangent + ", " +
 				"jointIndices=" + JointIndices + ", " +
 				"jointWeights=" + JointWeights + ")";
 		} // ToString()
-		#endregion
+        #endregion
 
-		#region Generate vertex declaration
-		/// <summary>
-		/// Vertex elements for Mesh.Clone
-		/// </summary>
-		public static readonly VertexDeclaration VertexDecl =
-			GenerateVertexDeclaration();
+        #region Generate vertex declaration
+        /// <summary>
+        /// Vertex elements for Mesh.Clone
+        /// </summary>
+        public static readonly VertexLayoutDescription VertexLayout =
+            GenerateVertexLayoutDescription();
 
-		/// <summary>
-		/// Generate vertex declaration
-		/// </summary>
-		private static VertexDeclaration GenerateVertexDeclaration()
-		{
-			VertexElement[] decl = new VertexElement[]
-				{
-					new VertexElement(0, VertexElementFormat.Vector3, 
-											VertexElementUsage.Position, 0),
-			                            
-					new VertexElement(12, VertexElementFormat.Vector2,
-											 VertexElementUsage.TextureCoordinate, 0),
-				                            
-					new VertexElement(20, VertexElementFormat.Vector3,
-											 VertexElementUsage.Normal, 0),
-				                            
-					new VertexElement(32, VertexElementFormat.Vector3,
-											 VertexElementUsage.Tangent, 0),
+        /// <summary>
+        /// Generate vertex declaration
+        /// </summary>
+        private static VertexLayoutDescription GenerateVertexLayoutDescription()
+        {
+            VertexLayoutDescription result = new VertexLayoutDescription(new VertexElementDescription[]
+            {
+                new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position),
+                new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate),
+                new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("Tangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("Bitangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("BlendIndices", VertexElementFormat.Float4, VertexElementSemantic.Position),
+                new VertexElementDescription("BlendWeight", VertexElementFormat.Float4, VertexElementSemantic.Position),
+            });
 
-					new VertexElement(44, VertexElementFormat.Vector3,
-											 VertexElementUsage.Binormal, 0),
-											 
-					new VertexElement(56, VertexElementFormat.Vector4,
-                                          VertexElementUsage.BlendIndices, 0),
-					
-					new VertexElement(72, VertexElementFormat.Vector4,
- 										  VertexElementUsage.BlendWeight, 0),
-				};
-
-            return new VertexDeclaration(decl);
-		} // GenerateVertexElements()
-		#endregion
+            return result;
+        } // GenerateVertexElements()
+        #endregion
 		#endregion
 
 		#region Nearly equal

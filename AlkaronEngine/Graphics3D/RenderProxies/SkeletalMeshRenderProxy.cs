@@ -1,18 +1,13 @@
 using System;
+using System.Numerics;
 using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
-using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using static AlkaronEngine.Assets.Meshes.SkeletalMesh;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
     public class SkeletalMeshRenderProxy : BaseRenderProxy
     {
-        public static BasicEffect effect = null;
-
         public SkeletalMesh SkeletalMesh { get; private set; }
 
         /// <summary>
@@ -63,7 +58,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             renderConfig.GraphicsDevice.DrawPrimitives(part.PrimitiveType, 0, part.PrimitiveCount);
         }*/
 
-        private void DrawBone(RuntimeBone bone, RenderManager renderManager, IRenderConfiguration renderConfig)
+        private void DrawBone()//RuntimeBone bone, RenderManager renderManager, IRenderConfiguration renderConfig)
         {
             /*if (effect == null)
             {
@@ -110,13 +105,13 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }*/
         }
 
-        public override void Render(IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
+        public override void Render()//IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
         {
-            base.Render(renderConfig, renderManager, materialToUse);
+            base.Render();//renderConfig, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            Matrix worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
-            materialToUse.ApplyParameters(worldViewProj);
+            //Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
+            //materialToUse.ApplyParameters(worldViewProj);
             Performance.EndAppendAggreate("Setup");
 
             Performance.StartAppendAggreate("Render Mesh");

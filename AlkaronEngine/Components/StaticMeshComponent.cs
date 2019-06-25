@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics3D.RenderProxies;
-using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace AlkaronEngine.Components
 {
@@ -16,9 +16,9 @@ namespace AlkaronEngine.Components
             staticMeshes = new List<StaticMesh>();
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
 
             if (IsDirty)
             {
@@ -32,9 +32,9 @@ namespace AlkaronEngine.Components
         {
             List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
-            Matrix worldMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
-                   Matrix.CreateScale(Scale.X, Scale.Y, Scale.Z) *
-                   Matrix.CreateTranslation(Center);
+            Matrix4x4 worldMatrix = Matrix4x4.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+                   Matrix4x4.CreateScale(Scale.X, Scale.Y, Scale.Z) *
+                   Matrix4x4.CreateTranslation(Center);
 
             for (int i = 0; i < staticMeshes.Count; i++)
             {
@@ -43,7 +43,7 @@ namespace AlkaronEngine.Components
                 StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
                 proxy.WorldMatrix = worldMatrix;
                 proxy.Material = mesh.Material;
-                proxy.BoundingBox = BoundingBox.CreateMerged(proxy.BoundingBox, BoundingBox.CreateFromSphere(staticMeshes[i].BoundingSphere));
+                //proxy.BoundingBox = BoundingBox.CreateMerged(proxy.BoundingBox, BoundingBox.CreateFromSphere(staticMeshes[i].BoundingSphere));
                 resultList.Add(proxy);
             }
 

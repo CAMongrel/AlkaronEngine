@@ -1,8 +1,9 @@
 using AlkaronEngine.Graphics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Numerics;
+using Veldrid;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Assets.Meshes
 {
@@ -69,13 +70,13 @@ namespace AlkaronEngine.Assets.Meshes
         }
         #endregion
 
-        #region Load
+        #region Deserialize
         /// <summary>
         /// Loads the static mesh from the compiled binary mesh
         /// </summary>
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
-            base.Deserialize(reader);
+            base.Deserialize(reader, assetSettings);
 
             // Read mesh data
             int NumTriangles = reader.ReadInt32();
@@ -129,14 +130,11 @@ namespace AlkaronEngine.Assets.Meshes
             // Create XNA buffers and fill them
             try
             {
-                VertexBuffer newVertexBuffer = new VertexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                    TangentVertex.VertexDecl,
-                    TangentVertex.SizeInBytes * objectVertices.Length, 
-                    BufferUsage.WriteOnly);
+                BufferDescription vertexBufferDesc = new BufferDescription((uint)(TangentVertex.SizeInBytes * objectVertices.Length), BufferUsage.VertexBuffer);
+                DeviceBuffer newVertexBuffer = assetSettings.GraphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
 
-                IndexBuffer newIndexBuffer = new IndexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                    IndexElementSize.ThirtyTwoBits,
-                    objectIndices.Length, BufferUsage.WriteOnly);
+                BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(int) * objectIndices.Length), BufferUsage.IndexBuffer);
+                DeviceBuffer newIndexBuffer = assetSettings.GraphicsDevice.ResourceFactory.CreateBuffer(indexBufferDesc);
 
                 if (newVertexBuffer != null)
                 {
@@ -164,8 +162,8 @@ namespace AlkaronEngine.Assets.Meshes
                 return;
             }
 
-            vertexBuffer.SetData<TangentVertex>(objectVertices);
-            indexBuffer.SetData<uint>(objectIndices);
+            assetSettings.GraphicsDevice.UpdateBuffer(vertexBuffer, 0, objectVertices);
+            assetSettings.GraphicsDevice.UpdateBuffer(indexBuffer, 0, objectIndices);
 
             CreateBoundingSphere();
         }
@@ -175,7 +173,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Creates a static mesh directly from vertices (triangles only)
         /// </summary>
-        public static StaticMesh FromVertices(Vector3[] vertices)
+        public static StaticMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice)
         {
             TangentVertex[] verts = new TangentVertex[vertices.Length];
             for (int i = 0; i < verts.Length; i++)
@@ -185,13 +183,13 @@ namespace AlkaronEngine.Assets.Meshes
                     Vector3.Zero, Vector3.Zero);
             }
 
-            return FromVertices(verts);
+            return FromVertices(verts, graphicsDevice);
         }
 
         /// <summary>
         /// Creates a static mesh directly from tangent vertices (triangles only)
         /// </summary>
-        public static StaticMesh FromVertices(TangentVertex[] vertices)
+        public static StaticMesh FromVertices(TangentVertex[] vertices, GraphicsDevice graphicsDevice)
         {
             uint[] indices = new uint[vertices.Length];
             for (uint i = 0; i < vertices.Length; i++)
@@ -199,31 +197,27 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices);
+            return FromVertices(vertices, indices, graphicsDevice);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
-        public static StaticMesh FromVertices(TangentVertex[] vertices,
-            uint[] indices)
+        public static StaticMesh FromVertices(TangentVertex[] vertices, uint[] indices, GraphicsDevice graphicsDevice)
         {
             StaticMesh mesh = new StaticMesh();
 
             mesh.objectVertices = vertices;
             mesh.objectIndices = indices;
 
-            mesh.vertexBuffer = new VertexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                    TangentVertex.VertexDecl,
-                    TangentVertex.SizeInBytes * mesh.objectVertices.Length,
-                    BufferUsage.WriteOnly);
+            BufferDescription vertexBufferDesc = new BufferDescription((uint)(TangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
+            mesh.vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
 
-            mesh.indexBuffer = new IndexBuffer(AlkaronCoreGame.Core.GraphicsDevice,
-                IndexElementSize.ThirtyTwoBits,
-                mesh.objectIndices.Length, BufferUsage.WriteOnly);
+            BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(int) * mesh.objectIndices.Length), BufferUsage.IndexBuffer);
+            mesh.indexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(indexBufferDesc);
 
-            mesh.vertexBuffer.SetData<TangentVertex>(mesh.objectVertices);
-            mesh.indexBuffer.SetData<uint>(mesh.objectIndices);
+            graphicsDevice.UpdateBuffer(mesh.vertexBuffer, 0, mesh.objectVertices);
+            graphicsDevice.UpdateBuffer(mesh.indexBuffer, 0, mesh.objectIndices);
 
             mesh.CreateBoundingSphere();
             //mesh.CreateRuntimeCollisionData(CollisionType.Vertices);
@@ -234,13 +228,13 @@ namespace AlkaronEngine.Assets.Meshes
         }
         #endregion
 
-        #region Save
+        #region Serialize
         /// <summary>
         /// Saves the static mesh into its binary representation
         /// </summary>
-        public override void Serialize(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
-            base.Serialize(writer);
+            base.Serialize(writer, assetSettings);
 
             writer.Write(NumberOfFaces);
             writer.Write(objectVertices.Length);
@@ -261,9 +255,9 @@ namespace AlkaronEngine.Assets.Meshes
                 writer.Write(objectVertices[i].Tangent.Y);
                 writer.Write(objectVertices[i].Tangent.Z);
 
-                writer.Write(objectVertices[i].BiTangent.X);
-                writer.Write(objectVertices[i].BiTangent.Y);
-                writer.Write(objectVertices[i].BiTangent.Z);
+                writer.Write(objectVertices[i].Bitangent.X);
+                writer.Write(objectVertices[i].Bitangent.Y);
+                writer.Write(objectVertices[i].Bitangent.Z);
             }
 
             writer.Write(objectIndices.Length);
@@ -342,7 +336,7 @@ namespace AlkaronEngine.Assets.Meshes
             inv_det = 1.0f / det;
 
             // calculate distance from vert0 to ray origin
-            tvec = ray.Position - scaledVert0;
+            tvec = ray.Origin - scaledVert0;
 
             // calculate U parameter and test bounds
             u = Vector3.Dot(tvec, pvec) * inv_det;
@@ -437,8 +431,8 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         public virtual void SetVertexData()
         {
-            AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
-            AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            //AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
+            //AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
         }
         #endregion
 
@@ -450,8 +444,8 @@ namespace AlkaronEngine.Assets.Meshes
         {
             SetVertexData();
 
-            AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-                0, 0, NumberOfFaces);
+            //AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+            //    0, 0, NumberOfFaces);
         }
         #endregion
 

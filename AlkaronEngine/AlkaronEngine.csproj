@@ -11,39 +11,36 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Actors\**" />
     <Compile Remove="Assets\Importers\**" />
-    <Compile Remove="Assets\Meshes\**" />
-    <Compile Remove="Components\**" />
     <Compile Remove="Controllers\**" />
     <Compile Remove="Graphics2D\**" />
-    <Compile Remove="Graphics3D\**" />
+    <Compile Remove="Graphics3D\Geometry\**" />
     <Compile Remove="Gui\**" />
     <Compile Remove="Resources\**" />
-    <EmbeddedResource Remove="Actors\**" />
     <EmbeddedResource Remove="Assets\Importers\**" />
-    <EmbeddedResource Remove="Assets\Meshes\**" />
-    <EmbeddedResource Remove="Components\**" />
     <EmbeddedResource Remove="Controllers\**" />
     <EmbeddedResource Remove="Graphics2D\**" />
-    <EmbeddedResource Remove="Graphics3D\**" />
+    <EmbeddedResource Remove="Graphics3D\Geometry\**" />
     <EmbeddedResource Remove="Gui\**" />
     <EmbeddedResource Remove="Resources\**" />
-    <None Remove="Actors\**" />
     <None Remove="Assets\Importers\**" />
-    <None Remove="Assets\Meshes\**" />
-    <None Remove="Components\**" />
     <None Remove="Controllers\**" />
     <None Remove="Graphics2D\**" />
-    <None Remove="Graphics3D\**" />
+    <None Remove="Graphics3D\Geometry\**" />
     <None Remove="Gui\**" />
     <None Remove="Resources\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Graphics3D\RenderManager.cs" />
+    <Compile Remove="Graphics3D\RenderPass.cs" />
+    <Compile Remove="Graphics3D\SkeletalMeshEffect.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
     <PackageReference Include="BepuPhysics" Version="2.0.0" />
     <PackageReference Include="Veldrid.ImGui" Version="5.69.0" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />
+    <PackageReference Include="Veldrid.Utilities" Version="4.6.1" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

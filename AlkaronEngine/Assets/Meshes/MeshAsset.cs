@@ -1,6 +1,7 @@
 using AlkaronEngine.Assets.Materials;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System.Numerics;
+using Veldrid;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Assets.Meshes
 {
@@ -25,11 +26,12 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Vertex buffer for the mesh.
         /// </summary>
-        protected VertexBuffer vertexBuffer = null;
+        protected DeviceBuffer vertexBuffer = null;
+        
         /// <summary>
         /// Index buffer for the mesh.
         /// </summary>
-        protected IndexBuffer indexBuffer = null;
+        protected DeviceBuffer indexBuffer = null;
 
         /// <summary>
         /// 32 bit indices
