@@ -2,18 +2,16 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Linq;
-using Microsoft.Xna.Framework.Content;
 
 namespace AlkaronEngine
 {
-    public class AlkaronContentManager : ContentManager
+    public class AlkaronContentManager
     {
         internal static string ResourcesPrefix = "AlkaronEngine.Resources.";
 
         private string[] resourceNames;
 
-        public AlkaronContentManager(IServiceProvider serviceProvider) 
-            : base(serviceProvider)
+        public AlkaronContentManager() 
         {
             resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
         }
@@ -22,15 +20,11 @@ namespace AlkaronEngine
         {
             string namesp = ResourcesPrefix;
             string fullAssetNameWithOrgExt = namesp + assetName;
-            string assetNameWithXNBExt = Path.ChangeExtension(assetName, ".xnb");
-            string fullAssetNameWithXNBExt = namesp + assetNameWithXNBExt;
 
             for (int i = 0; i < resourceNames.Length; i++)
             {
                 if (resourceNames[i] == assetName ||
-                    resourceNames[i] == fullAssetNameWithOrgExt ||
-                    resourceNames[i] == assetNameWithXNBExt ||
-                    resourceNames[i] == fullAssetNameWithXNBExt)
+                    resourceNames[i] == fullAssetNameWithOrgExt)
                 {
                     return resourceNames[i]; 
                 }
@@ -39,7 +33,7 @@ namespace AlkaronEngine
             return assetName;
         }
 
-        protected override Stream OpenStream(string assetName)
+        protected Stream OpenStream(string assetName)
         {
             var fullName = FindResource(assetName);
 
@@ -49,7 +43,7 @@ namespace AlkaronEngine
                 return stream; 
             }
 
-            return base.OpenStream(assetName);
+            return null;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Veldrid;
 
 namespace AlkaronEngine.Assets
 {
@@ -116,7 +117,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Loads the asset from the specified binary reader
         /// </summary>
-        public virtual void Deserialize(BinaryReader reader)
+        public virtual void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             string magic = new string(reader.ReadChars(4));
             AssetVersion = reader.ReadInt32();
@@ -127,8 +128,13 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Saves the asset in the binary form into the binary writer.
         /// </summary>
-        public virtual void Serialize(BinaryWriter writer)
+        public virtual void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
+            if (assetSettings.ReadOnlyAssets == true)
+            {
+                throw new InvalidOperationException("Cannot serialize assets in ReadOnlyAssets mode");
+            }
+
             writer.Write("AEAF".ToCharArray());
             writer.Write(MaxAssetVersion);
             writer.Write(Name);

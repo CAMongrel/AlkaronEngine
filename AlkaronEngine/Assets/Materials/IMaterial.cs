@@ -1,6 +1,4 @@
-using System;
-using AlkaronEngine.Graphics3D;
-using Microsoft.Xna.Framework;
+using System.Numerics;
 
 namespace AlkaronEngine.Assets.Materials
 {
@@ -8,7 +6,7 @@ namespace AlkaronEngine.Assets.Materials
     {
         bool RequiresOrderingBackToFront { get; set; }
 
-        void ApplyParameters(Matrix worldViewProjectio);
-        void SetupEffectForRenderPass(RenderPass renderPass);
+        void ApplyParameters(Matrix4x4 worldViewProjectio);
+        //void SetupEffectForRenderPass(RenderPass renderPass);
     }
 }

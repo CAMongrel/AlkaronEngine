@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Veldrid;
 
 namespace AlkaronEngine.Assets
 {
@@ -132,7 +133,7 @@ namespace AlkaronEngine.Assets
         /// Sets the filename as the origin and loads the index of the contained
         /// assets, but does not load the package completely.
         /// </summary>
-        public Package(string filename, bool isReadOnly = false)
+        public Package(string filename, AssetSettings assetSettings, bool isReadOnly = false)
             : this(isReadOnly)
 		{
 			fullFilename = filename;
@@ -151,12 +152,12 @@ namespace AlkaronEngine.Assets
             }
         }
 
-        public Package(Stream str, bool isReadOnly = false)
+        public Package(Stream str, AssetSettings assetSettings, bool isReadOnly = false)
             : this(isReadOnly)
         {
             fullFilename = null;
             IsFullyLoaded = false;
-            LoadAllAssets(str);
+            LoadAllAssets(assetSettings, str);
         }
 		#endregion
 		
@@ -229,7 +230,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Loads all assets in the package
         /// </summary>
-        public void LoadAllAssets(Stream stream = null)
+        public void LoadAllAssets(AssetSettings assetSettings, Stream stream = null)
 		{
 			if (IsFullyLoaded == true)
             {
@@ -281,7 +282,7 @@ namespace AlkaronEngine.Assets
                     reader.BaseStream.Seek(curPos, SeekOrigin.Begin);
                     for (int i = 0; i < numberOfAssets; i++)
                     {
-                        if (LoadAssetInternal(reader) == false)
+                        if (LoadAssetInternal(reader, assetSettings) == false)
                         {
                             // Asset failed to load. We have to skip it.
 
@@ -310,7 +311,7 @@ namespace AlkaronEngine.Assets
 		/// The actual loading function for an asset. Returns false if loading
 		/// failed for some reason.
 		/// </summary>
-		private bool LoadAssetInternal(BinaryReader reader)
+		private bool LoadAssetInternal(BinaryReader reader, AssetSettings assetSettings)
 		{
 			string assetName = "<Unknown>";
 
@@ -329,7 +330,7 @@ namespace AlkaronEngine.Assets
 				Asset newAsset = assetType.InvokeMember(null,
 					System.Reflection.BindingFlags.CreateInstance, null,
 					null, new object[] { }) as Asset;
-				newAsset.Deserialize(reader);
+				newAsset.Deserialize(reader, assetSettings);
                 newAsset.SetPackageOwner(this);
 
                 assetName = newAsset.Name;
@@ -360,7 +361,7 @@ namespace AlkaronEngine.Assets
 		/// 
 		/// Does nothing (and returns true) if the asset was already loaded before.
 		/// </summary>
-		private bool LoadAsset(string assetName)
+		private bool LoadAsset(string assetName, AssetSettings assetSettings)
 		{
 			// Check if we have already loaded the asset
 			if (LoadedAssets.ContainsKey(assetName))
@@ -384,7 +385,7 @@ namespace AlkaronEngine.Assets
 			{
 				reader.BaseStream.Seek(offset, SeekOrigin.Begin);
 
-				if (LoadAssetInternal(reader) == false)
+				if (LoadAssetInternal(reader, assetSettings) == false)
                 {
                     return false;
                 }
@@ -392,14 +393,14 @@ namespace AlkaronEngine.Assets
 
 			return true;
 		}
-		#endregion
-		#endregion
+        #endregion
+        #endregion
 
-		#region GetAsset
-		/// <summary>
-		/// Returns the loaded asset
-		/// </summary>
-		public Asset GetAsset(string assetName)
+        #region GetAsset
+        /// <summary>
+        /// Returns the loaded asset
+        /// </summary>
+        public Asset GetAsset(string assetName, AssetSettings assetSettings)
 		{
             // If we have alread loaded the asset previously, then just return it.
             if (LoadedAssets.ContainsKey(assetName) == true)
@@ -407,7 +408,7 @@ namespace AlkaronEngine.Assets
                 return LoadedAssets[assetName];
             }
 
-            bool result = LoadAsset(assetName);
+            bool result = LoadAsset(assetName, assetSettings);
             if (result == false)
             {
                 // Couldn't load the asset from disk.
@@ -422,7 +423,7 @@ namespace AlkaronEngine.Assets
 		/// <summary>
 		/// Saves the package
 		/// </summary>
-		public bool Save()
+		public bool Save(AssetSettings assetSettings)
 		{
 			if (isTransient || IsReadOnly)
             {
@@ -439,7 +440,7 @@ namespace AlkaronEngine.Assets
                 // Before saving, we need to fully load the package, to 
                 // correctly save all assets
 
-				LoadAllAssets();
+				LoadAllAssets(assetSettings);
 
                 // If IsLoaded is still false after trying to load the package,
                 // then something went wrong and we can't continue
@@ -472,7 +473,7 @@ namespace AlkaronEngine.Assets
 					AssetOffsetMap.Add(pair.Key, (int)writer.BaseStream.Position);
 
 					writer.Write(pair.Value.GetType().ToString());
-					pair.Value.Serialize(writer);
+					pair.Value.Serialize(writer, assetSettings);
 				}
 
 				long curPos = writer.BaseStream.Position;
@@ -539,7 +540,7 @@ namespace AlkaronEngine.Assets
 		/// Removes an asset from the package. This requires loading all
         /// assets in the package.
 		/// </summary>
-		internal void DeleteAsset(Asset SelectedAsset)
+		internal void DeleteAsset(Asset SelectedAsset, AssetSettings assetSettings)
 		{
             if (IsReadOnly)
             {
@@ -548,7 +549,7 @@ namespace AlkaronEngine.Assets
 
 			if (IsFullyLoaded == false)
 			{
-				LoadAllAssets();
+				LoadAllAssets(assetSettings);
 
                 // If IsLoaded is still false after trying to load the package,
                 // then something went wrong and we can't continue

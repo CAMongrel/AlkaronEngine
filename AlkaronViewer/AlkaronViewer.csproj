@@ -10,14 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="MeshScene.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="MeshScene.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\AlkaronEngine\AlkaronEngine.csproj" />
   </ItemGroup>
 

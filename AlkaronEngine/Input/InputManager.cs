@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Veldrid;
 
@@ -8,11 +10,10 @@ namespace AlkaronEngine.Input
 
     public class InputManager
     {
-        /*private Vector2 prevMousePos;
-        private MouseState prevMouseState;
-        private KeyboardState curKeyboardState;
-        private KeyboardState prevKeyboardState;
-        private int prevWheelValue;*/
+        private Vector2 prevMousePos;
+        private InputSnapshot curInputSnapshot;
+        private InputSnapshot prevInputSnapshot;
+        private float prevWheelValue;
 
         public event PointerEvent OnPointerMoved;
         public event PointerEvent OnPointerPressed;
@@ -34,95 +35,141 @@ namespace AlkaronEngine.Input
                throw new ArgumentNullException(nameof(setRenderConfig));
             }
 
-            renderConfig = setRenderConfig;
-            prevMousePos = new Vector2(-1, -1);
+            renderConfig = setRenderConfig;*/
 
-            MouseState mouseState = Mouse.GetState();
-            prevWheelValue = mouseState.ScrollWheelValue;*/
+            prevWheelValue = 0.0f;
+            prevMousePos = new Vector2(-1, -1);
         }
 
-        public void UpdateInput(InputSnapshot snapshot, double gameTime)
+        private static MouseEvent GetMouseEventForButton(MouseButton mouseButton, IReadOnlyList<MouseEvent> mouseEvents)
         {
-            /*MouseState mouseState = Mouse.GetState();
+            return (from e in mouseEvents
+                    where e.MouseButton == mouseButton
+                    select e).FirstOrDefault();
+        }
 
-            curKeyboardState = Keyboard.GetState();
-
-            Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
-
+        public void UpdateInput(InputSnapshot snapshot, double deltaTime)
+        {
+            /*
             Vector2 ScaledOffset = renderConfig.ScaledOffset;
             Vector2 Scale = renderConfig.Scale;
 
             Vector2 scaledPosition = new Vector2((mousePos.X - ScaledOffset.X) / Scale.X,
-               (mousePos.Y - ScaledOffset.Y) / Scale.Y);
+               (mousePos.Y - ScaledOffset.Y) / Scale.Y);*/
 
-            MousePosition = mousePos;
-            ScaledMousePosition = scaledPosition;
+            curInputSnapshot = snapshot;
 
-            if (mousePos != prevMousePos)
-            {
-               OnPointerMoved?.Invoke(scaledPosition, PointerType.None, gameTime);
-               prevMousePos = mousePos;
-            }
+            MousePosition = snapshot.MousePosition;
+            ScaledMousePosition = snapshot.MousePosition;
 
-            // Left mouse button
-            if (mouseState.LeftButton == ButtonState.Pressed && prevMouseState.LeftButton == ButtonState.Released)
+            if (MousePosition != prevMousePos)
             {
-               OnPointerPressed?.Invoke(scaledPosition, PointerType.LeftMouse, gameTime);
-            }
-            if (mouseState.LeftButton == ButtonState.Released && prevMouseState.LeftButton == ButtonState.Pressed)
-            {
-               OnPointerReleased?.Invoke(scaledPosition, PointerType.LeftMouse, gameTime);
+                OnPointerMoved?.Invoke(ScaledMousePosition, PointerType.None, deltaTime);
+                prevMousePos = MousePosition;
             }
 
-            // Middle mouse button
-            if (mouseState.MiddleButton == ButtonState.Pressed && prevMouseState.MiddleButton == ButtonState.Released)
+            // Mouse buttons
+            foreach (var mouseEvent in snapshot.MouseEvents)
             {
-               OnPointerPressed?.Invoke(scaledPosition, PointerType.MiddleMouse, gameTime);
-            }
-            if (mouseState.MiddleButton == ButtonState.Released && prevMouseState.MiddleButton == ButtonState.Pressed)
-            {
-               OnPointerReleased?.Invoke(scaledPosition, PointerType.MiddleMouse, gameTime);
+                switch (mouseEvent.MouseButton)
+                {
+                    case MouseButton.Left:
+                        {
+                            var prevEvent = GetMouseEventForButton(MouseButton.Left, prevInputSnapshot.MouseEvents);
+                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            {
+                                OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.LeftMouse, deltaTime);
+                            }
+                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            {
+                                OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.LeftMouse, deltaTime);
+                            }
+                        }
+                        break;
+
+                    case MouseButton.Middle:
+                        {
+                            var prevEvent = GetMouseEventForButton(MouseButton.Middle, prevInputSnapshot.MouseEvents);
+                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            {
+                                OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.MiddleMouse, deltaTime);
+                            }
+                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            {
+                                OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.MiddleMouse, deltaTime);
+                            }
+                        }
+                        break;
+
+                    case MouseButton.Right:
+                        {
+                            var prevEvent = GetMouseEventForButton(MouseButton.Right, prevInputSnapshot.MouseEvents);
+                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            {
+                                OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.RightMouse, deltaTime);
+                            }
+                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            {
+                                OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.RightMouse, deltaTime);
+                            }
+                        }
+                        break;
+                }
             }
 
-            // Right mouse button
-            if (mouseState.RightButton == ButtonState.Pressed && prevMouseState.RightButton == ButtonState.Released)
-            {
-               OnPointerPressed?.Invoke(scaledPosition, PointerType.RightMouse, gameTime);
-            }
-            if (mouseState.RightButton == ButtonState.Released && prevMouseState.RightButton == ButtonState.Pressed)
-            {
-               OnPointerReleased?.Invoke(scaledPosition, PointerType.RightMouse, gameTime);
-            }
-
-            // Mouse wheel
-            int newWheelValue = mouseState.ScrollWheelValue;
-            int curWheelDelta = newWheelValue - prevWheelValue;
+            // Mouse wheel            
+            float newWheelValue = snapshot.WheelDelta;
+            float curWheelDelta = newWheelValue - prevWheelValue;
             prevWheelValue = newWheelValue;
             if (curWheelDelta != 0)
             {
-               OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel, gameTime);
+                OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel, deltaTime);
             }
 
             // Handle keyboard events
-            HandleKeyboardEvents(curKeyboardState, prevKeyboardState, gameTime);
+            HandleKeyboardEvents(deltaTime);
 
-            prevMouseState = mouseState;
-            prevKeyboardState = curKeyboardState;*/
+            prevInputSnapshot = snapshot;
         }
 
-        /*private void HandleKeyboardEvents(KeyboardState curState, KeyboardState prevState, GameTime gameTime)
+        private static List<Key> GetPressedKeys(InputSnapshot snapshot)
         {
-            var curPressedKeys = new List<Keys>(curState.GetPressedKeys());
-            var prevPressedKeys = new List<Keys>(prevState.GetPressedKeys());
+            if (snapshot == null)
+            {
+                return new List<Key>();
+            }
 
-            var newlyPressedKeys = new List<Keys>();
-            var noLongerPressedKeys = new List<Keys>();
-            var stillPressedKeys = new List<Keys>();
+            return (from k in snapshot.KeyEvents
+                    where k.Down
+                    select k.Key).ToList();
+        }
+
+        private static bool IsKeyDown(InputSnapshot snapshot, Key key)
+        {
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            return (from k in snapshot.KeyEvents
+                    where k.Key == key &&
+                          k.Down == true
+                    select k).FirstOrDefault().Down;
+        }
+
+        private void HandleKeyboardEvents(double deltaTime)
+        {
+            var curPressedKeys = GetPressedKeys(curInputSnapshot);
+            var prevPressedKeys = GetPressedKeys(prevInputSnapshot);
+
+            var newlyPressedKeys = new List<Key>();
+            var noLongerPressedKeys = new List<Key>();
+            var stillPressedKeys = new List<Key>();
 
             // First build lists of newly or still pressed keys
             for (int i = curPressedKeys.Count - 1; i >= 0; i--)
             {
-                Keys key = curPressedKeys[i];
+                Key key = curPressedKeys[i];
                 if (prevPressedKeys.Contains(key))
                 {
                     stillPressedKeys.Add(key);
@@ -146,32 +193,31 @@ namespace AlkaronEngine.Input
             {
                 for (int i = 0; i < newlyPressedKeys.Count; i++)
                 {
-                    OnKeyPressed(newlyPressedKeys[i], gameTime);
+                    OnKeyPressed(newlyPressedKeys[i], deltaTime);
                 }
             }
             if (OnKeyReleased != null)
             {
                 for (int i = 0; i < noLongerPressedKeys.Count; i++)
                 {
-                    OnKeyReleased(noLongerPressedKeys[i], gameTime);
+                    OnKeyReleased(noLongerPressedKeys[i], deltaTime);
                 }
             }
         }
-        */
 
         public bool IsKeyPressed(Key key)
         {
-            return curKeyboardState.IsKeyDown(key);
+            return IsKeyDown(curInputSnapshot, key);
         }
 
         public bool WasKeyPressed(Key key)
         {
-            return prevKeyboardState.IsKeyDown(key);
+            return IsKeyDown(prevInputSnapshot, key);
         }
 
         public bool IsAnyKeyPressed()
         {
-            return curKeyboardState.GetPressedKeys().Length > 0;
+            return GetPressedKeys(curInputSnapshot).Count > 0;
         }
     }
 }

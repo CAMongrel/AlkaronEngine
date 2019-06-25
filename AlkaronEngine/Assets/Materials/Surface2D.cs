@@ -1,7 +1,6 @@
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using System.IO;
+using Veldrid;
 
 namespace AlkaronEngine.Assets.Materials
 {
@@ -10,138 +9,129 @@ namespace AlkaronEngine.Assets.Materials
 	/// </summary>
 	public class Surface2D : Asset
 	{
-        /// <summary>
-        /// Texture
-        /// </summary>
-        /// <returns>Texture 2D</returns>
-        public Texture2D Texture { get; private set; } // Texture
+        public Texture Texture { get; private set; }
 
-        /// <summary>
-        /// Is valid surface?
-        /// </summary>
         public override bool IsValid
         {
             get
             {
                 return Texture != null;
             } // get
-        } // IsValid
+        }
 
         protected override int MaxAssetVersion => 1;
 
-        /// <summary>
-        /// Texture filter minimum
-        /// </summary>
-        /// <returns>Texture filter</returns>
-        public TextureFilter TextureFilterMin { get; set; } // TextureFilterMin
-		/// <summary>
-		/// Texture filter mag
-		/// </summary>
-		/// <returns>Texture filter</returns>
-		public TextureFilter TextureFilterMag { get; set; } // TextureFilterMag
-		/// <summary>
-		/// Texture filter mip
-		/// </summary>
-		/// <returns>Texture filter</returns>
-		public TextureFilter TextureFilterMip { get; set; } // TextureFilterMip
+        public SamplerFilter SamplerFilter { get; set; }
 
-		/// <summary>
-		/// Create surface 2D
-		/// </summary>
 		public Surface2D()
 		{
             Texture = null;
-		} // Surface2D()
+		}
 
-        public Surface2D(Texture2D setTexture)
+        public Surface2D(Texture setTexture)
         {
             Texture = setTexture;
-        } // Surface2D()
+        }
 
-        /// <summary>
-        /// Dispose
-        /// </summary>
         public override void Dispose()
 		{
 			if (Texture != null)
             {
                 Texture.Dispose();
             }
-        } // Dispose()
+        } 
 
         #region Deserialize
-        /// <summary>
-        /// Loads a binary surface 2D
-        /// </summary>
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
 		{
-            base.Deserialize(reader);
+            base.Deserialize(reader, assetSettings);
 
-            int Width = reader.ReadInt32();
-            int Height = reader.ReadInt32();
-            int MipLevels = reader.ReadInt32();
-            SurfaceFormat format = (SurfaceFormat)reader.ReadInt32();
+            uint width = reader.ReadUInt32();
+            uint height = reader.ReadUInt32();
+            uint mipLevels = reader.ReadUInt32();
+            PixelFormat format = (PixelFormat)reader.ReadByte();
+            TextureSampleCount sampleCount = (TextureSampleCount)reader.ReadByte();
 
-            bool autoGenerateMipmaps = (MipLevels < 2);
+            bool autoGenerateMipmaps = (mipLevels < 2);
 
             int count = reader.ReadInt32();
-            byte[] rawData = reader.ReadBytes(count);
+            ReadOnlySpan<byte> rawData = reader.ReadBytes(count);
 
             try
             {
-                Texture2D newDXTexture = new Texture2D(AlkaronCoreGame.Core.GraphicsDevice,
-                    Width, Height, autoGenerateMipmaps, format);
+                TextureDescription textureDescription = new TextureDescription()
+                {
+                    Width = width,
+                    Height = height,
+                    MipLevels = mipLevels,
+                    Depth = 1,
+                    Format = format,
+                    SampleCount = sampleCount,
+                    Type = TextureType.Texture2D,
+                    Usage = assetSettings.ReadOnlyAssets ? TextureUsage.Sampled : TextureUsage.Staging
+                };
+
+                Texture newDXTexture = assetSettings.GraphicsDevice.ResourceFactory.CreateTexture(textureDescription);
                 if (newDXTexture != null)
                 {
                     // Dispose old texture
-                    if (Texture != null)
-                    {
-                        Texture.Dispose();
-                        Texture = null;
-                    } // if (dxTexture)
+                    Texture?.Dispose();
 
                     Texture = newDXTexture;
-                } // if (newDXTexture)
-            } // try
+                }
+            }
             catch (Exception ex)
             {
                 AlkaronCoreGame.Core.Log("Failed to load Surface2D:\r\n" + ex);
                 return;
-            } // catch
+            }
 
-            int[] mipStart = new int[MipLevels];
-            int[] mipSize = new int[MipLevels];
-            for (int i = 0; i < MipLevels; i++)
+            uint[] mipStart = new uint[mipLevels];
+            uint[] mipSize = new uint[mipLevels];
+            uint[] mipWidth = new uint[mipLevels];
+            uint[] mipHeight = new uint[mipLevels];
+            for (uint i = 0; i < mipLevels; i++)
             {
-                mipStart[i] = reader.ReadInt32();
-                mipSize[i] = reader.ReadInt32();
+                mipStart[i] = reader.ReadUInt32();
+                mipSize[i] = reader.ReadUInt32();
+                mipWidth[i] = reader.ReadUInt32();
+                mipHeight[i] = reader.ReadUInt32();
 
-                Texture.SetData(i, null, rawData, mipStart[i], mipSize[i]);
-            } // for (int)
-		} // Load(packageName, assetName, stream)
+                ReadOnlySpan<byte> mipSlice = rawData.Slice((int)mipStart[i], (int)mipSize[i]);
+                assetSettings.GraphicsDevice.UpdateTexture<byte>(Texture, mipSlice.ToArray(), 0, 0, 0, mipWidth[i], mipHeight[i], 1, i, 0);
+            }
+        }
         #endregion
 
         #region Serialize
         /// <summary>
         /// 
         /// </summary>
-        public override void Serialize(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
 		{
-            base.Serialize(writer);
-
-            writer.Write(Texture.Width);
-			writer.Write(Texture.Height);
-			writer.Write(Texture.LevelCount);
-			writer.Write((int)Texture.Format);
-
-            int[] mipStart = new int[Texture.LevelCount];
-            int[] mipSize = new int[Texture.LevelCount];
-
-            int texelCount = 0;
-            int mipWidth = Texture.Width;
-            int mipHeight = Texture.Height;
-            for (int i = 0; i < Texture.LevelCount; i++)
+            if (Texture.Usage.HasFlag(TextureUsage.Staging) == false)
             {
+                throw new InvalidOperationException("Cannot serialize readonly texture");
+            }
+
+            base.Serialize(writer, assetSettings);
+
+            /*writer.Write(Texture.Width);
+			writer.Write(Texture.Height);
+            writer.Write(Texture.MipLevels);
+            writer.Write((byte)Texture.Format);
+            writer.Write((byte)Texture.SampleCount);
+
+            uint[] mipStart = new uint[Texture.MipLevels];
+            uint[] mipSize = new uint[Texture.MipLevels];
+
+            uint texelCount = 0;
+            uint mipWidth = Texture.Width;
+            uint mipHeight = Texture.Height;
+            for (int i = 0; i < Texture.MipLevels; i++)
+            {
+                Texture
+
                 mipStart[i] = texelCount;
                 mipSize[i] = (int)((float)mipWidth * (float)mipHeight *
                     GetPixelStride(Texture.Format));
@@ -189,59 +179,8 @@ namespace AlkaronEngine.Assets.Materials
                 writer.Write(mipStart[i]);
                 writer.Write(mipSize[i]);
             }
-        } // Save(writer)
-        #endregion
-
-        #region GetPixelStride
-        /// <summary>
-        /// Returns the size in bytes of a single texel 
-        /// </summary>
-        static float GetPixelStride(SurfaceFormat format)
-        {
-            switch (format)
-            {
-                case SurfaceFormat.Alpha8:
-                    return 1;
-
-                case SurfaceFormat.Bgr565:
-                    return 2;
-
-                case SurfaceFormat.Color:
-                    return 4;
-
-                case SurfaceFormat.Single:
-                    return 4;
-
-                case SurfaceFormat.Dxt1:
-                    return 0.5f;
-
-                case SurfaceFormat.Dxt3:
-                case SurfaceFormat.Dxt5:
-                    return 1;
-
-                default:
-                    return -1;
-            }
+            */
         }
         #endregion
-
-        #region IsCompressedFormat
-        /// <summary>
-        /// Checks if the format is DXT compressed
-        /// </summary>
-        static bool IsCompressedFormat(SurfaceFormat format)
-        {
-            switch (format)
-            {
-                default:
-                    return false;
-
-                case SurfaceFormat.Dxt1:
-                case SurfaceFormat.Dxt3:
-                case SurfaceFormat.Dxt5:
-                    return true;
-            }
-        }
-        #endregion
-    } // class Surface2D
-} // namespace HellspawnEngine.Assets.Materials
+    }
+}

@@ -6,6 +6,7 @@ using Veldrid.StartupUtilities;
 using Veldrid;
 using System.Diagnostics;
 using AlkaronEngine.Scene;
+using AlkaronEngine.Assets;
 
 namespace AlkaronEngine
 {
@@ -31,11 +32,11 @@ namespace AlkaronEngine
 
         public string ContentDirectory { get; protected set; }
 
-        /*public PackageManager PackageManager { get; private set; }
+        public PackageManager PackageManager { get; private set; }
 
         public AssetManager AssetManager { get; private set; }
 
-        public AlkaronContentManager AlkaronContent { get; private set; }*/
+        public AlkaronContentManager AlkaronContent { get; private set; }
 
         public GraphicsLibrary GraphicsLibrary
         {
@@ -64,17 +65,14 @@ namespace AlkaronEngine
             {
                 X = 100,
                 Y = 100,
-                WindowWidth = 1280,
-                WindowHeight = 720,
+                WindowWidth = setWidth,
+                WindowHeight = setHeight,
                 WindowTitle = setWindowTitle,
+                WindowInitialState = WindowState.Normal
             };
             Window = VeldridStartup.CreateWindow(ref wci);
 
-            // Replace ContentManager with custom implementation using
-            // the ServiceProvider of the default ContentManager
-            /*AlkaronContent = new AlkaronContentManager(Content.ServiceProvider);
-            Content = AlkaronContent;
-            Content.RootDirectory = setContentFolder;*/
+            AlkaronContent = new AlkaronContentManager();
         }
 
         /// <summary>
@@ -87,14 +85,14 @@ namespace AlkaronEngine
         {
             SceneManager = new SceneManager();
 
-            /*AssetManager = new AssetManager();
+            AssetManager = new AssetManager();
 
             PackageManager = new PackageManager();
             // "AlkaronContent" must be initialized before calling this, because
             // BuildPackageMap depends on it.
             PackageManager.BuildPackageMap();
 
-            ScreenQuad.Initialize(SceneManager);
+            /*ScreenQuad.Initialize(SceneManager);
             Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
 
             DefaultFont = Content.Load<SpriteFont>("DefaultFont");
@@ -108,19 +106,18 @@ namespace AlkaronEngine
 
         public void Dispose()
         {
-            OnExiting();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        protected virtual void OnExiting()
+        protected virtual void Shutdown()
         {
             SceneManager?.Shutdown();
             SceneManager = null;
 
-            /*PackageManager?.Cleanup();
-            PackageManager = null;*/
+            PackageManager?.Cleanup();
+            PackageManager = null;
         }
 
         /// <summary>
@@ -129,7 +126,7 @@ namespace AlkaronEngine
         /// </summary>
         protected virtual void LoadContent()
         {
-            //TODO: use this.Content to load your game content here 
+            //
         }
 
         /// <summary>
@@ -152,6 +149,9 @@ namespace AlkaronEngine
             //factory = new DisposeCollectorResourceFactory(gd.ResourceFactory);
             //GraphicsDeviceCreated?.Invoke(gd, factory, gd.MainSwapchain);
 
+            Initialize();
+            LoadContent();
+
             Stopwatch sw = Stopwatch.StartNew();
             double previousElapsed = sw.Elapsed.TotalSeconds;
 
@@ -161,7 +161,7 @@ namespace AlkaronEngine
                 float deltaSeconds = (float)(newElapsed - previousElapsed);
 
                 InputSnapshot inputSnapshot = Window.PumpEvents();
-                SceneManager.UpdateFrameInput(inputSnapshot);
+                SceneManager.UpdateFrameInput(inputSnapshot, deltaSeconds);
 
                 if (Window.Exists)
                 {
@@ -177,6 +177,8 @@ namespace AlkaronEngine
                     Draw(deltaSeconds);
                 }
             }
+
+            Shutdown();
 
             GraphicsDevice.WaitForIdle();
             //factory.DisposeCollector.DisposeAll();

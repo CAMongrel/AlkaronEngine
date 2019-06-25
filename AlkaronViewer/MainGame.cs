@@ -23,8 +23,8 @@ namespace AlkaronViewer
         {
             base.Initialize();
 
-            /*MeshScene meshScene = new MeshScene();
-            SceneManager.NextScene = meshScene;*/
+            MeshScene meshScene = new MeshScene();
+            SceneManager.NextScene = meshScene;
         }
     }
 }

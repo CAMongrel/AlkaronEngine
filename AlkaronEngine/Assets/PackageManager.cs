@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Veldrid;
 
 namespace AlkaronEngine.Assets
 {
@@ -92,7 +93,7 @@ namespace AlkaronEngine.Assets
         /// Loads all assets of the package into memory, if "loadFully" is 
         /// <see langword="true"/>.
 		/// </summary>
-		public Package LoadPackage(string packageName, bool loadFully)
+		public Package LoadPackage(string packageName, bool loadFully, AssetSettings assetSettings)
 		{
 			packageName = Path.ChangeExtension(packageName, ".package");
 			
@@ -119,16 +120,16 @@ namespace AlkaronEngine.Assets
             Package pkg = null;
             if (isResource)
             {
-                pkg = new Package(AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename), true);
+                pkg = new Package(AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename), assetSettings, true);
             }
             else
             {
-                pkg = new Package(filename);
+                pkg = new Package(filename, assetSettings);
             }
 			LoadedPackages.Add(packageName, pkg);
             if (loadFully && isResource == false)
             {
-                pkg.LoadAllAssets();
+                pkg.LoadAllAssets(assetSettings);
             }
 
 #if IS_EDITOR
@@ -232,12 +233,12 @@ namespace AlkaronEngine.Assets
         /// TargetFilename *should* be a subdirectory of 
         /// AlkaronCoreGame.ContentDirectory.
         /// </summary>
-        public Package CreatePackage(string packageName, string targetFilename)
+        public Package CreatePackage(string packageName, string targetFilename, AssetSettings assetSettings)
 		{
 			if (DoesPackageExist(packageName))
             {
                 // Log warning?
-                return LoadPackage(packageName, false);
+                return LoadPackage(packageName, false, assetSettings);
             }
 
             packageName = Path.ChangeExtension(packageName, ".package");
@@ -245,7 +246,7 @@ namespace AlkaronEngine.Assets
             targetFilename = Path.ChangeExtension(targetFilename, ".package");
             string fullFilename = targetFilename;
 
-			Package pkg = new Package(fullFilename);
+			Package pkg = new Package(fullFilename, assetSettings);
 			PackageMap.Add(packageName, fullFilename);
 			LoadedPackages.Add(packageName, pkg);
 
@@ -306,13 +307,13 @@ namespace AlkaronEngine.Assets
 		/// <summary>
 		/// Loads all packages and then resaves them
 		/// </summary>
-		public void ResaveAllPackages()
+		public void ResaveAllPackages(AssetSettings assetSettings)
 		{
 			foreach (KeyValuePair<string, string> pair in PackageMap)
 			{
-				Package pkg = LoadPackage(pair.Key, true);
+				Package pkg = LoadPackage(pair.Key, true, assetSettings);
 				pkg.SetNeedsSave(true);
-				pkg.Save();
+				pkg.Save(assetSettings);
 			}
 			
 			// TODO: MessageBox.Show("All packages resaved.");

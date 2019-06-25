@@ -1,11 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Veldrid;
 
 namespace AlkaronEngine.Assets
 {
+    public class AssetSettings
+    {
+        public GraphicsDevice GraphicsDevice = null;
+        public bool ReadOnlyAssets = false;
+    }
+
 	public class AssetManager
 	{
+        public AssetSettings AssetSettings { get; private set; }
+
+        public AssetManager()
+        {
+            AssetSettings = new AssetSettings();
+        }
+
         #region Load<T>
         public T Load<T>(string assetPath) where T : Asset, new()
         {
@@ -32,13 +46,13 @@ namespace AlkaronEngine.Assets
             }
 
             packageName = Path.ChangeExtension(packageName, ".package");
-            Package pkg = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
+            Package pkg = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false, AssetSettings);
 			if (pkg == null)
             {
                 return default(T);
             }
 
-            T asset = pkg.GetAsset(assetName) as T;
+            T asset = pkg.GetAsset(assetName, AssetSettings) as T;
 			if (asset == null)
             {
                 return default(T);

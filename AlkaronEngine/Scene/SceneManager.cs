@@ -6,6 +6,11 @@ using Veldrid;
 
 namespace AlkaronEngine.Scene
 {
+    public class SceneRenderContext
+    {
+        public CommandList CommandList;
+    }
+
     public class SceneManager// : IRenderConfiguration
     {
         private object lockObj = new object();
@@ -15,8 +20,13 @@ namespace AlkaronEngine.Scene
 
         public InputManager InputManager { get; private set; }
 
-        /*public GraphicsDevice GraphicsDevice { get; private set; }
-        public PrimitiveRenderManager PrimitiveRenderManager { get; private set; }*/
+        public GraphicsDevice GraphicsDevice => AlkaronCoreGame.Core.GraphicsDevice;
+        /*public PrimitiveRenderManager PrimitiveRenderManager { get; private set; }*/
+
+        private CommandList commandList;
+        private Pipeline pipeline;
+
+        private SceneRenderContext renderContext;
 
         public virtual Vector2 Scale
         {
@@ -59,6 +69,7 @@ namespace AlkaronEngine.Scene
             GraphicsDevice = setGraphicsDevice;
 
             PrimitiveRenderManager = new PrimitiveRenderManager(this);*/
+
             InputManager = new InputManager();
             InputManager.OnPointerPressed += PointerPressed;
             InputManager.OnPointerReleased += PointerReleased;
@@ -69,6 +80,41 @@ namespace AlkaronEngine.Scene
 
             CurrentScene = null;
             NextScene = null;
+
+            CreateResources();
+        }
+
+        private void CreateResources()
+        {
+            var factory = GraphicsDevice.ResourceFactory;
+
+            // Create pipeline
+            GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription();
+            pipelineDescription.BlendState = BlendStateDescription.SingleOverrideBlend;
+            pipelineDescription.DepthStencilState = new DepthStencilStateDescription(
+                depthTestEnabled: true,
+                depthWriteEnabled: true,
+                comparisonKind: ComparisonKind.LessEqual);
+            pipelineDescription.RasterizerState = new RasterizerStateDescription(
+                cullMode: FaceCullMode.Back,
+                fillMode: PolygonFillMode.Solid,
+                frontFace: FrontFace.Clockwise,
+                depthClipEnabled: true,
+                scissorTestEnabled: false);
+            pipelineDescription.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
+            pipelineDescription.ResourceLayouts = System.Array.Empty<ResourceLayout>();
+            pipelineDescription.ShaderSet = new ShaderSetDescription();
+            pipelineDescription.ShaderSet.Shaders = new Shader[0];
+            pipelineDescription.ShaderSet.Specializations = new SpecializationConstant[0];
+            pipelineDescription.ShaderSet.VertexLayouts = new VertexLayoutDescription[0];
+            pipelineDescription.Outputs = GraphicsDevice.SwapchainFramebuffer.OutputDescription;
+
+            pipeline = factory.CreateGraphicsPipeline(pipelineDescription);
+
+            commandList = factory.CreateCommandList();
+
+            renderContext = new SceneRenderContext();
+            renderContext.CommandList = commandList;
         }
 
         public void Shutdown()
@@ -137,26 +183,37 @@ namespace AlkaronEngine.Scene
         {
             Performance.Push("Render loop on main thread");
 
+            commandList.Begin();
+
+            // We want to render directly to the output window.
+            commandList.SetFramebuffer(GraphicsDevice.SwapchainFramebuffer);
+            commandList.SetPipeline(pipeline);
+
             lock (lockObj)
             {
                 if (CurrentScene != null)
                 {
-                    CurrentScene.Draw(deltaTime);
+                    CurrentScene.Draw(deltaTime, renderContext);
                 }
                 else
                 {
-                    //GraphicsDevice.Clear(BaseScene.StandardBackgroundColor);
+                    commandList.ClearColorTarget(0, BaseScene.DefaultClearColor);
                 }
             }
+
+            commandList.End();
+            GraphicsDevice.SubmitCommands(commandList);
+
+            GraphicsDevice.SwapBuffers();
 
             Performance.Pop();
         }
 
-        /*public void PointerPressed(Vector2 scaledPosition, PointerType pointerType, double deltaTime)
+        public void PointerPressed(Vector2 scaledPosition, PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
-                CurrentScene?.PointerDown(scaledPosition, pointerType, gameTime);
+                CurrentScene?.PointerDown(scaledPosition, pointerType, deltaTime);
             }
         }
 
@@ -164,7 +221,7 @@ namespace AlkaronEngine.Scene
         {
             lock (lockObj)
             {
-                CurrentScene?.PointerUp(scaledPosition, pointerType, gameTime);
+                CurrentScene?.PointerUp(scaledPosition, pointerType, deltaTime);
             }
         }
 
@@ -172,7 +229,7 @@ namespace AlkaronEngine.Scene
         {
             lock (lockObj)
             {
-                CurrentScene?.PointerMoved(scaledPosition, gameTime);
+                CurrentScene?.PointerMoved(scaledPosition, deltaTime);
             }
         }
 
@@ -180,9 +237,9 @@ namespace AlkaronEngine.Scene
         {
             lock (lockObj)
             {
-                CurrentScene?.PointerWheelChanged(position, gameTime);
+                CurrentScene?.PointerWheelChanged(position, deltaTime);
             }
-        }*/
+        }
 
         void InputManager_OnKeyPressed(Key key, double deltaTime)
         {

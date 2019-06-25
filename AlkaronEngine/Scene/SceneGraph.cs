@@ -21,7 +21,8 @@ namespace AlkaronEngine.Scene
             //Actors = new List<BaseActor>();
 
             bufferPool = new BepuUtilities.Memory.BufferPool();
-            //physicsSimulation = BepuPhysics.Simulation.Create(bufferPool, new SceneCallbacks());
+            var sceneCallbacks = new SceneCallbacks();
+            physicsSimulation = BepuPhysics.Simulation.Create(bufferPool, sceneCallbacks, sceneCallbacks);
         }
 
         public void Update(double deltaTime)
@@ -88,8 +89,10 @@ namespace AlkaronEngine.Scene
         }*/
     }
 
-    internal unsafe struct SceneCallbacks : BepuPhysics.CollisionDetection.INarrowPhaseCallbacks
+    internal unsafe struct SceneCallbacks : INarrowPhaseCallbacks, IPoseIntegratorCallbacks
     {
+        public AngularIntegrationMode AngularIntegrationMode => AngularIntegrationMode.ConserveMomentum;
+
         public void Initialize(Simulation simulation)
         {
         }
@@ -113,12 +116,14 @@ namespace AlkaronEngine.Scene
             pairMaterial.MaximumRecoveryVelocity = 2f;
             pairMaterial.SpringSettings = new BepuPhysics.Constraints.SpringSettings(30, 1);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe bool ConfigureContactManifold(int workerIndex, CollidablePair pair, NonconvexContactManifold* manifold, out PairMaterialProperties pairMaterial)
         {
             ConfigureMaterial(out pairMaterial);
             return true;
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe bool ConfigureContactManifold(int workerIndex, CollidablePair pair, ConvexContactManifold* manifold, out PairMaterialProperties pairMaterial)
         {
@@ -134,6 +139,16 @@ namespace AlkaronEngine.Scene
 
         public void Dispose()
         {
+        }
+
+        public void PrepareForIntegration(float dt)
+        {
+            
+        }
+
+        public void IntegrateVelocity(int bodyIndex, in RigidPose pose, in BodyInertia localInertia, int workerIndex, ref BodyVelocity velocity)
+        {
+            
         }
     }
 }

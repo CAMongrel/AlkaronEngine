@@ -1,15 +1,8 @@
-using AlkaronEngine.Actors;
-using AlkaronEngine.Assets.Importers;
-using AlkaronEngine.Assets.Meshes;
-using AlkaronEngine.Components;
-using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Scene;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronViewer
 {
@@ -35,6 +28,8 @@ namespace AlkaronViewer
 
             modelManager = new GltfModelManager(baseModelFolder);
             modelManager.BuildModelList();
+
+            ClearColor = RgbaFloat.CornflowerBlue;
         }
 
         public override void Close()
@@ -42,58 +37,58 @@ namespace AlkaronViewer
             base.Close();
         }
 
-        public override void Draw(GameTime gameTime)
+        public override void Draw(double deltaTime, SceneRenderContext renderContext)
         {
-            base.Draw(gameTime);
+            base.Draw(deltaTime, renderContext);
         }
 
-        public override void Init(IRenderConfiguration setRenderConfig)
+        public override void Init()
         {
-            base.Init(setRenderConfig);
+            base.Init();
         }
 
-        public override bool KeyPressed(Keys key, GameTime gameTime)
+        public override bool KeyPressed(Key key, double deltaTime)
         {
-            return base.KeyPressed(key, gameTime);
+            return base.KeyPressed(key, deltaTime);
         }
 
-        public override bool KeyReleased(Keys key, GameTime gameTime)
+        public override bool KeyReleased(Key key, double deltaTime)
         {
-            return base.KeyReleased(key, gameTime);
+            return base.KeyReleased(key, deltaTime);
         }
 
-        public override void PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
+        public override void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            base.PointerDown(position, pointerType, gameTime);
+            base.PointerDown(position, pointerType, deltaTime);
         }
 
-        public override void PointerMoved(Vector2 position, GameTime gameTime)
+        public override void PointerMoved(Vector2 position, double deltaTime)
         {
-            base.PointerMoved(position, gameTime);
+            base.PointerMoved(position, deltaTime);
         }
 
-        public override void PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
+        public override void PointerUp(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            base.PointerUp(position, pointerType, gameTime);
+            base.PointerUp(position, pointerType, deltaTime);
         }
 
-        public override void PointerWheelChanged(Vector2 deltaValue, GameTime gameTime)
+        public override void PointerWheelChanged(Vector2 deltaValue, double deltaTime)
         {
-            base.PointerWheelChanged(deltaValue, gameTime);
+            base.PointerWheelChanged(deltaValue, deltaTime);
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
         }
 
         protected override void CreateDefaultCamera()
         {
-            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 10.0f, 45.0f, -45.0f, 0.0f, RenderConfig.ScreenSize, 0.1f, 500.0f);
+            /*var camComponent = new ArcBallCameraComponent(Vector3.Zero, 10.0f, 45.0f, -45.0f, 0.0f, RenderConfig.ScreenSize, 0.1f, 500.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
-            SceneGraph.AddActor(CurrentCamera);
+            SceneGraph.AddActor(CurrentCamera);*/
         }
 
         protected override void Init3D()
@@ -111,7 +106,7 @@ namespace AlkaronViewer
             //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
             //PresentModel("Monster", false, GltfModelEntryType.Base);
             
-            var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
+            /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
             var meshes = package.GetAssetsByType("StaticMesh");
 
             for (int i = 0; i < meshes.Length; i++)
@@ -120,12 +115,12 @@ namespace AlkaronViewer
                 {
                     AddStaticMesh(meshes[i] as StaticMesh);
                 }
-            }
+            }*/
         }
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
         {
-            string file = modelManager.GetModelPath(name, type);
+            /*string file = modelManager.GetModelPath(name, type);
 
             string assetName = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
 
@@ -140,7 +135,7 @@ namespace AlkaronViewer
                 {
                     Console.WriteLine("Import state: " + obj.State);
                 }, out importedAssets);*/
-            }
+            /*}
 
             for (int i = 0; i < importedAssets.Count; i++)
             {
@@ -152,6 +147,7 @@ namespace AlkaronViewer
 
             var package = MainGame.Instance.PackageManager.LoadPackage(assetName, false);
             package.Save();
+            */
         }
 
         protected override void InitUI()
@@ -159,7 +155,7 @@ namespace AlkaronViewer
             base.InitUI();
         }
 
-        public void AddStaticMesh(StaticMesh mesh)
+        /*public void AddStaticMesh(StaticMesh mesh)
         {
             if (mesh == null)
             {
@@ -170,6 +166,6 @@ namespace AlkaronViewer
             ((StaticMeshActor)focusActor).StaticMeshComponent.AddStaticMesh(mesh);
 
             SceneGraph.AddActor(focusActor);
-        }
+        }*/
     }
 }

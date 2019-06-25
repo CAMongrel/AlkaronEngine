@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using AlkaronEngine.Input;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
@@ -11,9 +12,10 @@ namespace AlkaronEngine.Scene
 {
     public class BaseScene
     {
-        /*public static Color StandardBackgroundColor = new Color(0x7F, 0x00, 0x00);
+        public static RgbaFloat DefaultClearColor = new RgbaFloat(0.5f, 0.0f, 0.0f, 1.0f);
+        public RgbaFloat ClearColor = DefaultClearColor;
 
-        public Gui.MouseCursor MouseCursor { get; set; }
+        /*public Gui.MouseCursor MouseCursor { get; set; }
 
         public IRenderConfiguration RenderConfig { get; private set; }
 
@@ -107,8 +109,10 @@ namespace AlkaronEngine.Scene
             //UIWindowManager.Update(gameTime);
         }
 
-        public virtual void Draw(double deltaTime)
+        public virtual void Draw(double deltaTime, SceneRenderContext renderContext)
         {
+            renderContext.CommandList.ClearColorTarget(0, ClearColor);
+
             /*RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);
             RenderManager.MouseCursor = MouseCursor;
 
@@ -118,9 +122,9 @@ namespace AlkaronEngine.Scene
             }*/
         }
 
-        /*public virtual void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
+        public virtual void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            bool res = UIWindowManager.PointerDown(position, pointerType, gameTime);
+            /*bool res = UIWindowManager.PointerDown(position, pointerType, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -138,12 +142,12 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerDown(position, pointerType);
                 }
-            }
+            }*/
         }
 
         public virtual void PointerUp(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            bool res = UIWindowManager.PointerUp(position, pointerType, gameTime);
+            /*bool res = UIWindowManager.PointerUp(position, pointerType, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -158,12 +162,12 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerUp(position, pointerType);
                 }
-            }
+            }*/
         }
 
         public virtual void PointerMoved(Vector2 position, double deltaTime)
         {
-            bool res = UIWindowManager.PointerMoved(position, gameTime);
+            /*bool res = UIWindowManager.PointerMoved(position, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -178,12 +182,12 @@ namespace AlkaronEngine.Scene
 
                     Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
                 }
-            }
+            }*/
         }
 
         public virtual void PointerWheelChanged(Vector2 deltaValue, double deltaTime)
         {
-            bool res = UIWindowManager.PointerWheelChanged(deltaValue, gameTime);
+            /*bool res = UIWindowManager.PointerWheelChanged(deltaValue, gameTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -192,8 +196,8 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerWheelChanged(deltaValue);
                 }
-            }
-        }*/
+            }*/
+        }
 
         public virtual bool KeyPressed(Key key, double deltaTime)
         {

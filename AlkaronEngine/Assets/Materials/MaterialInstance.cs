@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using AlkaronEngine.Graphics3D;
+using System.Numerics;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
+using Veldrid;
 
 namespace AlkaronEngine.Assets.Materials
 {
@@ -77,15 +77,15 @@ namespace AlkaronEngine.Assets.Materials
             Material = setMaterial;
         }
 
-        public void ApplyParameters(Matrix worldViewProjectio)
+        public void ApplyParameters(Matrix4x4 worldViewProjectio)
         {
-            var effect = Material.Effect;
+            //var effect = Material.Effect;
 
-            effect.Parameters["WorldViewProj"].SetValue(worldViewProjectio);
-            effect.CurrentTechnique.Passes[0].Apply();
+            //effect.Parameters["WorldViewProj"].SetValue(worldViewProjectio);
+            //effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        public virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        /*public virtual void SetupEffectForRenderPass(RenderPass renderPass)
         {
             //AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
             //AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;
@@ -94,11 +94,11 @@ namespace AlkaronEngine.Assets.Materials
 
             effect.Parameters["DiffuseColor"].SetValue(MaterialInputs.DiffuseColor);
             effect.Parameters["Texture"].SetValue(MaterialInputs.DiffuseTexture.Texture);
-        }
+        }*/
 
-        public override void Serialize(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
-            base.Serialize(writer);
+            base.Serialize(writer, assetSettings);
 
             // Material reference
             writer.Write(Material);
@@ -121,9 +121,9 @@ namespace AlkaronEngine.Assets.Materials
             writer.Write(MaterialInputs.AlphaCutoff);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
-            base.Deserialize(reader);
+            base.Deserialize(reader, assetSettings);
 
             // Material reference
             Material = reader.ReadAsset<Material>();
