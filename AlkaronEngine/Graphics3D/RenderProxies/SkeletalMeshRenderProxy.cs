@@ -105,9 +105,9 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }*/
         }
 
-        public override void Render()//IRenderConfiguration renderConfig, RenderManager renderManager, IMaterial materialToUse)
+        public override void Render(RenderContext renderContext, RenderManager renderManager, IMaterial materialToUse)
         {
-            base.Render();//renderConfig, renderManager, materialToUse);
+            base.Render(renderContext, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
             //Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
