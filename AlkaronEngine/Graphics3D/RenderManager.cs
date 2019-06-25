@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Generic;
-using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Components;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using AlkaronEngine.Actors;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using System.Threading;
-using AlkaronEngine.Gui;
 using AlkaronEngine.Assets.Materials;
+using Veldrid;
+using System.Numerics;
 
 namespace AlkaronEngine.Graphics3D
 {
+    public class RenderContext
+    {
+        public CommandList CommandList;
+    }
+
     public class RenderManager
     {
         public bool SupportsMultiThreadedRendering { get { return false; } }
@@ -40,10 +42,6 @@ namespace AlkaronEngine.Graphics3D
         public float CurrentFPS { get; private set; }
         public int RenderedComponentsLastFrame { get; private set; }
 
-        private RenderTarget2D renderTarget;
-        private IRenderConfiguration renderConfig;
-        private GraphicsDevice GraphicsDevice { get { return renderConfig?.GraphicsDevice; } }
-
         private List<RenderPass> renderPasses;
 
         internal ViewTarget ViewTarget { get; private set; }
@@ -53,9 +51,11 @@ namespace AlkaronEngine.Graphics3D
         /// </summary>
         private ViewTarget nextViewTarget;
 
-        public MouseCursor MouseCursor { get; set; }
+        private RenderContext renderContext;
 
-        public RenderManager(IRenderConfiguration setRenderConfig)
+        //public MouseCursor MouseCursor { get; set; }
+
+        public RenderManager(CommandList commandList)
         {
             maxFPS = -1;
 
@@ -68,7 +68,9 @@ namespace AlkaronEngine.Graphics3D
             renderProxyStagingArea = new List<BaseRenderProxy>();
 
             renderPasses = new List<RenderPass>();
-            renderConfig = setRenderConfig;
+
+            renderContext = new RenderContext();
+            renderContext.CommandList = commandList;
 
             CreateRenderTarget();
             CreateEffectLibrary();
@@ -136,11 +138,11 @@ namespace AlkaronEngine.Graphics3D
 
         private void CreateRenderTarget()
         {
-            if (renderTarget != null)
+            /*if (renderTarget != null)
             {
                 renderTarget.Dispose();
                 renderTarget = null;
-            }
+            }*/
 
             /*renderTarget = new RenderTarget2D(renderConfig.GraphicsDevice,
                                               (int)renderConfig.ScreenSize.X,
@@ -176,16 +178,20 @@ namespace AlkaronEngine.Graphics3D
             }
         }
 
-        private void Clear(Color clearColor, ClearOptions options = ClearOptions.Target,
-                             float clearDepth = 1.0f, int clearStencil = 0)
+        private void Clear(RenderContext renderContext, RgbaFloat clearColor, bool clearDepthStencil = false,
+                             float clearDepth = 1.0f, byte clearStencil = 0)
         {
-            GraphicsDevice.Clear(options, clearColor, clearDepth, clearStencil);
+            renderContext.CommandList.ClearColorTarget(0, clearColor);
+            if (clearDepthStencil)
+            {
+                renderContext.CommandList.ClearDepthStencil(clearDepth, clearStencil);
+            }
         }
 
-        private void RenderRenderPasses()
+        private void RenderRenderPasses(RenderContext renderContext)
         {
             // Render 3D
-            Clear(Color.Lavender, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
+            Clear(renderContext, RgbaFloat.Green, true, 1, 0);
 
             Performance.Push("RenderManager.Draw (Set RenderTarget)");
             // Render scene to texture
@@ -194,7 +200,7 @@ namespace AlkaronEngine.Graphics3D
 
             // Perform rendering
             Performance.Push("RenderManager.Draw (Clear)");
-            Clear(Color.CornflowerBlue);
+            Clear(renderContext, RgbaFloat.CornflowerBlue);
             Performance.Pop();
 
             Performance.Push("RenderManager.Draw (DrawRenderPasses)");
@@ -219,9 +225,9 @@ namespace AlkaronEngine.Graphics3D
             // Render 2D
             Performance.Push("BaseScene.Draw (Render2D)");
             // Clear depth buffer and stencil again for 2D rendering
-            Clear(Color.Lavender, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
-            UIWindowManager.Draw();
-            MouseCursor?.Render();
+            //Clear(Color.Lavender, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
+            //UIWindowManager.Draw();
+            //MouseCursor?.Render();
             Performance.Pop();
         }
 
@@ -261,14 +267,14 @@ namespace AlkaronEngine.Graphics3D
 
             Performance.Push("RenderManager.Draw");
 
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            //GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             // Apply update before rendering (adding new rendering proxies,
             // updating existing proxies)
             ApplyPreFrame(delta);
 
             // Render all active proxies in rendering passes
-            RenderRenderPasses();
+            RenderRenderPasses(renderContext);
 
             // Render the UI
             RenderUI();
@@ -297,7 +303,7 @@ namespace AlkaronEngine.Graphics3D
 
             for (int i = 0; i < renderPasses.Count; i++)
             {
-                componentCount += renderPasses[i].Draw(renderConfig,
+                componentCount += renderPasses[i].Draw(renderContext,
                     this, componentCount, MaxRenderCount);
             }
 

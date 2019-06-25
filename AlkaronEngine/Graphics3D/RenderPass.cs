@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using AlkaronEngine.Assets.Materials;
-using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Veldrid.Utilities;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -72,16 +71,17 @@ namespace AlkaronEngine.Graphics3D
         /// <returns>The draw.</returns>
         /// <param name="renderConfig">Render config.</param>
         /// <param name="renderManager">Render manager.</param>
-        public int Draw(IRenderConfiguration renderConfig,
+        public int Draw(RenderContext renderContext,
                         RenderManager renderManager,
                         int renderCount, 
                         int maxRenderCount)
         {
-            BoundingFrustum frustum = renderManager.ViewTarget?.CameraFrustum;
-            if (frustum == null)
+            if (renderManager.ViewTarget == null)
             {
-                return 0;
+                throw new InvalidOperationException("A ViewTarget is required for rendering");
             }
+
+            BoundingFrustum frustum = renderManager.ViewTarget.CameraFrustum;
 
             if (PerformDepthSorting == true)
             {
@@ -115,7 +115,7 @@ namespace AlkaronEngine.Graphics3D
                 {
                     continue;
                 }
-                proxies[i].Render(renderConfig, renderManager, Material);
+                proxies[i].Render(renderContext, renderManager, Material);
 
                 renderCount++;
                 renderedProxies++;

@@ -1,8 +1,7 @@
-﻿using System;
-using AlkaronEngine.Actors;
+﻿using AlkaronEngine.Actors;
 using AlkaronEngine.Input;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Controllers
 {
@@ -43,13 +42,13 @@ namespace AlkaronEngine.Controllers
          return false;
       }
 
-      public virtual bool KeyPressed(Keys key)
+      public virtual bool KeyPressed(Key key)
       {
          // Base implementation does nothing
          return false;
       }
 
-      public virtual bool KeyReleased(Keys key)
+      public virtual bool KeyReleased(Key key)
       {
          // Base implementation does nothing
          return false;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
 using Veldrid;
 
@@ -46,6 +47,11 @@ namespace AlkaronEngine.Assets.Materials
             base.Serialize(writer, assetSettings);
 
             writer.Write(RequiresOrderingBackToFront);
+        }
+
+        public void SetupEffectForRenderPass(RenderPass renderPass)
+        {
+            //throw new NotImplementedException();
         }
     }
 }

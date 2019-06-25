@@ -1,7 +1,5 @@
-﻿using System;
-using AlkaronEngine.Actors;
-using AlkaronEngine.Input;
-using Microsoft.Xna.Framework;
+﻿using AlkaronEngine.Actors;
+using Veldrid;
 
 namespace AlkaronEngine.Controllers
 {
@@ -11,7 +9,7 @@ namespace AlkaronEngine.Controllers
       {
       }
 
-      public override bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key)
+      public override bool KeyPressed(Key key)
       {
          if (PossessedActor == null)
          {

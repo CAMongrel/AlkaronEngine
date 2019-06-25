@@ -12,27 +12,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Assets\Importers\**" />
-    <Compile Remove="Controllers\**" />
     <Compile Remove="Graphics2D\**" />
     <Compile Remove="Graphics3D\Geometry\**" />
     <Compile Remove="Gui\**" />
-    <Compile Remove="Resources\**" />
     <EmbeddedResource Remove="Assets\Importers\**" />
-    <EmbeddedResource Remove="Controllers\**" />
     <EmbeddedResource Remove="Graphics2D\**" />
     <EmbeddedResource Remove="Graphics3D\Geometry\**" />
     <EmbeddedResource Remove="Gui\**" />
-    <EmbeddedResource Remove="Resources\**" />
     <None Remove="Assets\Importers\**" />
-    <None Remove="Controllers\**" />
     <None Remove="Graphics2D\**" />
     <None Remove="Graphics3D\Geometry\**" />
     <None Remove="Gui\**" />
-    <None Remove="Resources\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Graphics3D\RenderManager.cs" />
-    <Compile Remove="Graphics3D\RenderPass.cs" />
     <Compile Remove="Graphics3D\SkeletalMeshEffect.cs" />
   </ItemGroup>
   <ItemGroup>

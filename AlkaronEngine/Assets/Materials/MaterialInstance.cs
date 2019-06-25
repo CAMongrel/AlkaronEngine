@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
 using Veldrid;
 
@@ -85,16 +86,16 @@ namespace AlkaronEngine.Assets.Materials
             //effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        /*public virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        public virtual void SetupEffectForRenderPass(RenderPass renderPass)
         {
             //AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
             //AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;
 
-            var effect = Material.Effect;
+            //var effect = Material.Effect;
 
-            effect.Parameters["DiffuseColor"].SetValue(MaterialInputs.DiffuseColor);
-            effect.Parameters["Texture"].SetValue(MaterialInputs.DiffuseTexture.Texture);
-        }*/
+            //effect.Parameters["DiffuseColor"].SetValue(MaterialInputs.DiffuseColor);
+            //effect.Parameters["Texture"].SetValue(MaterialInputs.DiffuseTexture.Texture);
+        }
 
         public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
