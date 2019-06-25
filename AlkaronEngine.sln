@@ -11,22 +11,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlkaronViewer", "AlkaronVie
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Debug|x86.Build.0 = Debug|Any CPU
-		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Release|x86.ActiveCfg = Release|Any CPU
-		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Release|x86.Build.0 = Release|Any CPU
-		{37202CA4-E907-4C45-843D-29AFA169C07A}.Debug|x86.ActiveCfg = Debug|x86
-		{37202CA4-E907-4C45-843D-29AFA169C07A}.Debug|x86.Build.0 = Debug|x86
-		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|x86.ActiveCfg = Release|x86
-		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|x86.Build.0 = Release|x86
-		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|x86.Build.0 = Debug|Any CPU
-		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|x86.ActiveCfg = Release|Any CPU
-		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|x86.Build.0 = Release|Any CPU
+		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54AF337B-7B68-44AD-BD03-7B2C3D4A6CBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37202CA4-E907-4C45-843D-29AFA169C07A}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{37202CA4-E907-4C45-843D-29AFA169C07A}.Debug|Any CPU.Build.0 = Debug|x86
+		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|Any CPU.ActiveCfg = Release|x86
+		{37202CA4-E907-4C45-843D-29AFA169C07A}.Release|Any CPU.Build.0 = Release|x86
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6DB115F-0D45-4AAD-969C-8371ADFBD757}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

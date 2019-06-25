@@ -1,9 +1,4 @@
 ﻿using AlkaronEngine;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Threading.Tasks;
 
 namespace AlkaronViewer
 {
@@ -16,20 +11,20 @@ namespace AlkaronViewer
         {
             Instance = this;
 
-            IsMouseVisible = true;
+            //IsMouseVisible = true;
         }
 
         private void Window_ClientSizeChanged(object sender, System.EventArgs e)
         {
-            SceneManager?.ClientSizeChanged();
+            //SceneManager?.ClientSizeChanged();
         }
 
         protected override void Initialize()
         {
             base.Initialize();
 
-            MeshScene meshScene = new MeshScene();
-            SceneManager.NextScene = meshScene;
+            /*MeshScene meshScene = new MeshScene();
+            SceneManager.NextScene = meshScene;*/
         }
     }
 }

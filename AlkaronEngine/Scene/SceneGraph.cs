@@ -1,12 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Components;
-using AlkaronEngine.Graphics3D.RenderProxies;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using AlkaronEngine.Graphics3D;
-using AlkaronEngine.Actors;
 using System.Runtime.CompilerServices;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Collidables;
@@ -20,31 +13,31 @@ namespace AlkaronEngine.Scene
         private BepuUtilities.Memory.BufferPool bufferPool;
 
         public BaseScene SceneOwner { get; private set; }
-        private List<BaseActor> Actors;
+        //private List<BaseActor> Actors;
 
         public SceneGraph(BaseScene sceneOwner)
         {
             SceneOwner = sceneOwner;
-            Actors = new List<BaseActor>();
+            //Actors = new List<BaseActor>();
 
             bufferPool = new BepuUtilities.Memory.BufferPool();
-            physicsSimulation = BepuPhysics.Simulation.Create(bufferPool, new SceneCallbacks());
+            //physicsSimulation = BepuPhysics.Simulation.Create(bufferPool, new SceneCallbacks());
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(double deltaTime)
         {
             // Update phyics
-            physicsSimulation.Timestep((float)gameTime.ElapsedGameTime.TotalSeconds);
+            physicsSimulation.Timestep((float)deltaTime);
 
-            for (int i = 0; i < Actors.Count; i++)
+            /*for (int i = 0; i < Actors.Count; i++)
             {
                 Actors[i].Update(gameTime);
             }
 
-            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());
+            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());*/
         }
 
-        public void AddActor(BaseActor newActor)
+        /*public void AddActor(BaseActor newActor)
         {
             if (Actors.Contains(newActor))
             {
@@ -77,7 +70,6 @@ namespace AlkaronEngine.Scene
             remActor.ActorRemovedFromSceneGraph(this);
 
             // TODO: Handle physics
-
             
             //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
         }
@@ -93,7 +85,7 @@ namespace AlkaronEngine.Scene
             }
 
             return result;
-        }
+        }*/
     }
 
     internal unsafe struct SceneCallbacks : BepuPhysics.CollisionDetection.INarrowPhaseCallbacks

@@ -1,22 +1,22 @@
-﻿using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Input;
+﻿using AlkaronEngine.Input;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Scene
 {
-    public class SceneManager : IRenderConfiguration
+    public class SceneManager// : IRenderConfiguration
     {
         private object lockObj = new object();
 
         public BaseScene CurrentScene { get; private set; }
         public BaseScene NextScene { get; set; }
 
-        public GraphicsDevice GraphicsDevice { get; private set; }
         public InputManager InputManager { get; private set; }
-        public PrimitiveRenderManager PrimitiveRenderManager { get; private set; }
+
+        /*public GraphicsDevice GraphicsDevice { get; private set; }
+        public PrimitiveRenderManager PrimitiveRenderManager { get; private set; }*/
 
         public virtual Vector2 Scale
         {
@@ -42,24 +42,24 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public Vector2 ScreenSize
+        /*public Vector2 ScreenSize
         {
             get
             {
                 return new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             }
-        }
+        }*/
 
-        public SceneManager(GraphicsDevice setGraphicsDevice)
+        public SceneManager()//GraphicsDevice setGraphicsDevice)
         {
-            if (setGraphicsDevice == null)
+            /*if (setGraphicsDevice == null)
             {
                 throw new ArgumentNullException(nameof(setGraphicsDevice));
             }
             GraphicsDevice = setGraphicsDevice;
 
-            PrimitiveRenderManager = new PrimitiveRenderManager(this);
-            InputManager = new InputManager(this);
+            PrimitiveRenderManager = new PrimitiveRenderManager(this);*/
+            InputManager = new InputManager();
             InputManager.OnPointerPressed += PointerPressed;
             InputManager.OnPointerReleased += PointerReleased;
             InputManager.OnPointerMoved += PointerMoved;
@@ -88,15 +88,18 @@ namespace AlkaronEngine.Scene
             {
                 CurrentScene?.ClientSizeChanged();
 
-                ScreenQuad.RenderConfigDidUpdate();
+                //ScreenQuad.RenderConfigDidUpdate();
             }
         }
 
-        public void Update(GameTime gameTime)
+        public void UpdateFrameInput(InputSnapshot snapshot, double gameTime)
+        {
+            InputManager.UpdateInput(snapshot, gameTime);
+        }
+
+        public void Update(double deltaTime)
         {
             Performance.Push("Game loop");
-
-            InputManager.UpdateInput(gameTime);
 
             lock (lockObj)
             {
@@ -110,7 +113,7 @@ namespace AlkaronEngine.Scene
                     CurrentScene = NextScene;
                     if (CurrentScene != null)
                     {
-                        CurrentScene.Init(this);
+                        CurrentScene.Init();
                     }
 
                     NextScene = null;
@@ -118,19 +121,19 @@ namespace AlkaronEngine.Scene
 
                 if (CurrentScene != null)
                 {
-                    if (CurrentScene.MouseCursor != null)
+                    /*if (CurrentScene.MouseCursor != null)
                     {
                         CurrentScene.MouseCursor.Position = InputManager.MousePosition;
-                    }
+                    }*/
 
-                    CurrentScene.Update(gameTime);
+                    CurrentScene.Update(deltaTime);
                 }
             }
 
             Performance.Pop();
         }
 
-        public void Draw(GameTime gameTime)
+        public void Draw(double deltaTime)
         {
             Performance.Push("Render loop on main thread");
 
@@ -138,18 +141,18 @@ namespace AlkaronEngine.Scene
             {
                 if (CurrentScene != null)
                 {
-                    CurrentScene.Draw(gameTime);
+                    CurrentScene.Draw(deltaTime);
                 }
                 else
                 {
-                    GraphicsDevice.Clear(BaseScene.StandardBackgroundColor);
+                    //GraphicsDevice.Clear(BaseScene.StandardBackgroundColor);
                 }
             }
 
             Performance.Pop();
         }
 
-        public void PointerPressed(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
+        /*public void PointerPressed(Vector2 scaledPosition, PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
@@ -157,7 +160,7 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public void PointerReleased(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
+        public void PointerReleased(Vector2 scaledPosition, PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
@@ -165,7 +168,7 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public void PointerMoved(Vector2 scaledPosition, PointerType pointerType, GameTime gameTime)
+        public void PointerMoved(Vector2 scaledPosition, PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
@@ -173,27 +176,27 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        void InputManager_OnPointerWheelChanged(Vector2 position, Input.PointerType pointerType, GameTime gameTime)
+        void InputManager_OnPointerWheelChanged(Vector2 position, Input.PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
                 CurrentScene?.PointerWheelChanged(position, gameTime);
             }
-        }
+        }*/
 
-        void InputManager_OnKeyPressed(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        void InputManager_OnKeyPressed(Key key, double deltaTime)
         {
             lock (lockObj)
             {
-                CurrentScene?.KeyPressed(key, gameTime);
+                CurrentScene?.KeyPressed(key, deltaTime);
             }
         }
 
-        void InputManager_OnKeyReleased(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        void InputManager_OnKeyReleased(Key key, double deltaTime)
         {
             lock (lockObj)
             {
-                CurrentScene?.KeyReleased(key, gameTime);
+                CurrentScene?.KeyReleased(key, deltaTime);
             }
         }
     }

@@ -136,10 +136,10 @@ namespace AlkaronViewer
             }
             else
             {
-                AssetImporterGltfMesh.Import(file, assetName, assetName, (obj) =>
+                /*AssetImporterGltfMesh.Import(file, assetName, assetName, (obj) =>
                 {
                     Console.WriteLine("Import state: " + obj.State);
-                }, out importedAssets);
+                }, out importedAssets);*/
             }
 
             for (int i = 0; i < importedAssets.Count; i++)

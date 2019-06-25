@@ -1,7 +1,6 @@
 using System;
 using System.IO;
-using AlkaronEngine.Assets;
-using Microsoft.Xna.Framework;
+using System.Numerics;
 
 namespace AlkaronEngine.Util
 {
@@ -39,7 +38,7 @@ namespace AlkaronEngine.Util
                 reader.ReadSingle());
         }
 
-        public static void Write(this BinaryWriter writer, Asset asset)
+        /*public static void Write(this BinaryWriter writer, Asset asset)
         {
             if (asset == null ||
                 string.IsNullOrWhiteSpace(asset.Fullname))
@@ -63,6 +62,6 @@ namespace AlkaronEngine.Util
             {
                 return AlkaronCoreGame.Core.AssetManager.Load<T>(asset_ref); 
             }
-        }
+        }*/
     }
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -11,34 +11,39 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Actors\**" />
+    <Compile Remove="Assets\**" />
+    <Compile Remove="Components\**" />
+    <Compile Remove="Controllers\**" />
+    <Compile Remove="Graphics2D\**" />
+    <Compile Remove="Graphics3D\**" />
+    <Compile Remove="Gui\**" />
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Actors\**" />
+    <EmbeddedResource Remove="Assets\**" />
+    <EmbeddedResource Remove="Components\**" />
+    <EmbeddedResource Remove="Controllers\**" />
+    <EmbeddedResource Remove="Graphics2D\**" />
+    <EmbeddedResource Remove="Graphics3D\**" />
+    <EmbeddedResource Remove="Gui\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Actors\**" />
+    <None Remove="Assets\**" />
+    <None Remove="Components\**" />
+    <None Remove="Controllers\**" />
+    <None Remove="Graphics2D\**" />
+    <None Remove="Graphics3D\**" />
+    <None Remove="Gui\**" />
+    <None Remove="Resources\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="AlkaronContentManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
-    <PackageReference Include="BepuPhysics" Version="2.0.0-beta" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Graphics2D\DDSImage.cs" />
-    <Compile Remove="Graphics3D\Geometry\StaticMesh.cs" />
-    <Compile Remove="Graphics3D\Geometry\StaticMeshUnitCube.cs" />
-    <Compile Remove="Graphics2D\PbrMaterial.cs" />
-    <Compile Remove="Graphics3D\Geometry\SkeletalMesh.cs" />
-    <Compile Remove="Assets\Importers\AssetImporterSkeletalMesh.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Resources\DefaultFont.xnb" />
-    <None Remove="Resources\EngineMaterials.package" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Graphics2D\DDSImage.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Graphics2D\PbrMaterial.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Graphics3D\Geometry\SkeletalMesh.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Assets\Importers\AssetImporterSkeletalMesh.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\DefaultFont.xnb" />
-    <EmbeddedResource Include="Resources\EngineMaterials.package" />
+    <PackageReference Include="BepuPhysics" Version="2.0.0" />
+    <PackageReference Include="Veldrid.ImGui" Version="5.69.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
