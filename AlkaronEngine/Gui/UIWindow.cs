@@ -1,3 +1,5 @@
+using AlkaronEngine.Graphics3D;
+
 namespace AlkaronEngine.Gui
 {
     public class UIWindow : UIBaseComponent
@@ -46,9 +48,9 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Render
-        protected override void Draw()
+        protected override void Draw(RenderContext renderContext)
         {
-            base.Draw();
+            base.Draw(renderContext);
         }
         #endregion
     }

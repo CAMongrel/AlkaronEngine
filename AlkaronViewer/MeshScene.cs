@@ -1,4 +1,6 @@
 using AlkaronEngine.Actors;
+using AlkaronEngine.Assets.Importers;
+using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Components;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Gui;
@@ -156,6 +158,24 @@ namespace AlkaronViewer
             UIWindow window = new UIWindow();
             window.BackgroundColor = RgbaFloat.Red;
             window.Show();
+
+            AssetImporterSurface2D.Import("d:\\temp\\image.jpg", null, null, MainGame.Instance.AssetManager.AssetSettings, out var tex);
+
+            UIImage image = new UIImage(tex);
+            image.X = 50;
+            image.Y = 50;
+            image.Alpha = 1.0f;
+            image.Width = 200;
+            image.Height = 200;
+            window.AddComponent(image);
+
+            image = new UIImage(tex);
+            image.X = 10;
+            image.Y = 10;
+            image.Alpha = 0.5f;
+            image.Width = 200;
+            image.Height = 200;
+            window.AddComponent(image);
         }
 
         /*public void AddStaticMesh(StaticMesh mesh)

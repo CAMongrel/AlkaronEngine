@@ -1,4 +1,5 @@
-﻿using AlkaronEngine.Input;
+﻿using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Input;
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
@@ -68,12 +69,12 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        internal static void Draw()
+        internal static void Draw(RenderContext renderContext)
         {
-            Render();
+            Render(renderContext);
         }
 
-        private static void Render()
+        private static void Render(RenderContext renderContext)
         {
             for (int i = 0; i < windows.Count; i++)
             {
@@ -82,7 +83,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                windows[i].InternalRender();
+                windows[i].InternalRender(renderContext);
             }
         }
 

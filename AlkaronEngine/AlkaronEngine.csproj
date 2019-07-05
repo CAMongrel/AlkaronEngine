@@ -11,14 +11,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Assets\Importers\**" />
     <Compile Remove="Graphics3D\Geometry\**" />
-    <EmbeddedResource Remove="Assets\Importers\**" />
     <EmbeddedResource Remove="Graphics3D\Geometry\**" />
-    <None Remove="Assets\Importers\**" />
     <None Remove="Graphics3D\Geometry\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Assets\Importers\AssetImporterGltfMesh.cs" />
+    <Compile Remove="Assets\Importers\AssetImporterMaterial.cs" />
+    <Compile Remove="Assets\Importers\AssetImporterSkeletalMesh.cs" />
     <Compile Remove="Graphics2D\DDSImage.cs" />
     <Compile Remove="Graphics2D\FontRenderer.cs" />
     <Compile Remove="Graphics2D\IRenderConfiguration.cs" />
@@ -31,7 +31,6 @@
     <Compile Remove="Gui\MouseCursor.cs" />
     <Compile Remove="Gui\UIBaseComponentList.cs" />
     <Compile Remove="Gui\UIButton.cs" />
-    <Compile Remove="Gui\UIImage.cs" />
     <Compile Remove="Gui\UILabel.cs" />
     <Compile Remove="Gui\UIMessageBox.cs" />
     <Compile Remove="Gui\UIPanel.cs" />
@@ -51,6 +50,7 @@
   <ItemGroup>
     <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
     <PackageReference Include="BepuPhysics" Version="2.0.0" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.6.1" />
     <PackageReference Include="Veldrid.ImGui" Version="5.69.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />

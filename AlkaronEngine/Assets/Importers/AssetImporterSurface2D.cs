@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using AlkaronEngine.Assets.Materials;
-using Microsoft.Xna.Framework.Graphics;
+using Veldrid;
 
 namespace AlkaronEngine.Assets.Importers
 {
@@ -14,14 +14,14 @@ namespace AlkaronEngine.Assets.Importers
         /// <summary>
         /// Returns a nicely formatted string with information about the texture
         /// </summary>
-        static string GetNiceInfo(Texture2D texture)
+        static string GetNiceInfo(Texture texture)
         {
             return
                 "Texture2D information:\r\n" +
                 "==============================\r\n" +
                 "Width: " + texture.Width + "\r\n" +
                 "Height: " + texture.Height + "\r\n" +
-                "MipLevels: " + texture.LevelCount + "\r\n" +
+                "MipLevels: " + texture.MipLevels + "\r\n" +
                 "Format: " + texture.Format;
         }
         #endregion
@@ -33,6 +33,7 @@ namespace AlkaronEngine.Assets.Importers
         public static bool Import(string fullFilename,
             string setAssetName,
             string setPackageName,
+            AssetSettings assetSettings,
             out Surface2D importedAsset)
         {
             importedAsset = null;
@@ -61,7 +62,7 @@ namespace AlkaronEngine.Assets.Importers
 
             using (FileStream fs = File.OpenRead(inputFile))
             {
-                return Import(fs, setAssetName, setPackageName, inputFile, out importedAsset);
+                return Import(fs, setAssetName, setPackageName, inputFile, assetSettings, out importedAsset);
             }
         }
 
@@ -72,6 +73,7 @@ namespace AlkaronEngine.Assets.Importers
             string setAssetName,
             string setPackageName,
             string originalInputFile,
+            AssetSettings assetSettings,
             out Surface2D importedAsset)
         {
             if (originalInputFile == null)
@@ -87,16 +89,37 @@ namespace AlkaronEngine.Assets.Importers
 
             Package packageToSaveIn = null;
 
+            if (string.IsNullOrWhiteSpace(assetName))
+            {
+                assetName = "temporarySurface2D";
+                if (string.IsNullOrWhiteSpace(originalInputFile))
+                {
+                    assetName += "_" + DateTimeOffset.UtcNow.UtcTicks;
+                }else
+                {
+                    assetName += "_" + Path.GetFileNameWithoutExtension(originalInputFile);
+                }
+            }
+
             assetName = Path.ChangeExtension(assetName, ".surface2d");
 
-            if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
+            if (packageName != null)
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
+                if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
+                {
+                    packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false, assetSettings);
+                }
+                else
+                {
+                    packageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(
+                        packageName,
+                        Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName),
+                        assetSettings);
+                }
             }
             else
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(packageName,
-                    Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName));
+                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage("Transient", false, assetSettings);
             }
 
             if (packageToSaveIn == null)
@@ -108,13 +131,17 @@ namespace AlkaronEngine.Assets.Importers
             try
             {
                 // Import existing file and convert it to the new format
-                Texture2D newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, surfaceStream);
+                //Texture2D newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, surfaceStream);
+                var fileTex = new Veldrid.ImageSharp.ImageSharpTexture(surfaceStream);
+                var newTex = fileTex.CreateDeviceTexture(assetSettings.GraphicsDevice, assetSettings.GraphicsDevice.ResourceFactory);
 
                 Surface2D surface2D = new Surface2D(newTex);
                 surface2D.OriginalFilename = originalInputFile;
                 surface2D.Name = assetName;
 
                 packageToSaveIn.StoreAsset(surface2D);
+
+                importedAsset = surface2D;
             }
             catch (Exception ex)
             {

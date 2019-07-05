@@ -1,4 +1,6 @@
 #region Using directives
+using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
 using BepuUtilities;
@@ -297,12 +299,8 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region ctor
-        public UIBaseComponent()//IRenderConfiguration setRenderConfig)
+        public UIBaseComponent()
         {
-            /*if (setRenderConfig == null)
-            {
-                throw new ArgumentNullException(nameof(setRenderConfig));
-            }*/
             widthSizeMode = UISizeMode.Fixed;
             heightSizeMode = UISizeMode.Fixed;
             isPerformingLayout = false;
@@ -310,7 +308,6 @@ namespace AlkaronEngine.Gui
             customLayoutHooks = new Dictionary<string, ModifyLayout>();
             components = new List<UIBaseComponent>();
             animations = new List<UIAnimation>();
-            //renderConfig = setRenderConfig;
             parentComponent = null;
 
             Focusable = false;
@@ -680,10 +677,10 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Rendering
-        internal void InternalRender()
+        internal void InternalRender(RenderContext renderContext)
         {
             // Call actual draw method
-            Draw();
+            Draw(renderContext);
 
             // Iterate through child components
             for (int i = 0; i < components.Count; i++)
@@ -693,7 +690,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                components[i].InternalRender();
+                components[i].InternalRender(renderContext);
             }
 
             // Render focus
@@ -711,19 +708,24 @@ namespace AlkaronEngine.Gui
                 focusRect.Width -= (focusInset * 2);
                 focusRect.Height -= (focusInset * 2);
 
-                // TODO!!! Graphics2D.Texture.RenderRectangle(renderConfig, focusRect, focusColor, 2);
+                ScreenQuad.RenderRectangle(renderContext, focusRect, focusColor, 2);
             }
         }
 
-        protected virtual void Draw()
+        protected virtual void Draw(RenderContext renderContext)
         {
             // Draw background
             if (BackgroundColor.A > 0)
             {
-                float backgroundAlpha = (float)BackgroundColor.A / 255.0f;
-                // TODO!!
-                //Texture.SingleWhite?.RenderOnScreen(ScreenPosition.X, ScreenPosition.Y, this.Width, this.Height, 
-                //    new Color(BackgroundColor, CompositeAlpha * backgroundAlpha), CompositeRotation);
+                float alpha = CompositeAlpha * ((float)BackgroundColor.A / 1.0f);
+                RgbaFloat color = new RgbaFloat(BackgroundColor.R, BackgroundColor.G, BackgroundColor.B, alpha);
+
+                ScreenQuad.RenderQuad(renderContext,
+                    new Vector2(ScreenPosition.X, ScreenPosition.Y),
+                    new Vector2(this.Width, this.Height),
+                    ScreenQuad.SingleWhiteTexture,
+                    color,
+                    CompositeRotation);
             }
         }
         #endregion

@@ -125,6 +125,8 @@ namespace AlkaronEngine.Scene
             UIWindowManager.Update(deltaTime);
         }
 
+        private Texture texture;
+
         public virtual void Draw(double deltaTime, RenderContext renderContext)
         {
             renderContext.CommandList.ClearColorTarget(0, ClearColor);
@@ -138,7 +140,11 @@ namespace AlkaronEngine.Scene
 
             //GuiCore.RenderOnScreen(renderContext);
 
-            ScreenQuad.RenderQuad(renderContext);
+            if (texture == null)
+            {
+                var fileTex = new Veldrid.ImageSharp.ImageSharpTexture("d:\\temp\\image.jpg");
+                texture = fileTex.CreateDeviceTexture(renderContext.GraphicsDevice, renderContext.GraphicsDevice.ResourceFactory);
+            }
         }
 
         public virtual void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)

@@ -7,6 +7,7 @@ using System.Threading;
 using AlkaronEngine.Assets.Materials;
 using Veldrid;
 using System.Numerics;
+using AlkaronEngine.Gui;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -216,13 +217,13 @@ namespace AlkaronEngine.Graphics3D
             Performance.Pop();
         }
 
-        private void RenderUI()
+        private void RenderUI(RenderContext renderContext)
         {
             // Render 2D
             Performance.Push("BaseScene.Draw (Render2D)");
             // Clear depth buffer and stencil again for 2D rendering
             //Clear(Color.Lavender, ClearOptions.DepthBuffer | ClearOptions.Stencil, 1, 0);
-            //UIWindowManager.Draw();
+            UIWindowManager.Draw(renderContext);
             //MouseCursor?.Render();
             Performance.Pop();
         }
@@ -273,7 +274,7 @@ namespace AlkaronEngine.Graphics3D
             RenderRenderPasses(renderContext);
 
             // Render the UI
-            RenderUI();
+            RenderUI(renderContext);
 
             Performance.Pop();
 

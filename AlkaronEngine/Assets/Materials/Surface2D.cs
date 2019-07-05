@@ -23,7 +23,10 @@ namespace AlkaronEngine.Assets.Materials
 
         public SamplerFilter SamplerFilter { get; set; }
 
-		public Surface2D()
+        public int Width => IsValid ? (int)Texture.Width : 0;
+        public int Height => IsValid ? (int)Texture.Height : 0;
+
+        public Surface2D()
 		{
             Texture = null;
 		}

@@ -88,6 +88,7 @@ namespace AlkaronEngine
             SceneManager = new SceneManager();
 
             AssetManager = new AssetManager();
+            AssetManager.AssetSettings.GraphicsDevice = GraphicsDevice;
 
             PackageManager = new PackageManager();
             // "AlkaronContent" must be initialized before calling this, because
