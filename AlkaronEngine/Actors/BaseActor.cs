@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Components;
+using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
 using BepuPhysics.Collidables;
 
@@ -47,7 +48,7 @@ namespace AlkaronEngine.Actors
             return null; 
         }
 
-        /*internal IEnumerable<BaseRenderProxy> GetRenderProxies()
+        internal IEnumerable<BaseRenderProxy> GetRenderProxies()
         {
             List<BaseRenderProxy> resultList = new List<BaseRenderProxy>();
 
@@ -63,7 +64,7 @@ namespace AlkaronEngine.Actors
             }
 
             return resultList;
-        }*/
+        }
 
         public void AttachComponent(BaseComponent component)
         {

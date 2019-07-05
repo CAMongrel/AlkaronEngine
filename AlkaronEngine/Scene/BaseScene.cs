@@ -2,6 +2,12 @@
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using AlkaronEngine.Actors;
+using AlkaronEngine.Components;
+using AlkaronEngine.Controllers;
+using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using BepuPhysics;
 using BepuPhysics.Collidables;
@@ -23,19 +29,21 @@ namespace AlkaronEngine.Scene
 
         public SceneGraph SceneGraph { get; private set; }
 
-        /*public RenderManager RenderManager { get; private set; }
+        public RenderManager RenderManager { get; private set; }
 
         public CameraActor CurrentCamera { get; set; }
 
-        public BaseController CurrentController { get; private set; }*/
+        public BaseController CurrentController { get; private set; }
 
         private bool isMouseCaptured;
         private Vector2 lastMousePos;
         private bool mouseCursorWasVisible;
 
+        public Vector2 ScreenSize => new Vector2(AlkaronCoreGame.Core.Window.Width, AlkaronCoreGame.Core.Window.Height);
+
         public BaseScene()
         {
-            //CurrentController = null;
+            CurrentController = null;
         }
 
         /*public virtual Color BackgroundColor
@@ -46,26 +54,28 @@ namespace AlkaronEngine.Scene
             }
         }*/
 
-        public virtual void Init()//IRenderConfiguration setRenderConfig)
+        internal virtual void Init()
         {
             mouseCursorWasVisible = false;
             isMouseCaptured = false;
 
-            /*RenderConfig = setRenderConfig;
-            ContentManager = new ContentManager(AlkaronCoreGame.Core.Content.ServiceProvider, "Content");*/
+            //GuiCore = new GuiCore();
+            //GuiCore.Initialize((int)ScreenSize.X, (int)ScreenSize.Y);
+
+            /*ContentManager = new ContentManager(AlkaronCoreGame.Core.Content.ServiceProvider, "Content");*/
             SceneGraph = new SceneGraph(this);
-            //RenderManager = new RenderManager(RenderConfig);
+            RenderManager = new RenderManager();
 
             Init3D();
             InitUI();
 
-            //RenderManager.Start();
+            RenderManager.Start();
         }
 
         internal void ClientSizeChanged()
         {
-            //RenderManager.SizeChanged();
-            //UIWindowManager.PerformLayout();
+            RenderManager.SizeChanged();
+            //GuiCore.Resize((int)ScreenSize.X, (int)ScreenSize.Y);
         }
 
         protected virtual void InitUI()
@@ -81,23 +91,29 @@ namespace AlkaronEngine.Scene
 
         protected virtual void CreateDefaultCamera()
         {
-            /*CurrentCamera = new CameraActor(new FlyCameraComponent(new Vector3(0, 0, 15),
-                                                     RenderConfig.ScreenSize,
+            CurrentCamera = new CameraActor(new FlyCameraComponent(new Vector3(0, 0, 15),
+                                                     ScreenSize,
                                                      0.1f,
                                                      500.0f));
 
-            SceneGraph.AddActor(CurrentCamera);*/
+            SceneGraph.AddActor(CurrentCamera);
         }
 
         public virtual void Close()
         {
-            /*RenderManager.Stop();
+            RenderManager.Stop();
 
             UIWindowManager.Clear();
 
-            ContentManager.Unload();
+            /*ContentManager.Unload();
             ContentManager.Dispose();
             ContentManager = null;*/
+        }
+
+        public void UpdateInput(InputSnapshot snapshot, double deltaTime)
+        {
+            // Update 2D UI with input changes
+            //GuiCore.Update(deltaTime, snapshot);
         }
 
         public virtual void Update(double deltaTime)
@@ -106,33 +122,33 @@ namespace AlkaronEngine.Scene
             SceneGraph.Update(deltaTime);
 
             // Update 2D UI
-            //UIWindowManager.Update(gameTime);
+            UIWindowManager.Update(deltaTime);
         }
 
-        public virtual void Draw(double deltaTime, SceneRenderContext renderContext)
+        public virtual void Draw(double deltaTime, RenderContext renderContext)
         {
             renderContext.CommandList.ClearColorTarget(0, ClearColor);
 
-            /*RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);
-            RenderManager.MouseCursor = MouseCursor;
+            RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);
 
             if (RenderManager.SupportsMultiThreadedRendering == false)
             {
-                RenderManager.RenderFrame();
-            }*/
+                RenderManager.RenderFrame(renderContext);
+            }
+
+            //GuiCore.RenderOnScreen(renderContext);
+
+            ScreenQuad.RenderQuad(renderContext);
         }
 
         public virtual void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            /*bool res = UIWindowManager.PointerDown(position, pointerType, gameTime);
+            bool res = UIWindowManager.PointerDown(position, pointerType, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
-                if (MouseCursor != null)
-                {
-                    mouseCursorWasVisible = MouseCursor.IsVisible;
-                    MouseCursor.IsVisible = false;
-                }
+                mouseCursorWasVisible = AlkaronCoreGame.Core.Window.CursorVisible;
+                AlkaronCoreGame.Core.Window.CursorVisible = false;
                 isMouseCaptured = true;
 
                 lastMousePos = position;
@@ -142,19 +158,16 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerDown(position, pointerType);
                 }
-            }*/
+            }
         }
 
         public virtual void PointerUp(Vector2 position, PointerType pointerType, double deltaTime)
         {
-            /*bool res = UIWindowManager.PointerUp(position, pointerType, gameTime);
+            bool res = UIWindowManager.PointerUp(position, pointerType, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
-                if (MouseCursor != null)
-                {
-                    MouseCursor.IsVisible = mouseCursorWasVisible;
-                }
+                AlkaronCoreGame.Core.Window.CursorVisible = mouseCursorWasVisible;
                 isMouseCaptured = false;
 
                 res = CurrentController?.PointerUp(position, pointerType) ?? false;
@@ -162,12 +175,12 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerUp(position, pointerType);
                 }
-            }*/
+            }
         }
 
         public virtual void PointerMoved(Vector2 position, double deltaTime)
         {
-            /*bool res = UIWindowManager.PointerMoved(position, gameTime);
+            bool res = UIWindowManager.PointerMoved(position, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -180,14 +193,14 @@ namespace AlkaronEngine.Scene
                         CurrentCamera?.PointerMoved(position);
                     }
 
-                    Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
+                    //Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
                 }
-            }*/
+            }
         }
 
         public virtual void PointerWheelChanged(Vector2 deltaValue, double deltaTime)
         {
-            /*bool res = UIWindowManager.PointerWheelChanged(deltaValue, gameTime);
+            bool res = UIWindowManager.PointerWheelChanged(deltaValue, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -196,13 +209,12 @@ namespace AlkaronEngine.Scene
                 {
                     CurrentCamera?.PointerWheelChanged(deltaValue);
                 }
-            }*/
+            }
         }
 
         public virtual bool KeyPressed(Key key, double deltaTime)
         {
-            return false;
-            /*bool res = UIWindowManager.KeyPressed(key, gameTime);
+            bool res = UIWindowManager.KeyPressed(key, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -212,13 +224,12 @@ namespace AlkaronEngine.Scene
                     CurrentCamera?.KeyPressed(key);
                 }
             }
-            return res;*/
+            return res;
         }
 
         public virtual bool KeyReleased(Key key, double deltaTime)
         {
-            return false;
-            /*bool res = UIWindowManager.KeyReleased(key, gameTime);
+            bool res = UIWindowManager.KeyReleased(key, deltaTime);
             if (res == false)
             {
                 // Event was not handled by UI
@@ -228,7 +239,7 @@ namespace AlkaronEngine.Scene
                     CurrentCamera?.KeyReleased(key);
                 }
             }
-            return res;*/
+            return res;
         }
     }
 }

@@ -1,10 +1,7 @@
 ﻿using AlkaronEngine.Input;
-using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -63,11 +60,11 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        internal static void Update(GameTime gameTime)
+        internal static void Update(double deltaTime)
         {
             for (int i = 0; i < windows.Count; i++)
             {
-                windows[i].Update(gameTime);
+                windows[i].Update(deltaTime);
             }
         }
 
@@ -97,7 +94,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        internal static bool PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
+        internal static bool PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
             for (int i = windows.Count - 1; i >= 0; i--)
             {
@@ -107,7 +104,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (windows[i].PointerDown(localPosition, pointerType, gameTime))
+                if (windows[i].PointerDown(localPosition, pointerType, deltaTime))
                 {
                     return true;
                 }
@@ -116,42 +113,14 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        internal static bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
-        {
-            lock (lockObj)
-            {
-                if (CapturedComponent != null)
-                {
-                    Vector2 relPosition = position - CapturedComponent.ScreenPosition;
-                    return CapturedComponent.PointerUp(relPosition, pointerType, gameTime);
-                }
-            }
-
-            for (int i = windows.Count - 1; i >= 0; i--)
-            {
-                Vector2 localPosition = new Vector2(position.X - windows[i].RelativeX, position.Y - windows[i].RelativeY);
-                if (windows[i].HitTest(localPosition) == false)
-                {
-                    continue;
-                }
-
-                if (windows[i].PointerUp(localPosition, pointerType, gameTime))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        internal static bool PointerMoved(Vector2 position, GameTime gameTime)
+        internal static bool PointerUp(Vector2 position, PointerType pointerType, double deltaTime)
         {
             lock (lockObj)
             {
                 if (CapturedComponent != null)
                 {
                     Vector2 relPosition = position - CapturedComponent.ScreenPosition;
-                    return CapturedComponent.PointerMoved(relPosition, gameTime);
+                    return CapturedComponent.PointerUp(relPosition, pointerType, deltaTime);
                 }
             }
 
@@ -163,7 +132,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (windows[i].PointerMoved(localPosition, gameTime))
+                if (windows[i].PointerUp(localPosition, pointerType, deltaTime))
                 {
                     return true;
                 }
@@ -172,7 +141,35 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        internal static bool PointerWheelChanged(Vector2 deltaValue, GameTime gameTime)
+        internal static bool PointerMoved(Vector2 position, double deltaTime)
+        {
+            lock (lockObj)
+            {
+                if (CapturedComponent != null)
+                {
+                    Vector2 relPosition = position - CapturedComponent.ScreenPosition;
+                    return CapturedComponent.PointerMoved(relPosition, deltaTime);
+                }
+            }
+
+            for (int i = windows.Count - 1; i >= 0; i--)
+            {
+                Vector2 localPosition = new Vector2(position.X - windows[i].RelativeX, position.Y - windows[i].RelativeY);
+                if (windows[i].HitTest(localPosition) == false)
+                {
+                    continue;
+                }
+
+                if (windows[i].PointerMoved(localPosition, deltaTime))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool PointerWheelChanged(Vector2 deltaValue, double deltaTime)
         {
             return false;
         }
@@ -185,19 +182,19 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        internal static bool KeyReleased(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        internal static bool KeyReleased(Key key, double deltaTime)
         {
             lock (lockObj)
             {
-                return CapturedKeyboardComponent?.KeyReleased(key, gameTime) ?? false;
+                return CapturedKeyboardComponent?.KeyReleased(key, deltaTime) ?? false;
             }
         }
 
-        internal static bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        internal static bool KeyPressed(Key key, double deltaTime)
         {
             lock (lockObj)
             {
-                return CapturedKeyboardComponent?.KeyPressed(key, gameTime) ?? false;
+                return CapturedKeyboardComponent?.KeyPressed(key, deltaTime) ?? false;
             }
         }
     }

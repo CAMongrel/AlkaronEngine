@@ -23,20 +23,11 @@ namespace AlkaronEngine.Input
         public event KeyEvent OnKeyPressed;
         public event KeyEvent OnKeyReleased;
 
-        /*private IRenderConfiguration renderConfig;*/
-
         public Vector2 MousePosition { get; private set; }
         public Vector2 ScaledMousePosition { get; private set; }
 
         public InputManager()
         {
-            /*if (setRenderConfig == null)
-            {
-               throw new ArgumentNullException(nameof(setRenderConfig));
-            }
-
-            renderConfig = setRenderConfig;*/
-
             prevWheelValue = 0.0f;
             prevMousePos = new Vector2(-1, -1);
         }

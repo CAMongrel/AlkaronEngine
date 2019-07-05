@@ -1,11 +1,12 @@
 #region Using directives
-using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
+using BepuUtilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using Veldrid;
 #endregion
 
 namespace AlkaronEngine.Gui
@@ -49,9 +50,9 @@ namespace AlkaronEngine.Gui
         Fit
     }
 
-    public delegate void OnPointerDownInside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
-    public delegate void OnPointerUpInside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
-    public delegate void OnPointerUpOutside(UIBaseComponent sender, Vector2 position, GameTime gameTime);
+    public delegate void OnPointerDownInside(UIBaseComponent sender, Vector2 position, double deltaTime);
+    public delegate void OnPointerUpInside(UIBaseComponent sender, Vector2 position, double deltaTime);
+    public delegate void OnPointerUpOutside(UIBaseComponent sender, Vector2 position, double deltaTime);
 
     public delegate void ModifyLayout(UIBaseComponent component);
 
@@ -157,7 +158,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        public Color BackgroundColor { get; set; }
+        public RgbaFloat BackgroundColor { get; set; }
 
         public bool UserInteractionEnabled { get; set; }
         public bool Visible { get; set; }
@@ -215,7 +216,7 @@ namespace AlkaronEngine.Gui
         {
             get
             {
-                float parentWidth = renderConfig.ScreenSize.X;
+                float parentWidth = AlkaronCoreGame.Core.Window.Width;
                 if (ParentComponent != null)
                 {
                     parentWidth = ParentComponent.Width;
@@ -248,7 +249,7 @@ namespace AlkaronEngine.Gui
         {
             get
             {
-                float parentHeight = renderConfig.ScreenSize.Y;
+                float parentHeight = AlkaronCoreGame.Core.Window.Height;
                 if (ParentComponent != null)
                 {
                     parentHeight = ParentComponent.Height;
@@ -290,18 +291,18 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        protected IRenderConfiguration renderConfig;
+        //protected IRenderConfiguration renderConfig;
 
         private List<UIAnimation> animations;
         #endregion
 
         #region ctor
-        public UIBaseComponent(IRenderConfiguration setRenderConfig)
+        public UIBaseComponent()//IRenderConfiguration setRenderConfig)
         {
-            if (setRenderConfig == null)
+            /*if (setRenderConfig == null)
             {
                 throw new ArgumentNullException(nameof(setRenderConfig));
-            }
+            }*/
             widthSizeMode = UISizeMode.Fixed;
             heightSizeMode = UISizeMode.Fixed;
             isPerformingLayout = false;
@@ -309,12 +310,12 @@ namespace AlkaronEngine.Gui
             customLayoutHooks = new Dictionary<string, ModifyLayout>();
             components = new List<UIBaseComponent>();
             animations = new List<UIAnimation>();
-            renderConfig = setRenderConfig;
+            //renderConfig = setRenderConfig;
             parentComponent = null;
 
             Focusable = false;
             PositionAnchor = UIPositionAnchor.TopLeft;
-            BackgroundColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+            BackgroundColor = new RgbaFloat(1.0f, 1.0f, 1.0f, 0.0f);
             UserInteractionEnabled = true;
             Visible = true;
             Alpha = 1.0f;
@@ -555,7 +556,7 @@ namespace AlkaronEngine.Gui
                     break;
                 case UISizeMode.Fit:
                     {
-                        float parentWidth = renderConfig.ScreenSize.X;
+                        float parentWidth = AlkaronCoreGame.Core.Window.Width;
                         if (ParentComponent != null)
                         {
                             parentWidth = ParentComponent.Width;
@@ -572,7 +573,7 @@ namespace AlkaronEngine.Gui
                     break;
                 case UISizeMode.Fit:
                     {
-                        float parentHeight = renderConfig.ScreenSize.Y;
+                        float parentHeight = AlkaronCoreGame.Core.Window.Height;
                         if (ParentComponent != null)
                         {
                             parentHeight = ParentComponent.Height;
@@ -654,25 +655,25 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Game update
-        public virtual void Update(GameTime gameTime)
+        public virtual void Update(double deltaTime)
         {
             for (int i = 0; i < animations.Count; i++)
             {
                 if (animations[i].IsActive == false)
                 {
-                    animations[i].Activate(gameTime);
+                    animations[i].Activate(deltaTime);
                 }
             }
 
             for (int i = 0; i < animations.Count; i++)
             {
-                animations[i].Update(gameTime);
+                animations[i].Update(deltaTime);
             }
 
             for (int i = 0; i < components.Count; i++)
             {
                 Performance.Push(this.GetType() + ".components[" + i + "] - Update");
-                components[i].Update(gameTime);
+                components[i].Update(deltaTime);
                 Performance.Pop();
             }
         }
@@ -701,7 +702,7 @@ namespace AlkaronEngine.Gui
                 Vector2 screenPos = ScreenPosition;
                 RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
 
-                Color focusColor = Color.FromNonPremultiplied(new Vector4(new Vector3(0.3f), 0.7f));
+                RgbaFloat focusColor = new RgbaFloat(new Vector4(new Vector3(0.3f), 0.7f));
                 RectangleF focusRect = rect;
                 int focusInset = 4;
 
@@ -710,7 +711,7 @@ namespace AlkaronEngine.Gui
                 focusRect.Width -= (focusInset * 2);
                 focusRect.Height -= (focusInset * 2);
 
-                Graphics2D.Texture.RenderRectangle(renderConfig, focusRect, focusColor, 2);
+                // TODO!!! Graphics2D.Texture.RenderRectangle(renderConfig, focusRect, focusColor, 2);
             }
         }
 
@@ -720,8 +721,9 @@ namespace AlkaronEngine.Gui
             if (BackgroundColor.A > 0)
             {
                 float backgroundAlpha = (float)BackgroundColor.A / 255.0f;
-                Texture.SingleWhite?.RenderOnScreen(ScreenPosition.X, ScreenPosition.Y, this.Width, this.Height, 
-                    new Color(BackgroundColor, CompositeAlpha * backgroundAlpha), CompositeRotation);
+                // TODO!!
+                //Texture.SingleWhite?.RenderOnScreen(ScreenPosition.X, ScreenPosition.Y, this.Width, this.Height, 
+                //    new Color(BackgroundColor, CompositeAlpha * backgroundAlpha), CompositeRotation);
             }
         }
         #endregion
@@ -764,7 +766,7 @@ namespace AlkaronEngine.Gui
                 // pointInLocal now represents a point in a coordinate system with the
                 // center of the unrotated rectangle as 0,0
 
-                pointInLocal = Vector3.Transform(pointInLocal, Matrix.CreateRotationZ(MathHelper.ToRadians(-CompositeRotation)));
+                pointInLocal = Vector3.Transform(pointInLocal, Matrix4x4.CreateRotationZ(MathHelper.ToRadians(-CompositeRotation)));
                 // pointInLocal in now rotated according to the inverse rotation of
                 // the component
 
@@ -773,7 +775,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        protected internal virtual bool PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
+        protected internal virtual bool PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -788,7 +790,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerDown(localPosition, pointerType, gameTime))
+                if (components[i].PointerDown(localPosition, pointerType, deltaTime))
                 {
                     return true;
                 }
@@ -797,7 +799,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
+        protected internal virtual bool PointerUp(Vector2 position, PointerType pointerType, double deltaTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -812,7 +814,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerUp(localPosition, pointerType, gameTime))
+                if (components[i].PointerUp(localPosition, pointerType, deltaTime))
                 {
                     return true;
                 }
@@ -821,7 +823,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool PointerMoved(Vector2 position, GameTime gameTime)
+        protected internal virtual bool PointerMoved(Vector2 position, double deltaTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -836,7 +838,7 @@ namespace AlkaronEngine.Gui
                     continue;
                 }
 
-                if (components[i].PointerMoved(localPosition, gameTime))
+                if (components[i].PointerMoved(localPosition, deltaTime))
                 {
                     return true;
                 }
@@ -845,7 +847,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool KeyReleased(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        protected internal virtual bool KeyReleased(Key key, double deltaTime)
         {
             if (UserInteractionEnabled == false)
             {
@@ -855,7 +857,7 @@ namespace AlkaronEngine.Gui
             return false;
         }
 
-        protected internal virtual bool KeyPressed(Microsoft.Xna.Framework.Input.Keys key, GameTime gameTime)
+        protected internal virtual bool KeyPressed(Key key, double deltaTime)
         {
             if (UserInteractionEnabled == false ||
                 HasCapturedKeyboardFocus() == false)
@@ -863,14 +865,14 @@ namespace AlkaronEngine.Gui
                 return true;
             }
 
-            if (key == Microsoft.Xna.Framework.Input.Keys.Tab)
+            if (key == Key.Tab)
             {
                 UIBaseComponent nextFocus = FindNextFocusable(this);
                 if (nextFocus != null &&
                     nextFocus != this)
                 {
                     RelinquishFocus();
-                    nextFocus.ReceiveFocus(gameTime);
+                    nextFocus.ReceiveFocus(deltaTime);
                 }
                 return true;
             }
@@ -910,7 +912,7 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Focus
-        public virtual void ReceiveFocus(GameTime gameTime)
+        public virtual void ReceiveFocus(double deltaTime)
         {
             if (Focusable)
             {
@@ -1014,7 +1016,7 @@ namespace AlkaronEngine.Gui
                 if (backup.ContainsKey("Y")) { Y = (float)backup["Y"]; }
                 if (backup.ContainsKey("Width")) { Width = (float)backup["Width"]; }
                 if (backup.ContainsKey("Height")) { Height = (float)backup["Height"]; }
-                if (backup.ContainsKey("BackgroundColor")) { BackgroundColor = (Color)backup["BackgroundColor"]; }
+                if (backup.ContainsKey("BackgroundColor")) { BackgroundColor = (RgbaFloat)backup["BackgroundColor"]; }
                 if (backup.ContainsKey("Alpha")) { Alpha = (float)backup["Alpha"]; }
                 if (backup.ContainsKey("Rotation")) { Rotation = (float)backup["Rotation"]; }
             });

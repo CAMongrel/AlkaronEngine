@@ -4,7 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -61,7 +61,7 @@ namespace AlkaronEngine.Gui
       private Dictionary<string, object> initialValues;
       private Dictionary<string, object> finalValues;
 
-      private double animationActivateTime;
+      private DateTimeOffset animationActivateTime;
 
       public bool IsActive { get; private set; }
 
@@ -91,7 +91,7 @@ namespace AlkaronEngine.Gui
          animationAborted = setAnimationAborted;
       }
 
-      public void Activate(GameTime gameTime)
+      public void Activate(double deltaTime)
       {
          lock (lockObj)
          {
@@ -132,7 +132,7 @@ namespace AlkaronEngine.Gui
 
             Component.RestoreAnimateableProperties(initialValues);
 
-            animationActivateTime = gameTime.TotalGameTime.TotalSeconds;
+            animationActivateTime = DateTimeOffset.UtcNow;
             IsActive = true;
          }
       }
@@ -190,18 +190,18 @@ namespace AlkaronEngine.Gui
          }
          if (fieldType.FullName == "Microsoft.Xna.Framework.Color")
          {
-            Color initialColor = (Color)initialValue;
-            Color finalColor = (Color)finalValue;
+            RgbaFloat initialColor = (RgbaFloat)initialValue;
+            RgbaFloat finalColor = (RgbaFloat)finalValue;
 
-            int r = finalColor.R - initialColor.R;
-            int g = finalColor.G - initialColor.G;
-            int b = finalColor.B - initialColor.B;
-            int a = finalColor.A - initialColor.A;
+            float r = finalColor.R - initialColor.R;
+            float g = finalColor.G - initialColor.G;
+            float b = finalColor.B - initialColor.B;
+            float a = finalColor.A - initialColor.A;
 
-            return new Color((int)(initialColor.R + r * percentage),
-                             (int)(initialColor.G + g * percentage),
-                             (int)(initialColor.B + b * percentage),
-                             (int)(initialColor.A + a * percentage));
+            return new RgbaFloat((float)(initialColor.R + r * percentage),
+                                 (float)(initialColor.G + g * percentage),
+                                 (float)(initialColor.B + b * percentage),
+                                 (float)(initialColor.A + a * percentage));
          }
 
          return null;
@@ -214,7 +214,7 @@ namespace AlkaronEngine.Gui
          return Interpolate(percentage, initialValue, finalValue, valueType);
       }
 
-      public virtual void Update(GameTime gameTime)
+      public virtual void Update(double deltaTime)
       {
          lock (lockObj)
          {
@@ -223,14 +223,14 @@ namespace AlkaronEngine.Gui
                return;
             }
 
-            double currentAnimationTime = ((gameTime.TotalGameTime.TotalSeconds - animationActivateTime) - AnimationDelay);
+            double currentAnimationTime = ((DateTimeOffset.UtcNow - animationActivateTime).TotalSeconds - AnimationDelay);
             if (currentAnimationTime < 0.0)
             {
                // We are ahead of the animation delay. Don't do anything just yet.
                return;
             }
 
-            double percentage = MathHelper.Clamp((float)(currentAnimationTime / AnimationDuration), 0.0f, 1.0f);
+            double percentage = Math.Clamp((float)(currentAnimationTime / AnimationDuration), 0.0f, 1.0f);
 
             Type componentType = Component.GetType();
             foreach (KeyValuePair<string, object> pair in finalValues)

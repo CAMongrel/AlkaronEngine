@@ -1,17 +1,13 @@
-using AlkaronEngine.Graphics2D;
-using System;
-
 namespace AlkaronEngine.Gui
 {
     public class UIWindow : UIBaseComponent
     {
         #region Constructor
-        public UIWindow(IRenderConfiguration renderConfig)
-           : base(renderConfig)
+        public UIWindow()
         {
             X = Y = 0;
-            Width = renderConfig.ScreenSize.X;
-            Height = renderConfig.ScreenSize.Y;
+            Width = AlkaronCoreGame.Core.Window.Width;
+            Height = AlkaronCoreGame.Core.Window.Height;
 
             WidthSizeMode = UISizeMode.Fit;
             HeightSizeMode = UISizeMode.Fit;

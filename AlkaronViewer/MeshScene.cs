@@ -1,3 +1,7 @@
+using AlkaronEngine.Actors;
+using AlkaronEngine.Components;
+using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using AlkaronEngine.Scene;
 using System;
@@ -37,14 +41,9 @@ namespace AlkaronViewer
             base.Close();
         }
 
-        public override void Draw(double deltaTime, SceneRenderContext renderContext)
+        public override void Draw(double deltaTime, RenderContext renderContext)
         {
             base.Draw(deltaTime, renderContext);
-        }
-
-        public override void Init()
-        {
-            base.Init();
         }
 
         public override bool KeyPressed(Key key, double deltaTime)
@@ -84,11 +83,11 @@ namespace AlkaronViewer
 
         protected override void CreateDefaultCamera()
         {
-            /*var camComponent = new ArcBallCameraComponent(Vector3.Zero, 10.0f, 45.0f, -45.0f, 0.0f, RenderConfig.ScreenSize, 0.1f, 500.0f);
+            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 10.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 500.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
-            SceneGraph.AddActor(CurrentCamera);*/
+            SceneGraph.AddActor(CurrentCamera);
         }
 
         protected override void Init3D()
@@ -153,6 +152,10 @@ namespace AlkaronViewer
         protected override void InitUI()
         {
             base.InitUI();
+
+            UIWindow window = new UIWindow();
+            window.BackgroundColor = RgbaFloat.Red;
+            window.Show();
         }
 
         /*public void AddStaticMesh(StaticMesh mesh)

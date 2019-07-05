@@ -13,6 +13,7 @@ namespace AlkaronEngine.Graphics3D
     public class RenderContext
     {
         public CommandList CommandList;
+        public GraphicsDevice GraphicsDevice;
     }
 
     public class RenderManager
@@ -51,11 +52,9 @@ namespace AlkaronEngine.Graphics3D
         /// </summary>
         private ViewTarget nextViewTarget;
 
-        private RenderContext renderContext;
-
         //public MouseCursor MouseCursor { get; set; }
 
-        public RenderManager(CommandList commandList)
+        public RenderManager()
         {
             maxFPS = -1;
 
@@ -68,9 +67,6 @@ namespace AlkaronEngine.Graphics3D
             renderProxyStagingArea = new List<BaseRenderProxy>();
 
             renderPasses = new List<RenderPass>();
-
-            renderContext = new RenderContext();
-            renderContext.CommandList = commandList;
 
             CreateRenderTarget();
             CreateEffectLibrary();
@@ -98,8 +94,8 @@ namespace AlkaronEngine.Graphics3D
 
             renderThreadActive = true;
 
-            renderThread = new Thread(new ThreadStart(RenderThreadFunc));
-            renderThread.Start();
+            //renderThread = new Thread(new ThreadStart(RenderThreadFunc));
+            //renderThread.Start();
         }
 
         public void Stop()
@@ -204,7 +200,7 @@ namespace AlkaronEngine.Graphics3D
             Performance.Pop();
 
             Performance.Push("RenderManager.Draw (DrawRenderPasses)");
-            DrawRenderPasses();
+            DrawRenderPasses(renderContext);
             Performance.Pop();
 
             // Reset renderTarget
@@ -232,7 +228,7 @@ namespace AlkaronEngine.Graphics3D
         }
 
         // Main rendering function
-        internal void RenderFrame(bool shouldSleep = false)
+        internal void RenderFrame(RenderContext renderContext, bool shouldSleep = false)
         {
             long end = System.Diagnostics.Stopwatch.GetTimestamp();
             double seconds = (double)(end - frameCalcStart) / (double)System.Diagnostics.Stopwatch.Frequency;
@@ -287,17 +283,17 @@ namespace AlkaronEngine.Graphics3D
             Thread.Sleep(1);
         }
 
-        private void RenderThreadFunc()
+        private void RenderThreadFunc(RenderContext renderContext)
         {
             while (renderThreadActive)
             {
-                RenderFrame(true);
+                RenderFrame(renderContext, true);
             }
 
             renderThread = null;
         }
 
-        private void DrawRenderPasses()
+        private void DrawRenderPasses(RenderContext renderContext)
         {
             int componentCount = 0;
 

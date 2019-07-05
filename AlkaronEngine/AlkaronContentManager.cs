@@ -48,8 +48,6 @@ namespace AlkaronEngine
 
         /// <summary>
         /// Directly opens a Stream to an embedded resource.
-        /// 
-        /// Completely unrelated to the XNA content pipeline.
         /// </summary>
         public Stream OpenResourceStream(string resourceName)
         {
@@ -59,6 +57,29 @@ namespace AlkaronEngine
             if (stream != null)
             {
                 return stream;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Directly reads the bytes of an embedded resource.
+        /// </summary>
+        public ReadOnlySpan<byte> OpenResourceBytes(string resourceName)
+        {
+            var fullName = FindResource(resourceName);
+
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullName);
+            if (stream != null)
+            {
+                using (stream)
+                {
+                    byte[] data = new byte[stream.Length];
+                    stream.Read(data, 0, data.Length);
+
+                    ReadOnlySpan<byte> result = new ReadOnlySpan<byte>(data);
+                    return result;
+                }
             }
 
             return null;

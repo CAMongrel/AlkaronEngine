@@ -7,6 +7,8 @@ using Veldrid;
 using System.Diagnostics;
 using AlkaronEngine.Scene;
 using AlkaronEngine.Assets;
+using AlkaronEngine.Gui;
+using AlkaronEngine.Graphics2D;
 
 namespace AlkaronEngine
 {
@@ -21,7 +23,7 @@ namespace AlkaronEngine
     /// </summary>
     public class AlkaronCoreGame : IDisposable
     {
-        private readonly Sdl2Window Window;
+        internal readonly Sdl2Window Window;
         public GraphicsDevice GraphicsDevice { get; private set; }
 
         internal static AlkaronCoreGame Core;
@@ -92,8 +94,7 @@ namespace AlkaronEngine
             // BuildPackageMap depends on it.
             PackageManager.BuildPackageMap();
 
-            /*ScreenQuad.Initialize(SceneManager);
-            Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
+            /*Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
 
             DefaultFont = Content.Load<SpriteFont>("DefaultFont");
             SceneManager.PrimitiveRenderManager.EngineFont = DefaultFont;
@@ -202,7 +203,7 @@ namespace AlkaronEngine
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected virtual void Draw(double deltaTime)
         {
-            SceneManager.Draw(deltaTime);
+            SceneManager.Draw(GraphicsDevice, deltaTime);
         }
 
         /// <summary>

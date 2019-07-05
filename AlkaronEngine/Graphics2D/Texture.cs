@@ -1,16 +1,4 @@
-// Author: Henning
-// Project: WinWarEngine
-// Path: D:\Projekte\Henning\C#\WinWarCS\WinWarEngine\Graphics
-// Creation date: 27.11.2009 20:22
-// Last modified: 27.11.2009 22:25
-
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using Color = Microsoft.Xna.Framework.Color;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using RectangleF = AlkaronEngine.Util.RectangleF;
-using Matrix = Microsoft.Xna.Framework.Matrix;
 
 namespace AlkaronEngine.Graphics2D
 {

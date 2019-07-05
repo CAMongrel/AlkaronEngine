@@ -1,4 +1,7 @@
-﻿using AlkaronEngine.Input;
+﻿using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Gui;
+using AlkaronEngine.Input;
 using AlkaronEngine.Util;
 using System;
 using System.Numerics;
@@ -6,11 +9,6 @@ using Veldrid;
 
 namespace AlkaronEngine.Scene
 {
-    public class SceneRenderContext
-    {
-        public CommandList CommandList;
-    }
-
     public class SceneManager// : IRenderConfiguration
     {
         private object lockObj = new object();
@@ -26,7 +24,8 @@ namespace AlkaronEngine.Scene
         private CommandList commandList;
         private Pipeline pipeline;
 
-        private SceneRenderContext renderContext;
+        private RenderContext renderContext;
+
 
         public virtual Vector2 Scale
         {
@@ -113,8 +112,10 @@ namespace AlkaronEngine.Scene
 
             commandList = factory.CreateCommandList();
 
-            renderContext = new SceneRenderContext();
+            renderContext = new RenderContext();
             renderContext.CommandList = commandList;
+
+            ScreenQuad.Initialize(factory);
         }
 
         public void Shutdown()
@@ -138,9 +139,10 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public void UpdateFrameInput(InputSnapshot snapshot, double gameTime)
+        public void UpdateFrameInput(InputSnapshot snapshot, double deltaTime)
         {
-            InputManager.UpdateInput(snapshot, gameTime);
+            InputManager.UpdateInput(snapshot, deltaTime);
+            CurrentScene?.UpdateInput(snapshot, deltaTime);
         }
 
         public void Update(double deltaTime)
@@ -167,11 +169,6 @@ namespace AlkaronEngine.Scene
 
                 if (CurrentScene != null)
                 {
-                    /*if (CurrentScene.MouseCursor != null)
-                    {
-                        CurrentScene.MouseCursor.Position = InputManager.MousePosition;
-                    }*/
-
                     CurrentScene.Update(deltaTime);
                 }
             }
@@ -179,9 +176,11 @@ namespace AlkaronEngine.Scene
             Performance.Pop();
         }
 
-        public void Draw(double deltaTime)
+        public void Draw(GraphicsDevice graphicsDevice, double deltaTime)
         {
             Performance.Push("Render loop on main thread");
+
+            renderContext.GraphicsDevice = graphicsDevice;
 
             commandList.Begin();
 

@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Collidables;
 using BepuPhysics;
+using AlkaronEngine.Actors;
+using AlkaronEngine.Graphics3D.RenderProxies;
 
 namespace AlkaronEngine.Scene
 {
@@ -13,12 +15,12 @@ namespace AlkaronEngine.Scene
         private BepuUtilities.Memory.BufferPool bufferPool;
 
         public BaseScene SceneOwner { get; private set; }
-        //private List<BaseActor> Actors;
+        private List<BaseActor> Actors;
 
         public SceneGraph(BaseScene sceneOwner)
         {
             SceneOwner = sceneOwner;
-            //Actors = new List<BaseActor>();
+            Actors = new List<BaseActor>();
 
             bufferPool = new BepuUtilities.Memory.BufferPool();
             var sceneCallbacks = new SceneCallbacks();
@@ -30,15 +32,15 @@ namespace AlkaronEngine.Scene
             // Update phyics
             physicsSimulation.Timestep((float)deltaTime);
 
-            /*for (int i = 0; i < Actors.Count; i++)
+            for (int i = 0; i < Actors.Count; i++)
             {
-                Actors[i].Update(gameTime);
+                Actors[i].Update(deltaTime);
             }
 
-            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());*/
+            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());
         }
 
-        /*public void AddActor(BaseActor newActor)
+        public void AddActor(BaseActor newActor)
         {
             if (Actors.Contains(newActor))
             {
@@ -86,7 +88,7 @@ namespace AlkaronEngine.Scene
             }
 
             return result;
-        }*/
+        }
     }
 
     internal unsafe struct SceneCallbacks : INarrowPhaseCallbacks, IPoseIntegratorCallbacks
