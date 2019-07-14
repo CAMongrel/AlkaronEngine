@@ -11,7 +11,7 @@ namespace AlkaronEngine.Assets
     /// <summary>
     /// A package containing assets.
     /// 
-    /// Can be a real package stored persistently on disk or a transient package
+    /// Can be a real package stored persistently on disk or a volatile package
     /// that cannot be saved an only exists at runtime (i.e. created through
     /// dynamic logic)
     /// 
@@ -48,17 +48,19 @@ namespace AlkaronEngine.Assets
         /// Means this package cannot be saved on disk and is
         /// only used at runtime.
         /// </summary>
-        private bool isTransient;
+        private bool isVolatile;
 		
 		public const int MaxPackageVersion = 1;
 
-		public string PackageName
+        public static readonly string VolatilePackageName = "Volatile";
+
+        public string PackageName
 		{
 			get
 			{
-				if (isTransient)
+				if (isVolatile)
                 {
-                    return "Transient";
+                    return VolatilePackageName;
                 }
 
                 return Path.GetFileName(fullFilename);
@@ -69,9 +71,9 @@ namespace AlkaronEngine.Assets
 		{
 			get
 			{
-				if (isTransient)
+				if (isVolatile)
                 {
-                    return "Transient";
+                    return VolatilePackageName;
                 }
 
                 return Path.GetFileNameWithoutExtension(fullFilename);
@@ -122,7 +124,7 @@ namespace AlkaronEngine.Assets
 			IsLoading = false;
             IsFullyLoaded = true;
 
-            isTransient = false;
+            isVolatile = false;
 
             SetNeedsSave(false);
         }
@@ -161,15 +163,15 @@ namespace AlkaronEngine.Assets
         }
 		#endregion
 		
-		#region CreateTransient
+		#region CreateVolatile
 		/// <summary>
-		/// Creates a runtime-only transient package.
+		/// Creates a runtime-only volatile package.
 		/// </summary>
-		internal static Package CreateTransient()
+		internal static Package CreateVolatile()
 		{
 			Package pkg = new Package(false);
 			pkg.fullFilename = "";
-			pkg.isTransient = true;
+			pkg.isVolatile = true;
 			pkg.IsFullyLoaded = true;
 			pkg.NeedsSave = false;
 			return pkg;
@@ -425,7 +427,7 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		public bool Save(AssetSettings assetSettings)
 		{
-			if (isTransient || IsReadOnly)
+			if (isVolatile || IsReadOnly)
             {
                 return false;
             }
@@ -611,7 +613,7 @@ namespace AlkaronEngine.Assets
 		/// </summary>
 		public void SetNeedsSave(bool setNeedsSave)
 		{
-			if (isTransient)
+			if (isVolatile)
             {
                 return;
             }

@@ -8,8 +8,7 @@ namespace AlkaronEngine.Gui
 {
    public class UIPanel : UIBaseComponent
    {
-      public UIPanel(IRenderConfiguration setRenderConfig)
-         : base(setRenderConfig)
+      public UIPanel()
       {
 
       }

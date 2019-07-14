@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-using AlkaronEngine.Graphics2D;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿/*using System.Numerics;
 
 namespace AlkaronEngine.Gui
 {
@@ -9,7 +6,7 @@ namespace AlkaronEngine.Gui
     {
         #region Properties
         public string Text { get; set; }
-        public SpriteFont Font { get; set; }
+        //public TextureFont Font { get; set; }
 
         public bool AutoScaleFont { get; set; }
 
@@ -43,7 +40,7 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Constructor
-        public UILabel(IRenderConfiguration renderConfig, string setText, SpriteFont setFont = null)
+        public UILabel(IRenderConfiguration renderConfig, string setText, TextureFont setFont = null)
            : base(renderConfig)
         {
             Text = setText;
@@ -117,3 +114,4 @@ namespace AlkaronEngine.Gui
         #endregion
     }
 }
+*/

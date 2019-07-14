@@ -26,8 +26,8 @@ namespace AlkaronEngine.Assets
 			PackageMap = new Dictionary<string, string>();
 			LoadedPackages = new Dictionary<string, Package>();
 			
-			Package transientPkg = Package.CreateTransient();
-			LoadedPackages.Add("Transient.package", transientPkg);
+			Package volatilePkg = Package.CreateVolatile();
+			LoadedPackages.Add(Package.VolatilePackageName + ".package", volatilePkg);
 		}
 		#endregion
 		

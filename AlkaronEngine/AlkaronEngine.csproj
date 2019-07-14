@@ -29,27 +29,25 @@
     <Compile Remove="Graphics3D\SkeletalMeshEffect.cs" />
     <Compile Remove="Gui\GuiCore.cs" />
     <Compile Remove="Gui\MouseCursor.cs" />
-    <Compile Remove="Gui\UIBaseComponentList.cs" />
     <Compile Remove="Gui\UIButton.cs" />
-    <Compile Remove="Gui\UILabel.cs" />
     <Compile Remove="Gui\UIMessageBox.cs" />
-    <Compile Remove="Gui\UIPanel.cs" />
     <Compile Remove="Gui\UITextField.cs" />
     <Compile Remove="Gui\UITextureButton.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\EngineMaterials.package" />
-    <None Remove="Resources\Fragment.glsl" />
-    <None Remove="Resources\Vertex.glsl" />
+    <None Remove="Resources\ScreenQuadFragment.glsl" />
+    <None Remove="Resources\ScreenQuadVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\EngineMaterials.package" />
-    <EmbeddedResource Include="Resources\Fragment.glsl" />
-    <EmbeddedResource Include="Resources\Vertex.glsl" />
+    <EmbeddedResource Include="Resources\ScreenQuadFragment.glsl" />
+    <EmbeddedResource Include="Resources\ScreenQuadVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="glTF2Loader" Version="1.1.3-alpha" />
     <PackageReference Include="BepuPhysics" Version="2.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.6.1" />
     <PackageReference Include="Veldrid.ImGui" Version="5.69.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
