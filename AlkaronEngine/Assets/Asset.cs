@@ -23,7 +23,7 @@ namespace AlkaronEngine.Assets
         {
             get
             {
-                return Package?.PackageName ?? "<No Package>"; 
+                return Package?.PackageShortName ?? "<No Package>"; 
             } 
         }
 
@@ -109,7 +109,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Sets the package owner.
         /// </summary>
-        public void SetPackageOwner(Package packetToAddTo)
+        internal void SetPackageOwner(Package packetToAddTo)
         {
             Package = packetToAddTo;
         }
@@ -117,7 +117,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Loads the asset from the specified binary reader
         /// </summary>
-        public virtual void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        internal virtual void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             string magic = new string(reader.ReadChars(4));
             AssetVersion = reader.ReadInt32();
@@ -128,7 +128,7 @@ namespace AlkaronEngine.Assets
         /// <summary>
         /// Saves the asset in the binary form into the binary writer.
         /// </summary>
-        public virtual void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        internal virtual void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
             if (assetSettings.ReadOnlyAssets == true)
             {

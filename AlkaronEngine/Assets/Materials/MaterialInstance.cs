@@ -97,7 +97,7 @@ namespace AlkaronEngine.Assets.Materials
             //effect.Parameters["Texture"].SetValue(MaterialInputs.DiffuseTexture.Texture);
         }
 
-        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
             base.Serialize(writer, assetSettings);
 
@@ -122,7 +122,7 @@ namespace AlkaronEngine.Assets.Materials
             writer.Write(MaterialInputs.AlphaCutoff);
         }
 
-        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             base.Deserialize(reader, assetSettings);
 

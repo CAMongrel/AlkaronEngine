@@ -13,8 +13,8 @@ namespace AlkaronEngine.Scene
     {
         private object lockObj = new object();
 
-        public BaseScene CurrentScene { get; private set; }
-        public BaseScene NextScene { get; set; }
+        public BaseScene? CurrentScene { get; private set; }
+        public BaseScene? NextScene { get; set; }
 
         public InputManager InputManager { get; private set; }
 

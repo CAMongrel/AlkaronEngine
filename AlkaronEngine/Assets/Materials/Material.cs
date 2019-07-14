@@ -27,7 +27,7 @@ namespace AlkaronEngine.Assets.Materials
             GraphicsLibrary graphicsLibrary = AlkaronCoreGame.Core.GraphicsLibrary;
         }
 
-        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             base.Deserialize(reader, assetSettings);
 
@@ -42,7 +42,7 @@ namespace AlkaronEngine.Assets.Materials
             //Effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
             base.Serialize(writer, assetSettings);
 

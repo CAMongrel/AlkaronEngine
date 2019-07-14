@@ -21,7 +21,7 @@ namespace AlkaronEngine.Assets
         }
 
         #region Load<T>
-        public T Load<T>(string assetPath) where T : Asset, new()
+        public T? Load<T>(string assetPath) where T : Asset, new()
         {
             string[] assetPathComponents = assetPath.Split('.');
             if (assetPathComponents.Length != 3)
@@ -34,7 +34,7 @@ namespace AlkaronEngine.Assets
             return Load<T>(assetPathComponents[0], assetPathComponents[1] + "." + assetPathComponents[2]);
         }
 
-        public T Load<T>(string packageName, string assetName) where T : Asset, new()
+        public T? Load<T>(string packageName, string assetName) where T : Asset, new()
 		{
 			if (packageName == null)
             {
@@ -52,7 +52,7 @@ namespace AlkaronEngine.Assets
                 return default(T);
             }
 
-            T asset = pkg.GetAsset(assetName, AssetSettings) as T;
+            T? asset = pkg.GetAsset(assetName, AssetSettings) as T;
 			if (asset == null)
             {
                 return default(T);

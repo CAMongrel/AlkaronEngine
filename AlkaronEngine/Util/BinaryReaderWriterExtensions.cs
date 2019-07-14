@@ -53,7 +53,7 @@ namespace AlkaronEngine.Util
             }
         }
 
-        public static T ReadAsset<T>(this BinaryReader reader) where T : Asset, new()
+        public static T? ReadAsset<T>(this BinaryReader reader) where T : Asset, new()
         {
             string asset_ref = reader.ReadString();
             if (string.IsNullOrWhiteSpace(asset_ref))

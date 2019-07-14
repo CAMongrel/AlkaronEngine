@@ -9,6 +9,7 @@ using AlkaronEngine.Scene;
 using AlkaronEngine.Assets;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Assets.TextureFonts;
 
 namespace AlkaronEngine
 {
@@ -30,7 +31,7 @@ namespace AlkaronEngine
 
         public SceneManager SceneManager { get; protected set; }
 
-        /*public SpriteFont DefaultFont { get; protected set; }*/
+        public TextureFont DefaultFont { get; protected set; }
 
         public string ContentDirectory { get; protected set; }
 
@@ -56,7 +57,7 @@ namespace AlkaronEngine
 
             ContentDirectory = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
-                "Content");
+                setContentFolder);
 
             if (Directory.Exists(ContentDirectory) == false)
             {
@@ -128,7 +129,16 @@ namespace AlkaronEngine
         /// </summary>
         protected virtual void LoadContent()
         {
-            //
+            DefaultFont = AssetManager.Load<TextureFont>("EngineDefaults", "DefaultFont.textureFont");
+
+            /*AssetManager.AssetSettings.ReadOnlyAssets = false;
+
+            Package pkg = PackageManager.CreatePackage("EngineDefaults", "EngineDefaults", AssetManager.AssetSettings);
+            Assets.Importers.AssetImporterSurface2D.Import(@"C:\Users\Henning\Downloads\Arial32.png", "DefaultFontSurface", "EngineDefaults",
+                AssetManager.AssetSettings, out Assets.Materials.Surface2D? surface2D);
+            Assets.Importers.AssetImporterTextureFont.Import(surface2D, @"C:\Users\Henning\Downloads\Arial32.json", "DefaultFont", "EngineDefaults",
+                AssetManager.AssetSettings, out Assets.TextureFonts.TextureFont? textureFont);
+            pkg.Save(AssetManager.AssetSettings);*/
         }
 
         /// <summary>

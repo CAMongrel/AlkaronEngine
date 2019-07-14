@@ -154,12 +154,12 @@ namespace AlkaronEngine.Assets
             }
         }
 
-        public Package(Stream str, AssetSettings assetSettings, bool isReadOnly = false)
+        internal Package(Stream str, AssetSettings assetSettings, bool isReadOnly = false)
             : this(isReadOnly)
         {
             fullFilename = null;
             IsFullyLoaded = false;
-            LoadAllAssets(assetSettings, str);
+            Open(str);
         }
 		#endregion
 		
@@ -453,7 +453,11 @@ namespace AlkaronEngine.Assets
                 }
             }
 
-			string directory = Path.GetDirectoryName(fullFilename);
+            string directory = Path.GetDirectoryName(fullFilename);
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                directory = AlkaronCoreGame.Core.ContentDirectory;
+            }
 			string tempName = Path.Combine(directory, "tempPackage.tmp");
 			if (Directory.Exists(directory) == false)
             {
@@ -474,7 +478,8 @@ namespace AlkaronEngine.Assets
 				{
 					AssetOffsetMap.Add(pair.Key, (int)writer.BaseStream.Position);
 
-					writer.Write(pair.Value.GetType().ToString());
+                    string assetType = pair.Value.GetType().ToString();
+                    writer.Write(assetType);
 					pair.Value.Serialize(writer, assetSettings);
 				}
 

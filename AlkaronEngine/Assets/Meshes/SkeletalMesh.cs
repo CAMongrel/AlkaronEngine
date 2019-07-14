@@ -493,7 +493,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Load
         /// </summary>
-        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             base.Deserialize(reader, assetSettings);
 
@@ -698,11 +698,11 @@ namespace AlkaronEngine.Assets.Meshes
         #endregion
 
         #region Save
-		/// <summary>
-		/// Save
-		/// </summary>
-		/// <param name="writer">Writer</param>
-		public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        /// <summary>
+        /// Save
+        /// </summary>
+        /// <param name="writer">Writer</param>
+        internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
 		{
             base.Serialize(writer, assetSettings);
 

@@ -118,18 +118,26 @@ namespace AlkaronEngine.Assets
             bool isResource = AlkaronCoreGame.Core.AlkaronContent.IsResource(filename);
 
             Package pkg = null;
+            Stream stream = null;
             if (isResource)
             {
-                pkg = new Package(AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename), assetSettings, true);
+                stream = AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename);
+                pkg = new Package(stream, assetSettings, true);
+                loadFully = true;
             }
             else
             {
                 pkg = new Package(filename, assetSettings);
             }
 			LoadedPackages.Add(packageName, pkg);
-            if (loadFully && isResource == false)
+            if (loadFully)
             {
-                pkg.LoadAllAssets(assetSettings);
+                if (isResource)
+                {
+                    // Reopen the stream, because it was previously closed in the Package ctor
+                    stream = AlkaronCoreGame.Core.AlkaronContent.OpenResourceStream(filename);
+                }
+                pkg.LoadAllAssets(assetSettings, stream);
             }
 
 #if IS_EDITOR

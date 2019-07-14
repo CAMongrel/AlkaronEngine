@@ -34,7 +34,7 @@ namespace AlkaronEngine.Assets.Importers
             string setAssetName,
             string setPackageName,
             AssetSettings assetSettings,
-            out Surface2D importedAsset)
+            out Surface2D? importedAsset)
         {
             importedAsset = null;
 
@@ -74,7 +74,7 @@ namespace AlkaronEngine.Assets.Importers
             string setPackageName,
             string originalInputFile,
             AssetSettings assetSettings,
-            out Surface2D importedAsset)
+            out Surface2D? importedAsset)
         {
             if (originalInputFile == null)
             {
@@ -87,7 +87,7 @@ namespace AlkaronEngine.Assets.Importers
             string assetName = setAssetName;
             string packageName = setPackageName;
 
-            Package packageToSaveIn = null;
+            Package? packageToSaveIn = null;
 
             if (string.IsNullOrWhiteSpace(assetName))
             {
@@ -131,9 +131,13 @@ namespace AlkaronEngine.Assets.Importers
             try
             {
                 // Import existing file and convert it to the new format
-                //Texture2D newTex = Texture2D.FromStream(AlkaronCoreGame.Core.GraphicsDevice, surfaceStream);
                 var fileTex = new Veldrid.ImageSharp.ImageSharpTexture(surfaceStream);
-                var newTex = fileTex.CreateDeviceTexture(assetSettings.GraphicsDevice, assetSettings.GraphicsDevice.ResourceFactory);
+                TextureUsage usage = TextureUsage.Sampled;
+                if (assetSettings.ReadOnlyAssets == false)
+                {
+                    usage = TextureUsage.Staging;
+                }
+                var newTex = fileTex.CreateTextureWithUsage(assetSettings.GraphicsDevice, assetSettings.GraphicsDevice.ResourceFactory, usage);
 
                 Surface2D surface2D = new Surface2D(newTex);
                 surface2D.OriginalFilename = originalInputFile;

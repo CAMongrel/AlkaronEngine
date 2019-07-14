@@ -74,7 +74,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Loads the static mesh from the compiled binary mesh
         /// </summary>
-        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
         {
             base.Deserialize(reader, assetSettings);
 
@@ -232,7 +232,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Saves the static mesh into its binary representation
         /// </summary>
-        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
             base.Serialize(writer, assetSettings);
 

@@ -1,14 +1,18 @@
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Veldrid;
 
 namespace AlkaronEngine.Assets.Materials
 {
-	/// <summary>
-	/// Surface 2D
-	/// </summary>
-	public class Surface2D : Asset
-	{
+    /// <summary>
+    /// Surface 2D
+    /// </summary>
+    public class Surface2D : Asset
+    {
         public Texture Texture { get; private set; }
 
         public override bool IsValid
@@ -27,26 +31,26 @@ namespace AlkaronEngine.Assets.Materials
         public int Height => IsValid ? (int)Texture.Height : 0;
 
         public Surface2D()
-		{
+        {
             Texture = null;
-		}
+        }
 
-        public Surface2D(Texture setTexture)
+        internal Surface2D(Texture setTexture)
         {
             Texture = setTexture;
         }
 
         public override void Dispose()
-		{
-			if (Texture != null)
+        {
+            if (Texture != null)
             {
                 Texture.Dispose();
             }
-        } 
+        }
 
         #region Deserialize
-        public override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
-		{
+        internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
+        {
             base.Deserialize(reader, assetSettings);
 
             uint width = reader.ReadUInt32();
@@ -62,17 +66,8 @@ namespace AlkaronEngine.Assets.Materials
 
             try
             {
-                TextureDescription textureDescription = new TextureDescription()
-                {
-                    Width = width,
-                    Height = height,
-                    MipLevels = mipLevels,
-                    Depth = 1,
-                    Format = format,
-                    SampleCount = sampleCount,
-                    Type = TextureType.Texture2D,
-                    Usage = assetSettings.ReadOnlyAssets ? TextureUsage.Sampled : TextureUsage.Staging
-                };
+                TextureDescription textureDescription = TextureDescription.Texture2D(width, height, mipLevels, 1, format,
+                    assetSettings.ReadOnlyAssets ? TextureUsage.Sampled : TextureUsage.Staging);
 
                 Texture newDXTexture = assetSettings.GraphicsDevice.ResourceFactory.CreateTexture(textureDescription);
                 if (newDXTexture != null)
@@ -89,19 +84,20 @@ namespace AlkaronEngine.Assets.Materials
                 return;
             }
 
-            uint[] mipStart = new uint[mipLevels];
-            uint[] mipSize = new uint[mipLevels];
-            uint[] mipWidth = new uint[mipLevels];
-            uint[] mipHeight = new uint[mipLevels];
+            int[] mipStart = new int[mipLevels];
+            int[] mipSize = new int[mipLevels];
+            uint mipWidth = width;
+            uint mipHeight = height;
             for (uint i = 0; i < mipLevels; i++)
             {
-                mipStart[i] = reader.ReadUInt32();
-                mipSize[i] = reader.ReadUInt32();
-                mipWidth[i] = reader.ReadUInt32();
-                mipHeight[i] = reader.ReadUInt32();
+                mipStart[i] = reader.ReadInt32();
+                mipSize[i] = reader.ReadInt32();
 
                 ReadOnlySpan<byte> mipSlice = rawData.Slice((int)mipStart[i], (int)mipSize[i]);
-                assetSettings.GraphicsDevice.UpdateTexture<byte>(Texture, mipSlice.ToArray(), 0, 0, 0, mipWidth[i], mipHeight[i], 1, i, 0);
+                assetSettings.GraphicsDevice.UpdateTexture<byte>(Texture, mipSlice.ToArray(), 0, 0, 0, mipWidth, mipHeight, 1, i, 0);
+
+                mipWidth /= 2;
+                mipHeight /= 2;
             }
         }
         #endregion
@@ -110,8 +106,8 @@ namespace AlkaronEngine.Assets.Materials
         /// <summary>
         /// 
         /// </summary>
-        public override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
-		{
+        internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
+        {
             if (Texture.Usage.HasFlag(TextureUsage.Staging) == false)
             {
                 throw new InvalidOperationException("Cannot serialize readonly texture");
@@ -119,22 +115,20 @@ namespace AlkaronEngine.Assets.Materials
 
             base.Serialize(writer, assetSettings);
 
-            /*writer.Write(Texture.Width);
+            writer.Write(Texture.Width);
 			writer.Write(Texture.Height);
             writer.Write(Texture.MipLevels);
             writer.Write((byte)Texture.Format);
             writer.Write((byte)Texture.SampleCount);
 
-            uint[] mipStart = new uint[Texture.MipLevels];
-            uint[] mipSize = new uint[Texture.MipLevels];
+            int[] mipStart = new int[Texture.MipLevels];
+            int[] mipSize = new int[Texture.MipLevels];
 
-            uint texelCount = 0;
-            uint mipWidth = Texture.Width;
-            uint mipHeight = Texture.Height;
+            int texelCount = 0;
+            int mipWidth = (int)Texture.Width;
+            int mipHeight = (int)Texture.Height;
             for (int i = 0; i < Texture.MipLevels; i++)
             {
-                Texture
-
                 mipStart[i] = texelCount;
                 mipSize[i] = (int)((float)mipWidth * (float)mipHeight *
                     GetPixelStride(Texture.Format));
@@ -144,46 +138,69 @@ namespace AlkaronEngine.Assets.Materials
                 mipWidth /= 2;
                 mipHeight /= 2;
 
-                if (IsCompressedFormat(Texture.Format))
+                if (mipWidth < 1)
                 {
-                    if (mipWidth < 4)
-                    {
-                        mipWidth = 4;
-                    }
-                    if (mipHeight < 4)
-                    {
-                        mipHeight = 4;
-                    }
+                    mipWidth = 1;
                 }
-                else
+                if (mipHeight < 1)
                 {
-                    if (mipWidth < 1)
-                    {
-                        mipWidth = 1;
-                    }
-                    if (mipHeight < 1)
-                    {
-                        mipHeight = 1;
-                    }
+                    mipHeight = 1;
                 }
             }
             byte[] data = new byte[texelCount];
 
-            for (int i = 0; i < Texture.LevelCount; i++)
+            for (int i = 0; i < Texture.MipLevels; i++)
             {
-                Texture.GetData<byte>(i, null, data, mipStart[i], mipSize[i]);
+                var mapped = assetSettings.GraphicsDevice.Map(Texture, MapMode.Read, (uint)i);
+                Marshal.Copy(mapped.Data, data, mipStart[i], mipSize[i]);
+                assetSettings.GraphicsDevice.Unmap(Texture, (uint)i);
             }
 
             writer.Write(texelCount);
             writer.Write(data);
 
-            for (int i = 0; i < Texture.LevelCount; i++)
+            for (int i = 0; i < Texture.MipLevels; i++)
             {
                 writer.Write(mipStart[i]);
                 writer.Write(mipSize[i]);
             }
-            */
+        }
+
+        private static int GetPixelStride(PixelFormat pixelFormat)
+        {
+            return 4;
         }
         #endregion
+    }
+
+    internal static class ImageSharpTextureExtension
+    { 
+        internal static unsafe Texture CreateTextureWithUsage(this Veldrid.ImageSharp.ImageSharpTexture texture, GraphicsDevice gd, ResourceFactory factory, 
+            TextureUsage usage)
+        {
+            Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
+                texture.Width, texture.Height, texture.MipLevels, 1, texture.Format, usage));
+            for (int level = 0; level < texture.MipLevels; level++)
+            {
+                Image<Rgba32> image = texture.Images[level];
+                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
+                {
+                    gd.UpdateTexture(
+                        tex,
+                        (IntPtr)pin,
+                        (uint)(texture.PixelSizeInBytes * image.Width * image.Height),
+                        0,
+                        0,
+                        0,
+                        (uint)image.Width,
+                        (uint)image.Height,
+                        1,
+                        (uint)level,
+                        0);
+                }
+            }
+
+            return tex;
+        }
     }
 }
