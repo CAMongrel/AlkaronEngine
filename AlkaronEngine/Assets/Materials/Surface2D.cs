@@ -15,6 +15,8 @@ namespace AlkaronEngine.Assets.Materials
     {
         public Texture Texture { get; private set; }
 
+        public TextureView View { get; private set; }
+
         public override bool IsValid
         {
             get
@@ -35,9 +37,14 @@ namespace AlkaronEngine.Assets.Materials
             Texture = null;
         }
 
-        internal Surface2D(Texture setTexture)
+        internal Surface2D(Texture setTexture, AssetSettings assetSettings)
         {
             Texture = setTexture;
+            if (Texture.Usage == TextureUsage.Sampled ||
+                Texture.Usage == TextureUsage.Storage)
+            {
+                View = assetSettings.GraphicsDevice.ResourceFactory.CreateTextureView(Texture);
+            }
         }
 
         public override void Dispose()
@@ -76,6 +83,12 @@ namespace AlkaronEngine.Assets.Materials
                     Texture?.Dispose();
 
                     Texture = newDXTexture;
+                }
+
+                if (Texture.Usage == TextureUsage.Sampled ||
+                    Texture.Usage == TextureUsage.Storage)
+                {
+                    View = assetSettings.GraphicsDevice.ResourceFactory.CreateTextureView(Texture);
                 }
             }
             catch (Exception ex)

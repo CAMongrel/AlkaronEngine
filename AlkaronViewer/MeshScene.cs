@@ -12,7 +12,6 @@ using Veldrid;
 
 namespace AlkaronViewer
 {
-
     class MeshScene : BaseScene
     {
         private GltfModelManager modelManager;
@@ -176,6 +175,15 @@ namespace AlkaronViewer
             image.Width = 200;
             image.Height = 200;
             window.AddComponent(image);
+
+            UILabel label = new UILabel("Hello World!");
+            label.X = 0;
+            label.Y = 0;
+            label.Width = 200;
+            label.Height = 20;
+            label.TextAlignHorizontal = UITextAlignHorizontal.Left;
+            label.ForegroundColor = RgbaFloat.Yellow;
+            window.AddComponent(label);
         }
 
         /*public void AddStaticMesh(StaticMesh mesh)

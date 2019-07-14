@@ -1,4 +1,5 @@
-﻿using AlkaronEngine.Graphics3D;
+﻿using AlkaronEngine.Assets.TextureFonts;
+using AlkaronEngine.Graphics3D;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -10,14 +11,11 @@ namespace AlkaronEngine.Graphics2D
 {
     internal static class TextRenderer
     {
-        private static DeviceBuffer vertexBuffer;
-        private static DeviceBuffer indexBuffer;
         private static DeviceBuffer worldMatrixBuffer;
         private static DeviceBuffer colorTintBuffer;
         private static Pipeline graphicsPipeline;
         private static ResourceLayout graphicsLayout;
         private static ResourceSet graphicsResourceSet;
-        private static TextureView targetTextureView;
 
         internal static void Initialize(ResourceFactory factory)
         {
@@ -40,8 +38,6 @@ namespace AlkaronEngine.Graphics2D
                 },
                 shaders);
 
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(16 * sizeof(float), BufferUsage.VertexBuffer));
-            indexBuffer = factory.CreateBuffer(new BufferDescription(6 * sizeof(ushort), BufferUsage.IndexBuffer));
             worldMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             colorTintBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
@@ -62,47 +58,102 @@ namespace AlkaronEngine.Graphics2D
 
             graphicsPipeline = factory.CreateGraphicsPipeline(ref fullScreenQuadDesc);
 
-            ScreenQuadVertex[] vertices = new ScreenQuadVertex[4];
-            vertices[0] = new ScreenQuadVertex { Position = new Vector2(0, 0), TexCoord = new Vector2(0, 0) };
-            vertices[1] = new ScreenQuadVertex { Position = new Vector2(1, 0), TexCoord = new Vector2(1, 0) };
-            vertices[2] = new ScreenQuadVertex { Position = new Vector2(0, 1), TexCoord = new Vector2(0, 1) };
-            vertices[3] = new ScreenQuadVertex { Position = new Vector2(1, 1), TexCoord = new Vector2(1, 1) };
-
-            ushort[] indices = { 0, 1, 2, 1, 3, 2 };
-
-            AlkaronCoreGame.Core.GraphicsDevice.UpdateBuffer<ScreenQuadVertex>(vertexBuffer, 0, vertices);
-            AlkaronCoreGame.Core.GraphicsDevice.UpdateBuffer<ushort>(indexBuffer, 0, indices);
             AlkaronCoreGame.Core.GraphicsDevice.UpdateBuffer(worldMatrixBuffer, 0, Matrix4x4.Identity);
             AlkaronCoreGame.Core.GraphicsDevice.UpdateBuffer(colorTintBuffer, 0, RgbaFloat.White);
         }
 
-        private static Vector2 ConvertScreenPosToDevicePos(Vector2 vec)
+        private static Vector2 ConvertScreenPosToDevicePos(float x, float y)
         {
             float width = AlkaronCoreGame.Core.Window.Width;
             float height = AlkaronCoreGame.Core.Window.Height;
 
             Vector2 res;
-            res.X = (vec.X / width);
-            res.Y = (vec.Y / height);
+            res.X = (x / width);
+            res.Y = (y / height);
 
             return res;
         }
 
-        private static Vector2 ConvertScreenScaleToDeviceScale(Vector2 vec)
+        private static Vector2 ConvertScreenScaleToDeviceScale(float x, float y)
         {
             float width = AlkaronCoreGame.Core.Window.Width;
             float height = AlkaronCoreGame.Core.Window.Height;
 
             Vector2 res;
-            res.X = (vec.X / width);
-            res.Y = (vec.Y / height);
+            res.X = (x / width);
+            res.Y = (y / height);
 
             return res;
         }
 
-        internal static void RenderText(RenderContext renderContext, string text, float x, float y, RgbaFloat color)
+        internal static void RenderText(RenderContext renderContext, string text, float x, float y, RgbaFloat color, TextureFont font)
         {
+            ScreenQuadVertex[] vertices = new ScreenQuadVertex[text.Length * 6];
 
+            float xPos = x;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var def = font.CharacterDefinitionForGlyph(text[i]);
+                font.TexCoordsForCharacterDefinition(def, out Vector2 texCoordStart, out Vector2 texCoordSize);
+
+                Vector2 screenSpacePosition = ConvertScreenPosToDevicePos(xPos - def.OriginX, y - def.OriginY + (font.FontDefinition.Size / 2));
+                Vector2 screenSpaceSize = ConvertScreenScaleToDeviceScale(def.Width, def.Height);
+
+                xPos += def.Advance;                
+
+                vertices[i * 6 + 0] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition,
+                    TexCoord = texCoordStart
+                };
+                vertices[i * 6 + 1] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition + new Vector2(screenSpaceSize.X, 0),
+                    TexCoord = texCoordStart + new Vector2(texCoordSize.X, 0)
+                };
+                vertices[i * 6 + 2] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition + new Vector2(0, screenSpaceSize.Y),
+                    TexCoord = texCoordStart + new Vector2(0, texCoordSize.Y)
+                };
+                vertices[i * 6 + 3] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition + new Vector2(screenSpaceSize.X, 0),
+                    TexCoord = texCoordStart + new Vector2(texCoordSize.X, 0)
+                };
+                vertices[i * 6 + 4] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition + screenSpaceSize,
+                    TexCoord = texCoordStart + texCoordSize
+                };
+                vertices[i * 6 + 5] = new ScreenQuadVertex()
+                {
+                    Position = screenSpacePosition + new Vector2(0, screenSpaceSize.Y),
+                    TexCoord = texCoordStart + new Vector2(0, texCoordSize.Y)
+                };
+            }
+
+            ResourceFactory factory = renderContext.GraphicsDevice.ResourceFactory;
+            graphicsResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                graphicsLayout,
+                worldMatrixBuffer,
+                font.Surface.View,
+                AlkaronCoreGame.Core.GraphicsDevice.PointSampler,
+                colorTintBuffer));
+
+            renderContext.CommandList.SetGraphicsResourceSet(0, graphicsResourceSet);
+
+            DeviceBuffer vertexBuffer = factory.CreateBuffer(
+                new BufferDescription((uint)(vertices.Length * 4 * sizeof(float)), BufferUsage.VertexBuffer));
+            AlkaronCoreGame.Core.GraphicsDevice.UpdateBuffer<ScreenQuadVertex>(vertexBuffer, 0, vertices);
+
+            renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, Matrix4x4.Identity);
+            renderContext.CommandList.UpdateBuffer(colorTintBuffer, 0, color);
+
+            renderContext.CommandList.SetPipeline(graphicsPipeline);
+            renderContext.CommandList.SetVertexBuffer(0, vertexBuffer);
+
+            renderContext.CommandList.Draw((uint)vertices.Length);
         }
     }
 }

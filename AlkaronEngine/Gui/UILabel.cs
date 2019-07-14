@@ -1,4 +1,8 @@
-﻿/*using System.Numerics;
+﻿using AlkaronEngine.Assets.TextureFonts;
+using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -6,19 +10,21 @@ namespace AlkaronEngine.Gui
     {
         #region Properties
         public string Text { get; set; }
-        //public TextureFont Font { get; set; }
+        public TextureFont Font { get; set; }
 
-        public bool AutoScaleFont { get; set; }
+        public bool AutoScaleFont { get; set; } = false;
+
+        public RgbaFloat ForegroundColor { get; set; } = RgbaFloat.White;
 
         /// <summary>
         /// Gets or sets the horizontal text alignment.
         /// </summary>
-        public UITextAlignHorizontal TextAlignHorizontal { get; set; }
+        public UITextAlignHorizontal TextAlignHorizontal { get; set; } = UITextAlignHorizontal.Center;
 
         /// <summary>
         /// Gets or sets the vertical text alignment.
         /// </summary>
-        public UITextAlignVertical TextAlignVertical { get; set; }
+        public UITextAlignVertical TextAlignVertical { get; set; } = UITextAlignVertical.Center;
 
         public override Vector2 PreferredSize
         {
@@ -40,11 +46,10 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Constructor
-        public UILabel(IRenderConfiguration renderConfig, string setText, TextureFont setFont = null)
-           : base(renderConfig)
+        public UILabel(string setText, TextureFont? setFont = null)
         {
             Text = setText;
-            Font = setFont ?? renderConfig.PrimitiveRenderManager.EngineFont;
+            Font = setFont ?? AlkaronCoreGame.Core.DefaultFont;
             TextAlignHorizontal = UITextAlignHorizontal.Center;
             TextAlignVertical = UITextAlignVertical.Center;
             AutoScaleFont = false;
@@ -52,13 +57,19 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Render
-        protected override void Draw()
+        protected override void Draw(RenderContext renderContext)
         {
-            base.Draw();
+            base.Draw(renderContext);
+
+            TextureFont fontToUse = this.Font;
+            if (fontToUse == null)
+            {
+                return;
+            }
 
             Vector2 screenPos = ScreenPosition;
 
-            Color col = Color.FromNonPremultiplied(new Vector4(Vector3.One, CompositeAlpha));
+            RgbaFloat col = new RgbaFloat(new Vector4(ForegroundColor.R, ForegroundColor.G, ForegroundColor.B, CompositeAlpha));
 
             Vector2 fullSize = (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
             float textScale = 1.0f;
@@ -100,9 +111,7 @@ namespace AlkaronEngine.Gui
                     break;
             }
 
-            FontRenderer.DrawStringDirect(renderConfig, Font, Text, position.X, position.Y, col, textScale, CompositeRotation);
-
-            //
+            TextRenderer.RenderText(renderContext, Text, position.X, position.Y, col, fontToUse);
         }
         #endregion
 
@@ -114,4 +123,3 @@ namespace AlkaronEngine.Gui
         #endregion
     }
 }
-*/

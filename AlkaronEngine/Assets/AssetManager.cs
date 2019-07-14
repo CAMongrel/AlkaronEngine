@@ -8,7 +8,7 @@ namespace AlkaronEngine.Assets
     public class AssetSettings
     {
         public GraphicsDevice GraphicsDevice = null;
-        public bool ReadOnlyAssets = false;
+        public bool ReadOnlyAssets = true;
     }
 
 	public class AssetManager

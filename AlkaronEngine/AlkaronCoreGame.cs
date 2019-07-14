@@ -96,15 +96,7 @@ namespace AlkaronEngine
             // BuildPackageMap depends on it.
             PackageManager.BuildPackageMap();
 
-            /*Graphics2D.Texture.SingleWhite = new Graphics2D.Texture(SceneManager, 1, 1, new byte[] { 255, 255, 255, 255 });
-
-            DefaultFont = Content.Load<SpriteFont>("DefaultFont");
-            SceneManager.PrimitiveRenderManager.EngineFont = DefaultFont;
-
-            RasterizerState rasterizerState = new RasterizerState();
-            rasterizerState.CullMode = CullMode.CullClockwiseFace;
-
-            GraphicsDevice.RasterizerState = rasterizerState;*/
+            TextRenderer.Initialize(GraphicsDevice.ResourceFactory);
         }
 
         public void Dispose()
@@ -134,9 +126,9 @@ namespace AlkaronEngine
             /*AssetManager.AssetSettings.ReadOnlyAssets = false;
 
             Package pkg = PackageManager.CreatePackage("EngineDefaults", "EngineDefaults", AssetManager.AssetSettings);
-            Assets.Importers.AssetImporterSurface2D.Import(@"C:\Users\Henning\Downloads\Arial32.png", "DefaultFontSurface", "EngineDefaults",
+            Assets.Importers.AssetImporterSurface2D.Import(@"C:\Users\Henning\Downloads\Consolas20.png", "DefaultFontSurface", "EngineDefaults",
                 AssetManager.AssetSettings, out Assets.Materials.Surface2D? surface2D);
-            Assets.Importers.AssetImporterTextureFont.Import(surface2D, @"C:\Users\Henning\Downloads\Arial32.json", "DefaultFont", "EngineDefaults",
+            Assets.Importers.AssetImporterTextureFont.Import(surface2D, @"C:\Users\Henning\Downloads\Consolas20.json", "DefaultFont", "EngineDefaults",
                 AssetManager.AssetSettings, out Assets.TextureFonts.TextureFont? textureFont);
             pkg.Save(AssetManager.AssetSettings);*/
         }

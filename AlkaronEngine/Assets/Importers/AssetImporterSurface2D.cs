@@ -139,7 +139,7 @@ namespace AlkaronEngine.Assets.Importers
                 }
                 var newTex = fileTex.CreateTextureWithUsage(assetSettings.GraphicsDevice, assetSettings.GraphicsDevice.ResourceFactory, usage);
 
-                Surface2D surface2D = new Surface2D(newTex);
+                Surface2D surface2D = new Surface2D(newTex, assetSettings);
                 surface2D.OriginalFilename = originalInputFile;
                 surface2D.Name = assetName;
 

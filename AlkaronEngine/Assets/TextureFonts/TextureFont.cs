@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text;
 
 namespace AlkaronEngine.Assets.TextureFonts
@@ -26,6 +27,22 @@ namespace AlkaronEngine.Assets.TextureFonts
         {
             FontDefinition = setFontDefinition;
             Surface = setSurface;
+        }
+
+        internal CharacterDefinition CharacterDefinitionForGlyph(char c)
+        {
+            if (FontDefinition.Characters.TryGetValue(c.ToString(), out var def) == false)
+            {
+                return null;
+            }
+
+            return def;
+        }
+
+        internal void TexCoordsForCharacterDefinition(CharacterDefinition def, out Vector2 startCoords, out Vector2 coordsSize)
+        {
+            startCoords = new Vector2((float)def.X / (float)FontDefinition.Width, (float)def.Y / (float)FontDefinition.Height);
+            coordsSize = new Vector2((float)def.Width / (float)FontDefinition.Width, (float)def.Height / (float)FontDefinition.Height);
         }
 
         internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
@@ -51,6 +68,11 @@ namespace AlkaronEngine.Assets.TextureFonts
 
             string json = reader.ReadString();
             FontDefinition = JsonConvert.DeserializeObject<TextureFontDefinition>(json);
+        }
+
+        internal Vector2 MeasureString(string text)
+        {
+            return Vector2.One;
         }
     }
 }
