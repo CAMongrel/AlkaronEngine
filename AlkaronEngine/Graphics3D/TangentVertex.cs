@@ -126,11 +126,11 @@ namespace AlkaronEngine.Graphics
         {
             VertexLayoutDescription result = new VertexLayoutDescription(new VertexElementDescription[]
             {
-                new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position),
+                new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
                 new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate),
-                new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
-                new VertexElementDescription("Tangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
-                new VertexElementDescription("Bitangent", VertexElementFormat.Float3, VertexElementSemantic.Normal),
+                new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
+                new VertexElementDescription("Tangent", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
+                new VertexElementDescription("Bitangent", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
             });
 
             return result;

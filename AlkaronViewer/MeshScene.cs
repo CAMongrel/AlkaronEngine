@@ -1,12 +1,15 @@
 using AlkaronEngine.Actors;
 using AlkaronEngine.Assets.Importers;
 using AlkaronEngine.Assets.Materials;
+using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Components;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
 using AlkaronEngine.Scene;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using Veldrid;
 
@@ -24,7 +27,6 @@ namespace AlkaronViewer
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 baseModelFolder = @"D:\Projekte\Henning\GitHub\glTF-Sample-Models\2.0\";
-                baseModelFolder = @"D:\Temp\";
             }
             else
             {
@@ -95,6 +97,25 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
+            /*StaticMesh box = StaticMesh.FromVertices(new Vector3[] {
+                new Vector3(-1, -1, -1),
+                new Vector3( 1, -1, -1),
+                new Vector3(-1,  1, -1),
+
+                new Vector3( 1, -1, -1),
+                new Vector3( 1,  1, -1),
+                new Vector3(-1,  1, -1),
+
+                new Vector3( 1, -1,  1),
+                new Vector3(-1, -1,  1),
+                new Vector3(-1,  1,  1),
+
+                new Vector3( 1, -1,  1),
+                new Vector3(-1,  1,  1),
+                new Vector3( 1,  1,  1),
+            }, MainGame.Instance.GraphicsDevice);
+            AddStaticMesh(box);*/
+
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SkinnedEffect.dx11.mgfxo", "SkinnedEffect", "EngineMaterials", out var material);
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SpriteEffect.dx11.mgfxo", "SpriteEffect", "EngineMaterials", out material);
 
@@ -104,7 +125,7 @@ namespace AlkaronViewer
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
             //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
-            //PresentModel("Monster", false, GltfModelEntryType.Base);
+            PresentModel("Monster", false, GltfModelEntryType.Base);
             
             /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
             var meshes = package.GetAssetsByType("StaticMesh");
@@ -120,7 +141,7 @@ namespace AlkaronViewer
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
         {
-            /*string file = modelManager.GetModelPath(name, type);
+            string file = modelManager.GetModelPath(name, type);
 
             string assetName = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
 
@@ -131,11 +152,11 @@ namespace AlkaronViewer
             }
             else
             {
-                /*AssetImporterGltfMesh.Import(file, assetName, assetName, (obj) =>
+                AssetImporterGltfMesh.Import(file, assetName, assetName, true, (obj) =>
                 {
                     Console.WriteLine("Import state: " + obj.State);
-                }, out importedAssets);*/
-            /*}
+                }, MainGame.Instance.AssetManager.AssetSettings, out importedAssets);
+            }
 
             for (int i = 0; i < importedAssets.Count; i++)
             {
@@ -145,9 +166,8 @@ namespace AlkaronViewer
                 }
             }
 
-            var package = MainGame.Instance.PackageManager.LoadPackage(assetName, false);
-            package.Save();
-            */
+            /*var package = MainGame.Instance.PackageManager.LoadPackage(assetName, false);
+            package.Save();*/
         }
 
         protected override void InitUI()
@@ -155,7 +175,6 @@ namespace AlkaronViewer
             base.InitUI();
 
             UIWindow window = new UIWindow();
-            window.BackgroundColor = RgbaFloat.Red;
             window.Show();
 
             AssetImporterSurface2D.Import("d:\\temp\\image.jpg", null, null, MainGame.Instance.AssetManager.AssetSettings, out var tex);
@@ -186,7 +205,7 @@ namespace AlkaronViewer
             window.AddComponent(label);
         }
 
-        /*public void AddStaticMesh(StaticMesh mesh)
+        public void AddStaticMesh(StaticMesh mesh)
         {
             if (mesh == null)
             {
@@ -197,6 +216,6 @@ namespace AlkaronViewer
             ((StaticMeshActor)focusActor).StaticMeshComponent.AddStaticMesh(mesh);
 
             SceneGraph.AddActor(focusActor);
-        }*/
+        }
     }
 }

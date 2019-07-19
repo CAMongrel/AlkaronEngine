@@ -19,7 +19,7 @@ namespace AlkaronEngine.Components
 
         public bool IsDirty { get; protected set; }
 
-        protected BaseRenderProxy[] renderProxies;
+        internal BaseRenderProxy[] renderProxies;
 
         public BaseComponent(Vector3 setCenter)
         {
@@ -44,7 +44,7 @@ namespace AlkaronEngine.Components
             IsDirty = true;
         }
 
-        public virtual IEnumerable<BaseRenderProxy> GetRenderProxies()
+        internal virtual IEnumerable<BaseRenderProxy> GetRenderProxies()
         {
             return renderProxies;
         }

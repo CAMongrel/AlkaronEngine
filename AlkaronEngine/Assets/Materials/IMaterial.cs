@@ -7,7 +7,7 @@ namespace AlkaronEngine.Assets.Materials
     {
         bool RequiresOrderingBackToFront { get; set; }
 
-        void ApplyParameters(Matrix4x4 worldViewProjectio);
-        void SetupEffectForRenderPass(RenderPass renderPass);
+        void ApplyParameters(RenderContext renderContext, Matrix4x4 worldViewProjectio);
+        void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass);
     }
 }

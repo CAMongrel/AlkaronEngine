@@ -1,4 +1,5 @@
 using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics3D;
 using System;
 using System.IO;
 using System.Numerics;
@@ -127,7 +128,7 @@ namespace AlkaronEngine.Assets.Meshes
                 }
             }
 
-            // Create XNA buffers and fill them
+            // Create device buffers and fill them
             try
             {
                 BufferDescription vertexBufferDesc = new BufferDescription((uint)(TangentVertex.SizeInBytes * objectVertices.Length), BufferUsage.VertexBuffer);
@@ -213,7 +214,7 @@ namespace AlkaronEngine.Assets.Meshes
             BufferDescription vertexBufferDesc = new BufferDescription((uint)(TangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
             mesh.vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
 
-            BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(int) * mesh.objectIndices.Length), BufferUsage.IndexBuffer);
+            BufferDescription indexBufferDesc = new BufferDescription((uint)(sizeof(uint) * mesh.objectIndices.Length), BufferUsage.IndexBuffer);
             mesh.indexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(indexBufferDesc);
 
             graphicsDevice.UpdateBuffer(mesh.vertexBuffer, 0, mesh.objectVertices);
@@ -429,10 +430,10 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Sets the vertex and index data on the device
         /// </summary>
-        public virtual void SetVertexData()
+        public virtual void SetVertexData(RenderContext renderContext)
         {
-            //AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
-            //AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            renderContext.CommandList.SetVertexBuffer(0, vertexBuffer);
+            renderContext.CommandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt32);
         }
         #endregion
 
@@ -440,12 +441,11 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Renders the mesh transformed by the world matrix
         /// </summary>
-        public virtual void Render()
+        public virtual void Render(RenderContext renderContext)
         {
-            SetVertexData();
+            SetVertexData(renderContext);
 
-            //AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-            //    0, 0, NumberOfFaces);
+            renderContext.CommandList.DrawIndexed((uint)objectIndices.Length);
         }
         #endregion
 

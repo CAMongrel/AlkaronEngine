@@ -5,15 +5,20 @@ using System.Numerics;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
-    public class StaticMeshRenderProxy : BaseRenderProxy
+    internal class StaticMeshRenderProxy : BaseRenderProxy
     {
         public StaticMesh StaticMesh { get; private set; }
 
         public StaticMeshRenderProxy(StaticMesh setStaticMesh)
            : base()
         {
+            Type = RenderProxyType.SkeletalMesh;
             StaticMesh = setStaticMesh;
             Material = StaticMesh.Material;
+            if (Material == null)
+            {
+                Material = new Material();
+            }
         }
 
         public override void Render(RenderContext renderContext, RenderManager renderManager, IMaterial materialToUse)
@@ -26,8 +31,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             base.Render(renderContext, renderManager, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            //Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
-            //materialToUse.ApplyParameters(worldViewProj);
+            Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
+            materialToUse.ApplyParameters(renderContext, worldViewProj);
             Performance.EndAppendAggreate("Setup");
 
             /*if (StaticMesh.DiffuseTexture != null)
@@ -39,7 +44,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }*/
 
             Performance.StartAppendAggreate("Render Mesh");
-            StaticMesh.Render();
+            StaticMesh.Render(renderContext);
             Performance.EndAppendAggreate("Render Mesh");
         }
     }

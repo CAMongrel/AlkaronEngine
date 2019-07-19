@@ -57,9 +57,9 @@ namespace AlkaronEngine.Components
             return true;
         }
 
-        public override bool PointerMoved(Vector2 position)
+        public override bool PointerMoved(Vector2 position, double deltaTime)
         {
-            if (base.PointerMoved(position))
+            if (base.PointerMoved(position, deltaTime))
             {
                 return true;
             }
@@ -83,9 +83,9 @@ namespace AlkaronEngine.Components
             return base.PointerUp(position, pointerType);
         }
 
-        public override bool PointerWheelChanged(Vector2 position)
+        public override bool PointerWheelChanged(Vector2 position, double deltaTime)
         {
-            if (base.PointerWheelChanged(position))
+            if (base.PointerWheelChanged(position, deltaTime))
             {
                 return true;
             }

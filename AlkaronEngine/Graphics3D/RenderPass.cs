@@ -53,7 +53,7 @@ namespace AlkaronEngine.Graphics3D
             return 0;
         }
 
-        public void AddProxy(BaseRenderProxy proxy)
+        internal void AddProxy(BaseRenderProxy proxy)
         {
             if (PerformDepthSorting == false)
             {
@@ -101,7 +101,7 @@ namespace AlkaronEngine.Graphics3D
             Performance.PushAggregate("SetVertexBuffer");
             Performance.PushAggregate("DrawPrimitives");
 
-            Material.SetupEffectForRenderPass(this);
+            Material.SetupMaterialForRenderPass(renderContext, this);
 
             int renderedProxies = 0;
             for (int i = 0; i < proxies.Count; i++)

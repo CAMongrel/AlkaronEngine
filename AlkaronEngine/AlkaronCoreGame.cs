@@ -10,15 +10,10 @@ using AlkaronEngine.Assets;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Assets.TextureFonts;
+using AlkaronEngine.Graphics3D;
 
 namespace AlkaronEngine
 {
-    public enum GraphicsLibrary
-    {
-        DirectX11,
-        OpenGL
-    }
-
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
@@ -41,13 +36,7 @@ namespace AlkaronEngine
 
         public AlkaronContentManager AlkaronContent { get; private set; }
 
-        public GraphicsLibrary GraphicsLibrary
-        {
-            get
-            {
-                return GraphicsLibrary.OpenGL;            
-            } 
-        }
+        internal ShaderManager ShaderManager { get; private set; }
 
         public AlkaronCoreGame(int setWidth = 1280, int setHeight = 720,
                                string setContentFolder = "Content",
@@ -95,6 +84,9 @@ namespace AlkaronEngine
             // "AlkaronContent" must be initialized before calling this, because
             // BuildPackageMap depends on it.
             PackageManager.BuildPackageMap();
+
+            ShaderManager = new ShaderManager();
+            ShaderManager.Initialize();
 
             TextRenderer.Initialize(GraphicsDevice.ResourceFactory);
         }

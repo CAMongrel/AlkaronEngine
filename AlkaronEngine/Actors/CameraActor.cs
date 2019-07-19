@@ -25,14 +25,14 @@ namespace AlkaronEngine.Actors
             return CameraComponent?.PointerUp(position, pointerType) ?? false;
         }
 
-        public virtual bool PointerMoved(Vector2 position)
+        public virtual bool PointerMoved(Vector2 position, double deltaTime)
         {
-            return CameraComponent?.PointerMoved(position) ?? false;
+            return CameraComponent?.PointerMoved(position, deltaTime) ?? false;
         }
 
-        public virtual bool PointerWheelChanged(Vector2 position)
+        public virtual bool PointerWheelChanged(Vector2 position, double deltaTime)
         {
-            return CameraComponent?.PointerWheelChanged(position) ?? false;
+            return CameraComponent?.PointerWheelChanged(position, deltaTime) ?? false;
         }
 
         public virtual bool KeyPressed(Key key)

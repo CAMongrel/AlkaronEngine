@@ -5,7 +5,13 @@ using Veldrid.Utilities;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
-    public abstract class BaseRenderProxy
+    internal enum RenderProxyType
+    {
+        StaticMesh,
+        SkeletalMesh
+    }
+    
+    internal abstract class BaseRenderProxy
     {
         /// <summary>
         /// Lock object for cross-thread communication. Every action that 
@@ -17,6 +23,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         public IMaterial Material { get; set; }
         public Matrix4x4 WorldMatrix { get; set; }
         public BoundingBox BoundingBox { get; set; }
+
+        public RenderProxyType Type { get; protected set; }
 
         public BaseRenderProxy()
         {

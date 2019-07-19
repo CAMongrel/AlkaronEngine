@@ -2,11 +2,11 @@ using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
 using glTFLoader.Schema;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace AlkaronEngine.Assets.Importers
@@ -27,6 +27,7 @@ namespace AlkaronEngine.Assets.Importers
             internal List<Asset> ImportedAssets = new List<Asset>();
             internal bool ImportStaticMeshOnly;
             internal bool ImportAsSkeletalMesh;
+            internal AssetSettings AssetSettings;
 
             internal Gltf Model;
             internal List<byte[]> RawBuffers = new List<byte[]>();
@@ -41,6 +42,7 @@ namespace AlkaronEngine.Assets.Importers
             string setPackageName,
             bool importStaticMeshOnly,
             Action<AssetImporterGltfMeshProgress> progressCallback,
+            AssetSettings assetSettings,
             out List<Asset> importedAssets)
         {
             importedAssets = new List<Asset>();
@@ -75,17 +77,20 @@ namespace AlkaronEngine.Assets.Importers
             context.BaseFolder = Path.GetDirectoryName(fullFilename);
             context.ImportStaticMeshOnly = importStaticMeshOnly;
             context.ImportAsSkeletalMesh = !context.ImportStaticMeshOnly;
+            context.AssetSettings = assetSettings;
 
             string packageName = setPackageName;
 
             if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
             {
-                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false);
+                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false, assetSettings);
             }
             else
             {
-                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(packageName,
-                    Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName));
+                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(
+                    packageName,
+                    Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName), 
+                    assetSettings);
             }
 
             if (context.PackageToSaveIn == null)
@@ -100,6 +105,8 @@ namespace AlkaronEngine.Assets.Importers
                     extension == ".glb")
                 {
                     ImportGLTFFile(context); //fullFilename, assetName, packageToSaveIn, importedAssets);
+
+                    importedAssets = context.ImportedAssets;
                 }
                 else
                 {
@@ -167,39 +174,39 @@ namespace AlkaronEngine.Assets.Importers
                 {
                     var node = context.Model.Nodes[context.Model.Scenes[i].Nodes[j]];
 
-                    LoadNode(context, node, Matrix.Identity);
+                    LoadNode(context, node, Matrix4x4.Identity);
                 }
             }
         }
 
-        private static Matrix GetWorldMatrix(Node node)
+        private static Matrix4x4 GetWorldMatrix(Node node)
         {
             if (node.Matrix != null)
             {
-                return new Matrix(node.Matrix[ 0], node.Matrix[ 1], node.Matrix[ 2], node.Matrix[ 3],
-                                  node.Matrix[ 4], node.Matrix[ 5], node.Matrix[ 6], node.Matrix[ 7],
-                                  node.Matrix[ 8], node.Matrix[ 9], node.Matrix[10], node.Matrix[11],
-                                  node.Matrix[12], node.Matrix[13], node.Matrix[14], node.Matrix[15]);
+                return new Matrix4x4(node.Matrix[ 0], node.Matrix[ 1], node.Matrix[ 2], node.Matrix[ 3],
+                                     node.Matrix[ 4], node.Matrix[ 5], node.Matrix[ 6], node.Matrix[ 7],
+                                     node.Matrix[ 8], node.Matrix[ 9], node.Matrix[10], node.Matrix[11],
+                                     node.Matrix[12], node.Matrix[13], node.Matrix[14], node.Matrix[15]);
             }
             else
             {
-                Matrix resultMatrix = Matrix.Identity;
+                Matrix4x4 resultMatrix = Matrix4x4.Identity;
 
                 if (node.Translation != null)
                 {
-                    Matrix translationMat = Matrix.CreateTranslation(node.Translation[0], node.Translation[1], node.Translation[2]);
+                    Matrix4x4 translationMat = Matrix4x4.CreateTranslation(node.Translation[0], node.Translation[1], node.Translation[2]);
                     resultMatrix *= translationMat;
                 }
 
                 if (node.Rotation != null)
                 {
-                    Matrix rotationMat = Matrix.CreateFromQuaternion(new Quaternion(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]));
+                    Matrix4x4 rotationMat = Matrix4x4.CreateFromQuaternion(new Quaternion(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]));
                     resultMatrix *= rotationMat;
                 }
 
                 if (node.Scale != null)
                 {
-                    Matrix scaleMat = Matrix.CreateScale(node.Scale[0], node.Scale[1], node.Scale[2]);
+                    Matrix4x4 scaleMat = Matrix4x4.CreateScale(node.Scale[0], node.Scale[1], node.Scale[2]);
                     resultMatrix *= scaleMat;
                 }
 
@@ -207,9 +214,9 @@ namespace AlkaronEngine.Assets.Importers
             }
         }
 
-        private static void LoadNode(AssetImporterGltfMeshContext context, Node node, Matrix parentMatrix)
+        private static void LoadNode(AssetImporterGltfMeshContext context, Node node, Matrix4x4 parentMatrix)
         {
-            Matrix worldMatrix = parentMatrix * GetWorldMatrix(node);
+            Matrix4x4 worldMatrix = parentMatrix * GetWorldMatrix(node);
 
             if (node.Camera.HasValue)
             {
@@ -218,9 +225,19 @@ namespace AlkaronEngine.Assets.Importers
             {
                 LoadMesh(context, node.Mesh.Value, worldMatrix);
             }
+            else
+            {
+                if (node.Children != null)
+                {
+                    for (int i = 0; i < node.Children.Length; i++)
+                    {
+                        LoadNode(context, context.Model.Nodes[node.Children[i]], worldMatrix);
+                    }
+                }
+            }
         }
 
-        private static void LoadCamera(AssetImporterGltfMeshContext context, int cameraIndex, Matrix worldMatrix)
+        private static void LoadCamera(AssetImporterGltfMeshContext context, int cameraIndex, Matrix4x4 worldMatrix)
         {
             var camera = context.Model.Cameras[cameraIndex];
         }
@@ -268,7 +285,8 @@ namespace AlkaronEngine.Assets.Importers
                 {                    
                     string surfaceAssetName = GetImageAssetName(img, imageIndex, context.FullFilename);
 
-                    AssetImporterSurface2D.Import(str, surfaceAssetName, context.PackageToSaveIn.PackageName, context.FullFilename, out Surface2D surface);
+                    AssetImporterSurface2D.Import(str, surfaceAssetName, context.PackageToSaveIn.PackageName, context.FullFilename, 
+                        context.AssetSettings, out Surface2D surface);
                     if (surface != null)
                     {
                         context.ImportedAssets.Add(surface);
@@ -285,7 +303,7 @@ namespace AlkaronEngine.Assets.Importers
             }
         }
 
-        private static void LoadMesh(AssetImporterGltfMeshContext context, int meshIndex, Matrix worldMatrix)
+        private static void LoadMesh(AssetImporterGltfMeshContext context, int meshIndex, Matrix4x4 worldMatrix)
         {
             Mesh mesh = context.Model.Meshes[meshIndex];
 
@@ -383,7 +401,7 @@ namespace AlkaronEngine.Assets.Importers
                         vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
                         if (normalsSpan != null)
                         {
-                            vertices[v].BiTangent = Vector3.Cross(normalsSpan[v], vertices[v].Tangent) * tangentSpan[v].W;
+                            vertices[v].Bitangent = Vector3.Cross(normalsSpan[v], vertices[v].Tangent) * tangentSpan[v].W;
                         }
                     }
                 }
@@ -392,7 +410,7 @@ namespace AlkaronEngine.Assets.Importers
 
                 if (prim.Indices == null)
                 {
-                    staticMesh = StaticMesh.FromVertices(vertices);
+                    staticMesh = StaticMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice);
                 }
                 else
                 {
@@ -447,15 +465,15 @@ namespace AlkaronEngine.Assets.Importers
                                 throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
                         }
 
-                        staticMesh = StaticMesh.FromVertices(vertices, indices);
+                        staticMesh = StaticMesh.FromVertices(vertices, indices, context.AssetSettings.GraphicsDevice);
                     }
                 }
 
                 staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
                 context.PackageToSaveIn.StoreAsset(staticMesh);
 
-                Materials.Material material = CreateMaterialForMesh(prim, context.Model);
-                staticMesh.Material = material;
+                //Materials.Material material = CreateMaterialForMesh(prim, context.Model);
+                staticMesh.Material = new Materials.Material();
 
                 context.ImportedAssets.Add(staticMesh);
             }

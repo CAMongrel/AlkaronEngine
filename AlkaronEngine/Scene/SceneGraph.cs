@@ -77,7 +77,7 @@ namespace AlkaronEngine.Scene
             //SceneOwner.RenderManager.AppendRenderProxies(newActor.CreateRenderProxies());
         }
 
-        public List<BaseRenderProxy> GetSceneRenderProxies()
+        internal List<BaseRenderProxy> GetSceneRenderProxies()
         {
             List<BaseRenderProxy> result = new List<BaseRenderProxy>();
 

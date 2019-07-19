@@ -88,7 +88,7 @@ namespace AlkaronEngine.Scene
             var factory = GraphicsDevice.ResourceFactory;
 
             // Create pipeline
-            GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription();
+            /*GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription();
             pipelineDescription.BlendState = BlendStateDescription.SingleOverrideBlend;
             pipelineDescription.DepthStencilState = new DepthStencilStateDescription(
                 depthTestEnabled: true,
@@ -108,7 +108,7 @@ namespace AlkaronEngine.Scene
             pipelineDescription.ShaderSet.VertexLayouts = new VertexLayoutDescription[0];
             pipelineDescription.Outputs = GraphicsDevice.SwapchainFramebuffer.OutputDescription;
 
-            pipeline = factory.CreateGraphicsPipeline(pipelineDescription);
+            pipeline = factory.CreateGraphicsPipeline(pipelineDescription);*/
 
             commandList = factory.CreateCommandList();
 
@@ -186,7 +186,7 @@ namespace AlkaronEngine.Scene
 
             // We want to render directly to the output window.
             commandList.SetFramebuffer(GraphicsDevice.SwapchainFramebuffer);
-            commandList.SetPipeline(pipeline);
+            //commandList.SetPipeline(pipeline);
 
             lock (lockObj)
             {

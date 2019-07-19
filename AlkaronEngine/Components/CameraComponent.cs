@@ -73,12 +73,12 @@ namespace AlkaronEngine.Components
             return false;
         }
 
-        public virtual bool PointerMoved(Vector2 position)
+        public virtual bool PointerMoved(Vector2 position, double deltaTime)
         {
             return false;
         }
 
-        public virtual bool PointerWheelChanged(Vector2 position)
+        public virtual bool PointerWheelChanged(Vector2 position, double deltaTime)
         {
             return false;
         }

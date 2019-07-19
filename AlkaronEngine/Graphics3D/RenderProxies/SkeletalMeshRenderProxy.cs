@@ -6,7 +6,7 @@ using AlkaronEngine.Util;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
 {
-    public class SkeletalMeshRenderProxy : BaseRenderProxy
+    internal class SkeletalMeshRenderProxy : BaseRenderProxy
     {
         public SkeletalMesh SkeletalMesh { get; private set; }
 
@@ -18,6 +18,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
 
         public SkeletalMeshRenderProxy(SkeletalMesh setSkeletalMesh)
         {
+            Type = RenderProxyType.SkeletalMesh;
             SkeletalMesh = setSkeletalMesh;
         }
 

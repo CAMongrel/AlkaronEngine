@@ -8,6 +8,8 @@ using AlkaronEngine.Assets.Materials;
 using Veldrid;
 using System.Numerics;
 using AlkaronEngine.Gui;
+using Veldrid.SPIRV;
+using System.Text;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -111,26 +113,11 @@ namespace AlkaronEngine.Graphics3D
 
         private void CreateEffectLibrary()
         {
-            /*AlphaTestEffect eff = new AlphaTestEffect(renderConfig.GraphicsDevice);
-            eff.FogEnabled = false;
-            eff.VertexColorEnabled = false;
-            /*eff.World = Matrix.Identity;
-            eff.View = Matrix.CreateLookAt(new Vector3(0, 0, 15), Vector3.Zero, Vector3.Up);
-            eff.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), renderConfig.GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);*/
-            /*EffectLibrary.AddEffect("StaticMesh", eff);
-
-            BasicEffect eff2 = new BasicEffect(renderConfig.GraphicsDevice);
-            eff2.FogEnabled = false;
-            eff2.VertexColorEnabled = false;
-            eff2.LightingEnabled = false;
-            eff2.TextureEnabled = true;
-            EffectLibrary.AddEffect("StaticMesh_Translucent", eff2);*/
+            
         }
 
         private void CreateMaterialLibrary()
         {
-            /*SkeletalMeshMaterial skelMat = new SkeletalMeshMaterial(renderConfig);
-            MaterialLibrary.AddMaterial("SkeletalMesh", skelMat);*/
         }
 
         private void CreateRenderTarget()
@@ -166,7 +153,7 @@ namespace AlkaronEngine.Graphics3D
             }
         }
 
-        public void SetRenderProxies(List<BaseRenderProxy> list)
+        internal void SetRenderProxies(List<BaseRenderProxy> list)
         {
             lock (lockObj)
             {
@@ -327,7 +314,6 @@ namespace AlkaronEngine.Graphics3D
         private void ApplyRenderProxyStagingArea()
         {
             // Apply stage to current process
-
             Dictionary<IMaterial, RenderPass> renderPassDict = new Dictionary<IMaterial, RenderPass>();
 
             for (int p = 0; p < renderProxyStagingArea.Count; p++)

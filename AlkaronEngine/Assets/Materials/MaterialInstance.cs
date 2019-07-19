@@ -78,7 +78,7 @@ namespace AlkaronEngine.Assets.Materials
             Material = setMaterial;
         }
 
-        public void ApplyParameters(Matrix4x4 worldViewProjectio)
+        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldViewProjectio)
         {
             //var effect = Material.Effect;
 
@@ -86,7 +86,7 @@ namespace AlkaronEngine.Assets.Materials
             //effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        public virtual void SetupEffectForRenderPass(RenderPass renderPass)
+        public virtual void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass)
         {
             //AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
             //AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using AlkaronEngine.Graphics;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
 using Veldrid;
@@ -15,16 +16,60 @@ namespace AlkaronEngine.Assets.Materials
 
         public bool RequiresOrderingBackToFront { get; set; }
 
+        private Pipeline graphicsPipeline;
+        private ResourceLayout graphicsLayout;
+        private DeviceBuffer worldMatrixBuffer;
+        private ResourceSet graphicsResourceSet;
+
+        public Shader FragmentShader { get; set; }
+
         public Material()
         {
             RequiresOrderingBackToFront = false;
+
+            Shader[] shaders = new Shader[]
+            {
+                AlkaronCoreGame.Core.ShaderManager.StaticMeshVertexShader,
+                AlkaronCoreGame.Core.ShaderManager.GetFragmentShaderByName("SimpleColorFragment")
+            };
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    TangentVertex.VertexLayout
+                },
+                shaders);
+
+            var factory = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory;
+
+            graphicsLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("WorldViewProj", ResourceKind.UniformBuffer, ShaderStages.Vertex))
+                /*new ResourceLayoutElementDescription("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ColorTint", ResourceKind.UniformBuffer, ShaderStages.Fragment))*/);
+
+            GraphicsPipelineDescription fullScreenQuadDesc = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleAlphaBlend,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
+                new RasterizerStateDescription(FaceCullMode.Back, PolygonFillMode.Solid, FrontFace.CounterClockwise, true, false),
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                new[] { graphicsLayout },
+                AlkaronCoreGame.Core.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
+
+            graphicsPipeline = factory.CreateGraphicsPipeline(ref fullScreenQuadDesc);
+
+            worldMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+            graphicsResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                graphicsLayout,
+                worldMatrixBuffer));
         }
 
         public override bool IsValid => false;
 
         private void CreateShader()
         {
-            GraphicsLibrary graphicsLibrary = AlkaronCoreGame.Core.GraphicsLibrary;
         }
 
         internal override void Deserialize(BinaryReader reader, AssetSettings assetSettings)
@@ -36,12 +81,6 @@ namespace AlkaronEngine.Assets.Materials
             CreateShader();
         }
 
-        public void ApplyParameters(Matrix4x4 worldViewProjectio)
-        {
-            //Effect.Parameters["WorldViewProj"].SetValue(worldViewProjectio);
-            //Effect.CurrentTechnique.Passes[0].Apply();
-        }
-
         internal override void Serialize(BinaryWriter writer, AssetSettings assetSettings)
         {
             base.Serialize(writer, assetSettings);
@@ -49,9 +88,15 @@ namespace AlkaronEngine.Assets.Materials
             writer.Write(RequiresOrderingBackToFront);
         }
 
-        public void SetupEffectForRenderPass(RenderPass renderPass)
+        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldViewProjectio)
         {
-            //throw new NotImplementedException();
+            renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, worldViewProjectio);
+            renderContext.CommandList.SetGraphicsResourceSet(0, graphicsResourceSet);
+        }
+
+        public void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass)
+        {
+            renderContext.CommandList.SetPipeline(graphicsPipeline);
         }
     }
 }

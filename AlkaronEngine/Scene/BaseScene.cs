@@ -125,8 +125,6 @@ namespace AlkaronEngine.Scene
             UIWindowManager.Update(deltaTime);
         }
 
-        private Texture texture;
-
         public virtual void Draw(double deltaTime, RenderContext renderContext)
         {
             renderContext.CommandList.ClearColorTarget(0, ClearColor);
@@ -139,12 +137,6 @@ namespace AlkaronEngine.Scene
             }
 
             //GuiCore.RenderOnScreen(renderContext);
-
-            if (texture == null)
-            {
-                var fileTex = new Veldrid.ImageSharp.ImageSharpTexture("d:\\temp\\image.jpg");
-                texture = fileTex.CreateDeviceTexture(renderContext.GraphicsDevice, renderContext.GraphicsDevice.ResourceFactory);
-            }
         }
 
         public virtual void PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
@@ -196,10 +188,10 @@ namespace AlkaronEngine.Scene
 
                     if (res == false)
                     {
-                        CurrentCamera?.PointerMoved(position);
+                        CurrentCamera?.PointerMoved(position, deltaTime);
                     }
 
-                    //Mouse.SetPosition((int)lastMousePos.X, (int)lastMousePos.Y);
+                    AlkaronCoreGame.Core.Window.SetMousePosition((int)lastMousePos.X, (int)lastMousePos.Y);
                 }
             }
         }
@@ -213,7 +205,7 @@ namespace AlkaronEngine.Scene
                 res = CurrentController?.PointerWheelChanged(deltaValue) ?? false;
                 if (res == false)
                 {
-                    CurrentCamera?.PointerWheelChanged(deltaValue);
+                    CurrentCamera?.PointerWheelChanged(deltaValue, deltaTime);
                 }
             }
         }

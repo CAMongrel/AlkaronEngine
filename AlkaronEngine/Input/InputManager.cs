@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -8,12 +9,44 @@ namespace AlkaronEngine.Input
     public delegate void PointerEvent(Vector2 position, PointerType pointerType, double deltaTime);
     public delegate void KeyEvent(Key key, double deltaTime);
 
+    class LocalInputSnapshot
+    {
+        internal Veldrid.KeyEvent[] KeyEvents;
+        internal Veldrid.MouseEvent[] MouseEvents;
+        internal char[] KeyCharPresses;
+        internal Vector2 MousePosition;
+        internal float WheelDelta;
+
+        public static LocalInputSnapshot Create(InputSnapshot snapshot)
+        {
+            var localInputSnapshot = new LocalInputSnapshot();
+            localInputSnapshot.KeyEvents = new Veldrid.KeyEvent[snapshot.KeyEvents.Count];
+            for (int i = 0; i < localInputSnapshot.KeyEvents.Length; i++)
+            {
+                localInputSnapshot.KeyEvents[i] = snapshot.KeyEvents[i];
+            }
+            localInputSnapshot.MouseEvents = new MouseEvent[snapshot.MouseEvents.Count];
+            for (int i = 0; i < localInputSnapshot.MouseEvents.Length; i++)
+            {
+                localInputSnapshot.MouseEvents[i] = snapshot.MouseEvents[i];
+            }
+            localInputSnapshot.KeyCharPresses = new char[snapshot.KeyCharPresses.Count];
+            for (int i = 0; i < localInputSnapshot.KeyCharPresses.Length; i++)
+            {
+                localInputSnapshot.KeyCharPresses[i] = snapshot.KeyCharPresses[i];
+            }
+            localInputSnapshot.MousePosition = snapshot.MousePosition;
+            localInputSnapshot.WheelDelta = snapshot.WheelDelta;
+            return localInputSnapshot;
+        }
+    }
+
     public class InputManager
     {
         private Vector2 prevMousePos;
-        private InputSnapshot curInputSnapshot;
-        private InputSnapshot prevInputSnapshot;
-        private float prevWheelValue;
+        private bool[] mouseDown;
+        private LocalInputSnapshot curInputSnapshot;
+        private LocalInputSnapshot prevInputSnapshot;
 
         public event PointerEvent OnPointerMoved;
         public event PointerEvent OnPointerPressed;
@@ -28,8 +61,8 @@ namespace AlkaronEngine.Input
 
         public InputManager()
         {
-            prevWheelValue = 0.0f;
             prevMousePos = new Vector2(-1, -1);
+            mouseDown = new bool[Enum.GetValues(typeof(MouseButton)).Length];
         }
 
         private static MouseEvent GetMouseEventForButton(MouseButton mouseButton, IReadOnlyList<MouseEvent> mouseEvents)
@@ -41,17 +74,10 @@ namespace AlkaronEngine.Input
 
         public void UpdateInput(InputSnapshot snapshot, double deltaTime)
         {
-            /*
-            Vector2 ScaledOffset = renderConfig.ScaledOffset;
-            Vector2 Scale = renderConfig.Scale;
+            curInputSnapshot = LocalInputSnapshot.Create(snapshot);
 
-            Vector2 scaledPosition = new Vector2((mousePos.X - ScaledOffset.X) / Scale.X,
-               (mousePos.Y - ScaledOffset.Y) / Scale.Y);*/
-
-            curInputSnapshot = snapshot;
-
-            MousePosition = snapshot.MousePosition;
-            ScaledMousePosition = snapshot.MousePosition;
+            MousePosition = curInputSnapshot.MousePosition;
+            ScaledMousePosition = curInputSnapshot.MousePosition;
 
             if (MousePosition != prevMousePos)
             {
@@ -60,18 +86,21 @@ namespace AlkaronEngine.Input
             }
 
             // Mouse buttons
-            foreach (var mouseEvent in snapshot.MouseEvents)
+            foreach (var mouseEvent in curInputSnapshot.MouseEvents)
             {
+                var preDown = mouseDown[(int)mouseEvent.MouseButton];
+                mouseDown[(int)mouseEvent.MouseButton] = mouseEvent.Down;
+                var curDown = mouseEvent.Down;
+
                 switch (mouseEvent.MouseButton)
                 {
                     case MouseButton.Left:
                         {
-                            var prevEvent = GetMouseEventForButton(MouseButton.Left, prevInputSnapshot.MouseEvents);
-                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            if (curDown == true && preDown == false)
                             {
                                 OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.LeftMouse, deltaTime);
                             }
-                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            if (curDown == false && preDown == true)
                             {
                                 OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.LeftMouse, deltaTime);
                             }
@@ -80,12 +109,11 @@ namespace AlkaronEngine.Input
 
                     case MouseButton.Middle:
                         {
-                            var prevEvent = GetMouseEventForButton(MouseButton.Middle, prevInputSnapshot.MouseEvents);
-                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            if (curDown == true && preDown == false)
                             {
                                 OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.MiddleMouse, deltaTime);
                             }
-                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            if (curDown == false && preDown == true)
                             {
                                 OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.MiddleMouse, deltaTime);
                             }
@@ -94,12 +122,11 @@ namespace AlkaronEngine.Input
 
                     case MouseButton.Right:
                         {
-                            var prevEvent = GetMouseEventForButton(MouseButton.Right, prevInputSnapshot.MouseEvents);
-                            if (mouseEvent.Down == true && prevEvent.Down == false)
+                            if (curDown == true && preDown == false)
                             {
                                 OnPointerPressed?.Invoke(ScaledMousePosition, PointerType.RightMouse, deltaTime);
                             }
-                            if (mouseEvent.Down == false && prevEvent.Down == true)
+                            if (curDown == false && preDown == true)
                             {
                                 OnPointerReleased?.Invoke(ScaledMousePosition, PointerType.RightMouse, deltaTime);
                             }
@@ -108,10 +135,8 @@ namespace AlkaronEngine.Input
                 }
             }
 
-            // Mouse wheel            
-            float newWheelValue = snapshot.WheelDelta;
-            float curWheelDelta = newWheelValue - prevWheelValue;
-            prevWheelValue = newWheelValue;
+            // Mouse wheel
+            float curWheelDelta = curInputSnapshot.WheelDelta;
             if (curWheelDelta != 0)
             {
                 OnPointerWheelChanged?.Invoke(new Vector2(curWheelDelta, 0), PointerType.Wheel, deltaTime);
@@ -120,10 +145,10 @@ namespace AlkaronEngine.Input
             // Handle keyboard events
             HandleKeyboardEvents(deltaTime);
 
-            prevInputSnapshot = snapshot;
+            prevInputSnapshot = curInputSnapshot;
         }
 
-        private static List<Key> GetPressedKeys(InputSnapshot snapshot)
+        private static List<Key> GetPressedKeys(LocalInputSnapshot snapshot)
         {
             if (snapshot == null)
             {
@@ -135,7 +160,7 @@ namespace AlkaronEngine.Input
                     select k.Key).ToList();
         }
 
-        private static bool IsKeyDown(InputSnapshot snapshot, Key key)
+        private static bool IsKeyDown(LocalInputSnapshot snapshot, Key key)
         {
             if (snapshot == null)
             {

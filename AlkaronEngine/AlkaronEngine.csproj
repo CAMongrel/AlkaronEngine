@@ -19,7 +19,6 @@
     <None Remove="Graphics3D\Geometry\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Assets\Importers\AssetImporterGltfMesh.cs" />
     <Compile Remove="Assets\Importers\AssetImporterMaterial.cs" />
     <Compile Remove="Assets\Importers\AssetImporterSkeletalMesh.cs" />
     <Compile Remove="Graphics2D\DDSImage.cs" />
@@ -42,11 +41,17 @@
     <None Remove="Resources\EngineMaterials.package" />
     <None Remove="Resources\ScreenQuadFragment.glsl" />
     <None Remove="Resources\ScreenQuadVertex.glsl" />
+    <None Remove="Resources\SimpleColorFragment.glsl" />
+    <None Remove="Resources\SimpleVertex.glsl" />
+    <None Remove="Resources\StaticMeshVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\EngineDefaults.package" />
     <EmbeddedResource Include="Resources\EngineMaterials.package" />
     <EmbeddedResource Include="Resources\ScreenQuadFragment.glsl" />
+    <EmbeddedResource Include="Resources\SimpleVertex.glsl" />
+    <EmbeddedResource Include="Resources\SimpleColorFragment.glsl" />
+    <EmbeddedResource Include="Resources\StaticMeshVertex.glsl" />
     <EmbeddedResource Include="Resources\ScreenQuadVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
