@@ -29,6 +29,8 @@ namespace AlkaronEngine.Graphics3D
 
             CompileFragmentShader("SimpleColorFragment",
                 Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SimpleColorFragment.glsl")));
+            CompileFragmentShader("DefaultPBRFragment",
+                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("DefaultPBRFragment.glsl")));
         }
 
         internal void CompileFragmentShader(string name, string shaderCode, string entryPoint = "main")

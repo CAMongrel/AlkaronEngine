@@ -25,7 +25,7 @@ namespace AlkaronEngine.Graphics2D
         private static TextureView targetTextureView;
 
         internal static Texture SingleWhiteTexture { get; private set; }
-        private static TextureView singleWhiteTextureView;
+        internal static TextureView SingleWhiteTextureView { get; private set; }
 
         internal static void Initialize(ResourceFactory factory)
         {
@@ -97,7 +97,7 @@ namespace AlkaronEngine.Graphics2D
             });
             AlkaronCoreGame.Core.GraphicsDevice.UpdateTexture(SingleWhiteTexture, new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 0, 0, 1, 1, 1, 0, 0);
 
-            singleWhiteTextureView = factory.CreateTextureView(SingleWhiteTexture);
+            SingleWhiteTextureView = factory.CreateTextureView(SingleWhiteTexture);
         }
 
         private static Vector2 ConvertScreenPosToDevicePos(Vector2 vec)
@@ -181,7 +181,7 @@ namespace AlkaronEngine.Graphics2D
             {
                 if (texture == SingleWhiteTexture)
                 {
-                    targetTextureView = singleWhiteTextureView;
+                    targetTextureView = SingleWhiteTextureView;
                 }
                 else
                 {

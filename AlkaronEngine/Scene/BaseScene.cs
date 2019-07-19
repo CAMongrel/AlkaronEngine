@@ -91,7 +91,7 @@ namespace AlkaronEngine.Scene
 
         protected virtual void CreateDefaultCamera()
         {
-            CurrentCamera = new CameraActor(new FlyCameraComponent(new Vector3(0, 0, 15),
+            CurrentCamera = new CameraActor(new FlyCameraComponent(new Vector3(0, 0, -15),
                                                      ScreenSize,
                                                      0.1f,
                                                      500.0f));
@@ -127,6 +127,8 @@ namespace AlkaronEngine.Scene
 
         public virtual void Draw(double deltaTime, RenderContext renderContext)
         {
+            renderContext.RenderManager = RenderManager;
+
             renderContext.CommandList.ClearColorTarget(0, ClearColor);
 
             RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);

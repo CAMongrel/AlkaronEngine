@@ -37,6 +37,7 @@
     <Compile Remove="Gui\UITextureButton.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Resources\DefaultPBRFragment.glsl" />
     <None Remove="Resources\EngineDefaults.package" />
     <None Remove="Resources\EngineMaterials.package" />
     <None Remove="Resources\ScreenQuadFragment.glsl" />
@@ -49,6 +50,7 @@
     <EmbeddedResource Include="Resources\EngineDefaults.package" />
     <EmbeddedResource Include="Resources\EngineMaterials.package" />
     <EmbeddedResource Include="Resources\ScreenQuadFragment.glsl" />
+    <EmbeddedResource Include="Resources\DefaultPBRFragment.glsl" />
     <EmbeddedResource Include="Resources\SimpleVertex.glsl" />
     <EmbeddedResource Include="Resources\SimpleColorFragment.glsl" />
     <EmbeddedResource Include="Resources\StaticMeshVertex.glsl" />

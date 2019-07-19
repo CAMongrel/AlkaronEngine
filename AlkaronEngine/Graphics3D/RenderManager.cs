@@ -17,6 +17,7 @@ namespace AlkaronEngine.Graphics3D
     {
         public CommandList CommandList;
         public GraphicsDevice GraphicsDevice;
+        public RenderManager RenderManager;
     }
 
     public class RenderManager
@@ -54,8 +55,6 @@ namespace AlkaronEngine.Graphics3D
         /// Needs locking with lockObj ... accessed by multiple threads.
         /// </summary>
         private ViewTarget nextViewTarget;
-
-        //public MouseCursor MouseCursor { get; set; }
 
         public RenderManager()
         {
@@ -287,8 +286,7 @@ namespace AlkaronEngine.Graphics3D
 
             for (int i = 0; i < renderPasses.Count; i++)
             {
-                componentCount += renderPasses[i].Draw(renderContext,
-                    this, componentCount, MaxRenderCount);
+                componentCount += renderPasses[i].Draw(renderContext, componentCount, MaxRenderCount);
             }
 
             RenderedComponentsLastFrame = componentCount;

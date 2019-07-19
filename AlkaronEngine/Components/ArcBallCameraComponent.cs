@@ -11,6 +11,8 @@ namespace AlkaronEngine.Components
         private float pitchRadians;
         private float rollRadians;
 
+        public float RotationSpeedFactor { get; set; } = 5.0f;
+
         public ArcBallCameraComponent(  Vector3 setLookAt,
                                         float setDistance,
                                         float setYawDegrees, float setPitchDegrees, float setRollDegrees,
@@ -51,7 +53,7 @@ namespace AlkaronEngine.Components
             }
 
             Vector2 delta = position - startPos;
-            delta *= (float)deltaTime;
+            delta *= (float)deltaTime * RotationSpeedFactor;
 
             yawRadians -= BepuUtilities.MathHelper.ToRadians(delta.X);
             pitchRadians -= BepuUtilities.MathHelper.ToRadians(delta.Y);

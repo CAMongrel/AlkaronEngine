@@ -65,6 +65,7 @@ namespace AlkaronEngine.Components
             }
 
             Vector2 delta = position - startPos;
+            delta *= (float)deltaTime;
 
             yaw -= delta.X;
             pitch -= delta.Y;

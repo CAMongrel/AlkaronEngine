@@ -72,21 +72,20 @@ namespace AlkaronEngine.Graphics3D
         /// <param name="renderConfig">Render config.</param>
         /// <param name="renderManager">Render manager.</param>
         public int Draw(RenderContext renderContext,
-                        RenderManager renderManager,
                         int renderCount, 
                         int maxRenderCount)
         {
-            if (renderManager.ViewTarget == null)
+            if (renderContext.RenderManager.ViewTarget == null)
             {
                 throw new InvalidOperationException("A ViewTarget is required for rendering");
             }
 
-            BoundingFrustum frustum = renderManager.ViewTarget.CameraFrustum;
+            BoundingFrustum frustum = renderContext.RenderManager.ViewTarget.CameraFrustum;
 
             if (PerformDepthSorting == true)
             {
                 Performance.Push("Perform DepthSorting");
-                WorldOriginForDepthSorting = renderManager.ViewTarget?.CameraLocation ?? Vector3.Zero;
+                WorldOriginForDepthSorting = renderContext.RenderManager.ViewTarget?.CameraLocation ?? Vector3.Zero;
                 proxies.Sort((x, y) => 
                 {
                     float distanceSqr = Vector3.DistanceSquared(x.WorldMatrix.Translation, WorldOriginForDepthSorting);
@@ -115,7 +114,7 @@ namespace AlkaronEngine.Graphics3D
                 {
                     continue;
                 }
-                proxies[i].Render(renderContext, renderManager, Material);
+                proxies[i].Render(renderContext, Material);
 
                 renderCount++;
                 renderedProxies++;

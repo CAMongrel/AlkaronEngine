@@ -21,17 +21,17 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }
         }
 
-        public override void Render(RenderContext renderContext, RenderManager renderManager, IMaterial materialToUse)
+        public override void Render(RenderContext renderContext, IMaterial materialToUse)
         {
             /*if (StaticMesh.IsCollisionOnly)
             {
                 return;
             }*/
 
-            base.Render(renderContext, renderManager, materialToUse);
+            base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
+            Matrix4x4 worldViewProj = WorldMatrix * renderContext.RenderManager.ViewTarget.ViewMatrix * renderContext.RenderManager.ViewTarget.ProjectionMatrix;
             materialToUse.ApplyParameters(renderContext, worldViewProj);
             Performance.EndAppendAggreate("Setup");
 

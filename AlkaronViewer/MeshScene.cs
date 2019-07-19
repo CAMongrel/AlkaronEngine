@@ -97,24 +97,16 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
-            /*StaticMesh box = StaticMesh.FromVertices(new Vector3[] {
-                new Vector3(-1, -1, -1),
-                new Vector3( 1, -1, -1),
-                new Vector3(-1,  1, -1),
+            StaticMesh box = StaticMesh.FromVertices(new Vector3[] {
+                new Vector3(-1, -1, 0),
+                new Vector3(-1,  5, 0),
+                new Vector3( 1, -1, 0),
 
-                new Vector3( 1, -1, -1),
-                new Vector3( 1,  1, -1),
-                new Vector3(-1,  1, -1),
-
-                new Vector3( 1, -1,  1),
-                new Vector3(-1, -1,  1),
-                new Vector3(-1,  1,  1),
-
-                new Vector3( 1, -1,  1),
-                new Vector3(-1,  1,  1),
-                new Vector3( 1,  1,  1),
+                new Vector3( 1, -1, 0),
+                new Vector3(-1,  5, 0),
+                new Vector3( 1,  5, 0),
             }, MainGame.Instance.GraphicsDevice);
-            AddStaticMesh(box);*/
+            //AddStaticMesh(box);
 
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SkinnedEffect.dx11.mgfxo", "SkinnedEffect", "EngineMaterials", out var material);
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SpriteEffect.dx11.mgfxo", "SpriteEffect", "EngineMaterials", out material);

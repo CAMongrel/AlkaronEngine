@@ -32,7 +32,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             WorldMatrix = Matrix4x4.Identity;
         }
 
-        public virtual void Render(RenderContext renderContext, RenderManager renderManager, IMaterial materialToUse)
+        public virtual void Render(RenderContext renderContext, IMaterial materialToUse)
         {
         }
 

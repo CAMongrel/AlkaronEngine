@@ -472,20 +472,37 @@ namespace AlkaronEngine.Assets.Importers
                 staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
                 context.PackageToSaveIn.StoreAsset(staticMesh);
 
-                //Materials.Material material = CreateMaterialForMesh(prim, context.Model);
-                staticMesh.Material = new Materials.Material();
+                staticMesh.Material = CreateMaterialForMesh(prim, context);
 
                 context.ImportedAssets.Add(staticMesh);
             }
         }
 
-        private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, Gltf model)
+        private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, AssetImporterGltfMeshContext context)
         {
-            var mat = AlkaronCoreGame.Core.AssetManager.Load<Materials.Material>("EngineMaterials.BasicEffect.material");
+            if (prim.Material == null)
+            {
+                return new Materials.Material();
+            }
 
-            Materials.Material result = mat; //new PbrMaterial(AlkaronCoreGame.Core.SceneManager);
-            //result.Effect = AlkaronCoreGame.Core.SceneManager.RenderManager.
+            int matIndex = prim.Material.Value;
+            var mat = context.Model.Materials[matIndex];
+            if (mat.PbrMetallicRoughness == null)
+            {
+                return new Materials.Material();
+            }
 
+            var pbr = mat.PbrMetallicRoughness;
+
+            Materials.Material result = new Materials.Material();
+            if (pbr.BaseColorTexture != null)
+            {
+                result.AlbedoTexture = ((Surface2D)context.ImportedAssets[pbr.BaseColorTexture.Index]).Texture;
+            }
+            if (pbr.MetallicRoughnessTexture != null)
+            {
+                result.MetallicRoughnessTexture = ((Surface2D)context.ImportedAssets[pbr.MetallicRoughnessTexture.Index]).Texture;
+            }
             return result;
         }
 
