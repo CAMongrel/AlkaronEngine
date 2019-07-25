@@ -1,3 +1,4 @@
+using AlkaronEngine.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -324,7 +325,7 @@ namespace AlkaronEngine.Assets
 				Type assetType = Type.GetType(assetTypeName);
 				if (assetType == null)
 				{
-					AlkaronCoreGame.Core.Log("Found possibly deprecated or unknown asset type: " +
+                    Log.Status("Found possibly deprecated or unknown asset type: " +
 						assetTypeName);
 					return false;
 				}
@@ -350,7 +351,7 @@ namespace AlkaronEngine.Assets
 			}
 			catch (Exception ex)
 			{
-                AlkaronCoreGame.Core.Log("Error while loading asset '" + assetName + "':\r\n" + ex);
+                Log.Status("Error while loading asset '" + assetName + "':\r\n" + ex);
 				return false;
 			}
 		}
@@ -448,7 +449,7 @@ namespace AlkaronEngine.Assets
                 // then something went wrong and we can't continue
                 if (IsFullyLoaded == false)
                 {
-                    AlkaronCoreGame.Core.Log("Saving package failed");
+                    Log.Status("Saving package failed");
                     return false;
                 }
             }
@@ -562,7 +563,7 @@ namespace AlkaronEngine.Assets
                 // then something went wrong and we can't continue
                 if (IsFullyLoaded == false)
                 {
-                    AlkaronCoreGame.Core.Log("Delete package failed");
+                    Log.Status("Delete package failed");
                     return;
                 }
             }

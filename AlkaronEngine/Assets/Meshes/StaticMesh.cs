@@ -1,5 +1,6 @@
 using AlkaronEngine.Graphics;
 using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Util;
 using System;
 using System.IO;
 using System.Numerics;
@@ -486,8 +487,10 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         public virtual void SetVertexData(RenderContext renderContext)
         {
+            Performance.StartAppendAggreate("SetVertexBuffer");
             renderContext.CommandList.SetVertexBuffer(0, vertexBuffer);
             renderContext.CommandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt32);
+            Performance.EndAppendAggreate("SetVertexBuffer");
         }
         #endregion
 
@@ -499,7 +502,9 @@ namespace AlkaronEngine.Assets.Meshes
         {
             SetVertexData(renderContext);
 
+            Performance.StartAppendAggreate("DrawPrimitives");
             renderContext.CommandList.DrawIndexed((uint)objectIndices.Length);
+            Performance.EndAppendAggreate("DrawPrimitives");
         }
         #endregion
 

@@ -18,6 +18,9 @@ namespace AlkaronEngine.Graphics3D
         public CommandList CommandList;
         public GraphicsDevice GraphicsDevice;
         public RenderManager RenderManager;
+
+        // Stats
+        public long RenderedTrianglesThisFrame;
     }
 
     public class RenderManager
@@ -224,6 +227,8 @@ namespace AlkaronEngine.Graphics3D
                 frameCalcStart = end;
                 CurrentFPS = frameCounter;
 
+                Console.WriteLine("CurrentFPS: " + CurrentFPS);
+
                 frameCounter = 0;
             }
 
@@ -268,6 +273,8 @@ namespace AlkaronEngine.Graphics3D
 
             // Don't fry the CPU
             Thread.Sleep(1);
+
+            RemoveAllRenderPasses();
         }
 
         private void RenderThreadFunc(RenderContext renderContext)
@@ -292,7 +299,7 @@ namespace AlkaronEngine.Graphics3D
             RenderedComponentsLastFrame = componentCount;
         }
 
-        private void ClearRenderPasses()
+        private void RemoveAllRenderPasses()
         {
             renderPasses.Clear();
         }
@@ -345,7 +352,7 @@ namespace AlkaronEngine.Graphics3D
             renderProxyStagingArea.Clear();
         }
 
-        private void ClearRenderPassses()
+        private void ClearRenderPasses()
         {
             for (int i = 0; i < renderPasses.Count; i++)
             {
@@ -363,7 +370,7 @@ namespace AlkaronEngine.Graphics3D
                     nextViewTarget = null;
                 }
 
-                ClearRenderPassses();
+                ClearRenderPasses();
                 ApplyRenderProxyStagingArea();
             }
 

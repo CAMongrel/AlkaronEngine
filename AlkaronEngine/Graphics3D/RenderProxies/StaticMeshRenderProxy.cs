@@ -45,6 +45,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             Performance.StartAppendAggreate("Render Mesh");
             StaticMesh.Render(renderContext);
             Performance.EndAppendAggreate("Render Mesh");
+
+            renderContext.RenderedTrianglesThisFrame += StaticMesh.NumberOfFaces;
         }
     }
 }

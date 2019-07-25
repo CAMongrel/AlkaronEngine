@@ -44,6 +44,7 @@
     <None Remove="Resources\ScreenQuadVertex.glsl" />
     <None Remove="Resources\SimpleColorFragment.glsl" />
     <None Remove="Resources\SimpleVertex.glsl" />
+    <None Remove="Resources\SkeletalMeshVertex.glsl" />
     <None Remove="Resources\StaticMeshVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +54,7 @@
     <EmbeddedResource Include="Resources\DefaultPBRFragment.glsl" />
     <EmbeddedResource Include="Resources\SimpleVertex.glsl" />
     <EmbeddedResource Include="Resources\SimpleColorFragment.glsl" />
+    <EmbeddedResource Include="Resources\SkeletalMeshVertex.glsl" />
     <EmbeddedResource Include="Resources\StaticMeshVertex.glsl" />
     <EmbeddedResource Include="Resources\ScreenQuadVertex.glsl" />
   </ItemGroup>

@@ -92,7 +92,33 @@ namespace AlkaronEngine.Graphics3D
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    object val = elem.Value;
+
+                    // TODO: Use optimized packing
+                    sb.AppendLine("layout(set = 0, binding = " + (bindingLoc) + ") uniform " + elem.Name + "ConstantBuffer { vec4 " + elem.Name + "Constant; };");
+
+                    /*if (val is float)
+                    {
+                        sb.AppendLine("layout(set = 0, binding = " + (bindingLoc) + ") uniform " + elem.Name + "ConstantBuffer { float " + elem.Name + "Constant; };");
+                    }
+                    else if (val is float[] fval)
+                    {
+                        switch (fval.Length)
+                        {
+                            case 2:
+                                sb.AppendLine("layout(set = 0, binding = " + (bindingLoc) + ") uniform " + elem.Name + "ConstantBuffer { vec2 " + elem.Name + "Constant; };");
+                                break;
+                            case 3:
+                                sb.AppendLine("layout(set = 0, binding = " + (bindingLoc) + ") uniform " + elem.Name + "ConstantBuffer { vec3 " + elem.Name + "Constant; };");
+                                break;
+                            case 4:
+                                sb.AppendLine("layout(set = 0, binding = " + (bindingLoc) + ") uniform " + elem.Name + "ConstantBuffer { vec4 " + elem.Name + "Constant; };");
+                                break;
+
+                            default:
+                                throw new NotImplementedException();
+                        }                        
+                    }*/
                 }
             }
         }
@@ -117,7 +143,7 @@ namespace AlkaronEngine.Graphics3D
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    description.Add(new ResourceLayoutElementDescription(elem.Name + "Constant", ResourceKind.UniformBuffer, ShaderStages.Fragment));
                 }
             }
         }
@@ -158,9 +184,10 @@ namespace AlkaronEngine.Graphics3D
             return new ResourceLayoutDescription(elements.ToArray());
         }
 
-        internal bool HasInputOfType(ConstructedShaderInputType type)
+        internal bool HasInputOfType(ConstructedShaderInputType type, ConstructedShaderInputValueType valueType)
         {
-            return GetInputForType(type) != null;
+            var input = GetInputForType(type);
+            return input != null && input.ValueType == valueType;
         }
 
         private ConstructedShaderInputElement? GetInputForType(ConstructedShaderInputType type)
@@ -274,6 +301,7 @@ namespace AlkaronEngine.Graphics3D
             AddLocalVars(sb);
             AddPbrCode(sb);
             sb.AppendLine("    " + ColorOutputName + " = vec4(color, 1.0);");
+            sb.AppendLine("    " + ColorOutputName + " = vec4(albedo, 1.0);");
             sb.AppendLine("}");
         }
 
@@ -344,9 +372,9 @@ namespace AlkaronEngine.Graphics3D
                 {
                     sb.AppendLine("    vec3 albedo = texture(sampler2D(" + albedoInput.Name + "Texture, " + albedoInput.Name + "Sampler), " + TexCoordsInputName + ").rgb;");
                 }
-                else
+                else if (albedoInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
                 {
-                    throw new NotImplementedException();
+                    sb.AppendLine("    vec3 albedo = " + albedoInput.Name + "Constant.xyz;");
                 }
             }
             else
@@ -366,14 +394,54 @@ namespace AlkaronEngine.Graphics3D
                 {
                     throw new NotImplementedException();
                 }
+
+                sb.AppendLine("    float metallic = metRough.x;");
+                sb.AppendLine("    float roughness = metRough.y;");
             }
             else
             {
-                sb.AppendLine("    vec2 metRough = vec2(1.0, 1.0);");
+                var metInput = GetInputForType(ConstructedShaderInputType.Metallic);
+                if (metInput != null)
+                {
+                    if (metInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                    {
+                        sb.AppendLine("    float metallic = " + metInput.Name + "Constant.x;");
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }                    
+                }
+                else
+                {
+                    sb.AppendLine("    float metallic = 1.0;");
+                }
+                var roughInput = GetInputForType(ConstructedShaderInputType.Roughness);
+                if (roughInput != null)
+                {
+                    if (roughInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                    {
+                        sb.AppendLine("    float roughness = " + roughInput.Name + "Constant.x;");
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("    float roughness = 1.0;");
+                }
             }
-            sb.AppendLine("    float metallic = metRough.x;");
-            sb.AppendLine("    float roughness = metRough.y;");
-            sb.AppendLine("    float ao = 0.0;");
+            var aoInput = GetInputForType(ConstructedShaderInputType.AmbientOcclusion);
+            if (aoInput != null)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                sb.AppendLine("    float ao = 0.0;");
+            }
             sb.AppendLine();
         }
 
@@ -414,24 +482,76 @@ namespace AlkaronEngine.Graphics3D
         internal void ApplyToMaterial(Material material)
         {
             var normalInput = GetInputForType(ConstructedShaderInputType.Normal);
-            if (normalInput != null &&
-                normalInput.ValueType == ConstructedShaderInputValueType.Texture)
+            if (normalInput != null)
             {
-                material.NormalTexture = ((Surface2D)normalInput.Value).Texture;
+                if (normalInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    material.NormalTexture = ((Surface2D)normalInput.Value).Texture;
+                }
+                else if (normalInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    throw new NotImplementedException();
+                }
             }
 
             var albedoInput = GetInputForType(ConstructedShaderInputType.DiffuseAlbedo);
-            if (albedoInput != null &&
-                albedoInput.ValueType == ConstructedShaderInputValueType.Texture)
+            if (albedoInput != null)
             {
-                material.AlbedoTexture = ((Surface2D)albedoInput.Value).Texture;
+                if (albedoInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    material.AlbedoTexture = ((Surface2D)albedoInput.Value).Texture;
+                }
+                else if (albedoInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    float[] values = (float[])albedoInput.Value;
+                    if (values.Length == 4)
+                    {
+                        material.AlbedoFactor = new RgbaFloat(values[0], values[1], values[2], values[3]);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
             }
 
             var metallicRoughnessInput = GetInputForType(ConstructedShaderInputType.MetallicRoughnessCombined);
-            if (metallicRoughnessInput != null &&
-                metallicRoughnessInput.ValueType == ConstructedShaderInputValueType.Texture)
+            if (metallicRoughnessInput != null)
             {
-                material.MetallicRoughnessTexture = ((Surface2D)metallicRoughnessInput.Value).Texture;
+                if (metallicRoughnessInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    material.MetallicRoughnessTexture = ((Surface2D)metallicRoughnessInput.Value).Texture;
+                }
+                else if (metallicRoughnessInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            var metallicInput = GetInputForType(ConstructedShaderInputType.Metallic);
+            if (metallicInput != null)
+            {
+                if (metallicInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    throw new NotImplementedException(); 
+                }
+                else if (metallicInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    material.MetallicFactor = (float)metallicInput.Value;
+                }
+            }
+
+            var roughnessInput = GetInputForType(ConstructedShaderInputType.Metallic);
+            if (roughnessInput != null)
+            {
+                if (roughnessInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    throw new NotImplementedException();
+                }
+                else if (roughnessInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    material.RoughnessFactor = (float)roughnessInput.Value;
+                }
             }
         }
     }

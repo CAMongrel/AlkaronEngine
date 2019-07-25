@@ -1,5 +1,6 @@
 ﻿using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.TextureFonts;
+using AlkaronEngine.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,21 +26,21 @@ namespace AlkaronEngine.Assets.Importers
             string inputFile = setFontDefinitionFile;
             if (File.Exists(inputFile) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' is not valid!");
+                Log.Status("Import file '" + inputFile + "' is not valid!");
                 return false;
             }
 
             string extension = Path.GetExtension(inputFile);
             if (string.IsNullOrWhiteSpace(extension))
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
             extension = extension.ToLowerInvariant();
             if (allowedExtensions.Contains(extension) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
@@ -85,7 +86,7 @@ namespace AlkaronEngine.Assets.Importers
 
             if (packageToSaveIn == null)
             {
-                AlkaronCoreGame.Core.Log("Unable to create or find the package for this asset");
+                Log.Status("Unable to create or find the package for this asset");
                 return false;
             }
 
@@ -103,7 +104,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             catch (Exception ex)
             {
-                AlkaronCoreGame.Core.Log("Failed to import TextureFont: " + ex.ToString());
+                Log.Status("Failed to import TextureFont: " + ex.ToString());
                 return false;
             }
 

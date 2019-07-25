@@ -11,13 +11,14 @@ using AlkaronEngine.Gui;
 using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Assets.TextureFonts;
 using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Util;
 
 namespace AlkaronEngine
 {
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
-    public class AlkaronCoreGame : IDisposable
+    public class AlkaronCoreGame : IDisposable, ITimeProvider, ILogWriter
     {
         internal readonly Sdl2Window Window;
         public GraphicsDevice GraphicsDevice { get; private set; }
@@ -43,6 +44,9 @@ namespace AlkaronEngine
                                string setWindowTitle = "AlkaronEngine")
         {
             Core = this;
+
+            Performance.TimeProvider = this;
+            Log.LogWriter = this;
 
             ContentDirectory = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
@@ -133,7 +137,7 @@ namespace AlkaronEngine
         {
             GraphicsDeviceOptions options = new GraphicsDeviceOptions(
                 debug: false,
-                swapchainDepthFormat: PixelFormat.R16_UNorm,
+                swapchainDepthFormat: PixelFormat.R32_Float,
                 syncToVerticalBlank: true,
                 resourceBindingModel: ResourceBindingModel.Improved,
                 preferDepthRangeZeroToOne: true,
@@ -201,12 +205,19 @@ namespace AlkaronEngine
             SceneManager.Draw(GraphicsDevice, deltaTime);
         }
 
-        /// <summary>
-        /// Passes log output to the log handler
-        /// </summary>
-        internal void Log(string text)
+        public long GetTimestamp()
         {
-            Console.WriteLine(text);
+            return Stopwatch.GetTimestamp();
+        }
+
+        public long GetFrequency()
+        {
+            return Stopwatch.Frequency;
+        }
+
+        public void WriteLine(string line, params object[] args)
+        {
+            Console.WriteLine(line, args);
         }
     }
 }

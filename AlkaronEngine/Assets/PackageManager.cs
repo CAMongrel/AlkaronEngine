@@ -1,3 +1,4 @@
+using AlkaronEngine.Util;
 using System.Collections.Generic;
 using System.IO;
 using Veldrid;
@@ -51,7 +52,7 @@ namespace AlkaronEngine.Assets
 
                 if (PackageMap.ContainsKey(packageName))
                 {
-                    AlkaronCoreGame.Core.Log("Found duplicate package '" +
+                    Log.Status("Found duplicate package '" +
                         packageName + "' at \r\n" +
                         embeddedPackages[i] + "\r\nUsing the already loaded package at\r\n" +
                         PackageMap[packageName]);
@@ -73,7 +74,7 @@ namespace AlkaronEngine.Assets
 				
 				if (PackageMap.ContainsKey(packageName))
 				{
-                    AlkaronCoreGame.Core.Log("Found duplicate package '" + 
+                    Log.Status("Found duplicate package '" + 
 						packageName + "' at \r\n" +
 						packages[i] + "\r\nUsing the already loaded package at\r\n" +
 						PackageMap[packageName]);
@@ -110,7 +111,7 @@ namespace AlkaronEngine.Assets
 
             if (filename == null)
 			{
-                AlkaronCoreGame.Core.Log("Trying to open nonexistent package '" + 
+                Log.Status("Trying to open nonexistent package '" + 
 					packageName + "'");
 				return null;
 			}

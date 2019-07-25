@@ -1,3 +1,4 @@
+using AlkaronEngine.Util;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
@@ -93,7 +94,7 @@ namespace AlkaronEngine.Assets.Materials
             }
             catch (Exception ex)
             {
-                AlkaronCoreGame.Core.Log("Failed to load Surface2D:\r\n" + ex);
+                Log.Status("Failed to load Surface2D:\r\n" + ex);
                 return;
             }
 

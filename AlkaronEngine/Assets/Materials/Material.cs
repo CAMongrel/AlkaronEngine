@@ -44,6 +44,13 @@ namespace AlkaronEngine.Assets.Materials
         private TextureView normalTextureView;
         private TextureView aoTextureView;
         private TextureView metallicRoughnessTextureView;
+        private DeviceBuffer albedoFactorBuffer;
+        private DeviceBuffer metallicFactorBuffer;
+        private DeviceBuffer roughnessFactorBuffer;
+
+        public RgbaFloat AlbedoFactor = RgbaFloat.Black;
+        public float MetallicFactor = 1.0f;
+        public float RoughnessFactor = 1.0f;
 
         private Texture albedoTexture;
         public Texture AlbedoTexture
@@ -145,6 +152,11 @@ namespace AlkaronEngine.Assets.Materials
             worldViewProjMatrixBuffer = factory.CreateBuffer(new BufferDescription(4 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             environmentBuffer = factory.CreateBuffer(new BufferDescription(5 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
+            // TODO: Adapt if optimized packing is used in shader
+            albedoFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            metallicFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            roughnessFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
             albedoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             normalTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             aoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
@@ -196,17 +208,34 @@ namespace AlkaronEngine.Assets.Materials
             bindableResources.Add(environmentBuffer);
             if (ConstructedShader != null)
             {
-                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo))
+                // DiffuseAlbedo
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo, ConstructedShaderInputValueType.Texture))
                 {
                     bindableResources.Add(albedoTextureView);
                     bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
                 }
-                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.MetallicRoughnessCombined))
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo, ConstructedShaderInputValueType.ConstantValue))
+                {
+                    bindableResources.Add(albedoFactorBuffer);
+                }
+
+                // Metallic/Roughness
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.MetallicRoughnessCombined, ConstructedShaderInputValueType.Texture))
                 {
                     bindableResources.Add(metallicRoughnessTextureView);
                     bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
                 }
-                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Normal))
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Metallic, ConstructedShaderInputValueType.ConstantValue))
+                {
+                    bindableResources.Add(metallicFactorBuffer);
+                }
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Roughness, ConstructedShaderInputValueType.ConstantValue))
+                {
+                    bindableResources.Add(roughnessFactorBuffer);
+                }
+
+                // Normal
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Normal, ConstructedShaderInputValueType.Texture))
                 {
                     bindableResources.Add(normalTextureView);
                     bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
@@ -251,6 +280,7 @@ namespace AlkaronEngine.Assets.Materials
 
         public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix)
         {
+            Performance.StartAppendAggreate("Setup Texture");
             Matrix4x4 worldViewProjection = worldMatrix * renderContext.RenderManager.ViewTarget.ViewMatrix * 
                 renderContext.RenderManager.ViewTarget.ProjectionMatrix;
 
@@ -261,15 +291,21 @@ namespace AlkaronEngine.Assets.Materials
             environmentBufferObj.LightPosition2 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
             environmentBufferObj.LightPosition3 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 
+            renderContext.CommandList.UpdateBuffer(metallicFactorBuffer, 0, MetallicFactor);
+            renderContext.CommandList.UpdateBuffer(roughnessFactorBuffer, 0, RoughnessFactor);
+            renderContext.CommandList.UpdateBuffer(albedoFactorBuffer, 0, AlbedoFactor);
             renderContext.CommandList.UpdateBuffer(environmentBuffer, 0, environmentBufferObj);
             renderContext.CommandList.UpdateBuffer(worldViewProjMatrixBuffer, 0, worldViewProjection);
             renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, worldMatrix);
             renderContext.CommandList.SetGraphicsResourceSet(0, graphicsResourceSet);
+            Performance.EndAppendAggreate("Setup Texture");
         }
 
         public void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass)
         {
+            Performance.StartAppendAggreate("Setup");
             renderContext.CommandList.SetPipeline(graphicsPipeline);
+            Performance.EndAppendAggreate("Setup");
         }
     }
 }

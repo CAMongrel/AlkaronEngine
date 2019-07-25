@@ -9,6 +9,7 @@ using AlkaronEngine.Graphics2D;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Gui;
 using AlkaronEngine.Input;
+using AlkaronEngine.Util;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
@@ -129,6 +130,10 @@ namespace AlkaronEngine.Scene
         {
             renderContext.RenderManager = RenderManager;
 
+            Performance.Enabled = true;
+            Performance.LogLongRunningTasksOnly = true;
+
+            renderContext.RenderedTrianglesThisFrame = 0;
             renderContext.CommandList.ClearColorTarget(0, ClearColor);
 
             RenderManager.SetViewTargetFromCameraComponent(CurrentCamera.CameraComponent);

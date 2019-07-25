@@ -2,6 +2,7 @@ using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
 using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Util;
 using glTFLoader.Schema;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace AlkaronEngine.Assets.Importers
             internal bool ImportStaticMeshOnly;
             internal bool ImportAsSkeletalMesh;
             internal AssetSettings AssetSettings;
+            internal int MeshCounter;
 
             internal Gltf Model;
             internal List<byte[]> RawBuffers = new List<byte[]>();
@@ -52,21 +54,21 @@ namespace AlkaronEngine.Assets.Importers
             string inputFile = fullFilename;
             if (File.Exists(inputFile) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' is not valid!");
+                Log.Status("Import file '" + inputFile + "' is not valid!");
                 return false;
             }
 
             string extension = Path.GetExtension(inputFile);
             if (string.IsNullOrWhiteSpace(extension))
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
             extension = extension.ToLowerInvariant();
             if (allowedExtensions.Contains(extension) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
@@ -79,6 +81,7 @@ namespace AlkaronEngine.Assets.Importers
             context.ImportStaticMeshOnly = importStaticMeshOnly;
             context.ImportAsSkeletalMesh = !context.ImportStaticMeshOnly;
             context.AssetSettings = assetSettings;
+            context.MeshCounter = 0;
 
             string packageName = setPackageName;
 
@@ -96,7 +99,7 @@ namespace AlkaronEngine.Assets.Importers
 
             if (context.PackageToSaveIn == null)
             {
-                AlkaronCoreGame.Core.Log("Unable to create or find the package for this asset");
+                Log.Status("Unable to create or find the package for this asset");
                 return false;
             }
 
@@ -116,7 +119,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             catch (Exception ex)
             {
-                AlkaronCoreGame.Core.Log("Failed to import Mesh: " + ex);
+                Log.Status("Failed to import Mesh: " + ex);
                 return false;
             }
 
@@ -471,7 +474,8 @@ namespace AlkaronEngine.Assets.Importers
                     }
                 }
 
-                staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
+                staticMesh.Name = mesh.Name + $"_{p}_{context.MeshCounter}.staticMesh";
+                context.MeshCounter++;
                 context.PackageToSaveIn.StoreAsset(staticMesh);
 
                 staticMesh.RootTransform = worldMatrix;
@@ -500,6 +504,7 @@ namespace AlkaronEngine.Assets.Importers
 
             ConstructedShader constructedShader = new ConstructedShader(context.BaseAssetName + "_Material_" + mat.Name);
 
+            // Albedo
             if (pbr.BaseColorTexture != null)
             {
                 constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
@@ -510,6 +515,18 @@ namespace AlkaronEngine.Assets.Importers
                     ValueType = ConstructedShaderInputValueType.Texture
                 });
             }
+            else
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Albedo",
+                    Type = ConstructedShaderInputType.DiffuseAlbedo,
+                    Value = pbr.BaseColorFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+            }
+
+            // Metallic/Roughness
             if (pbr.MetallicRoughnessTexture != null)
             {
                 constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
@@ -520,6 +537,25 @@ namespace AlkaronEngine.Assets.Importers
                     ValueType = ConstructedShaderInputValueType.Texture
                 });
             }
+            else
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Metallic",
+                    Type = ConstructedShaderInputType.Metallic,
+                    Value = pbr.MetallicFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Roughness",
+                    Type = ConstructedShaderInputType.Roughness,
+                    Value = pbr.RoughnessFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+            }
+
+            // Normal Map
             if (mat.NormalTexture != null)
             {
                 constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
@@ -529,6 +565,31 @@ namespace AlkaronEngine.Assets.Importers
                     Value = (Surface2D)context.ImportedAssets[mat.NormalTexture.Index],
                     ValueType = ConstructedShaderInputValueType.Texture
                 });
+            }
+
+            // AmbientOcclusion
+            if (mat.OcclusionTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "AmbientOcclusion",
+                    Type = ConstructedShaderInputType.AmbientOcclusion,
+                    Value = (Surface2D)context.ImportedAssets[mat.OcclusionTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+
+            // Emissive
+            if (mat.EmissiveTexture != null)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (mat.EmissiveFactor != null)
+                {
+                    //throw new NotImplementedException();
+                }
             }
 
             result.LoadFromConstructedShader(constructedShader);

@@ -88,7 +88,7 @@ namespace AlkaronViewer
 
         protected override void CreateDefaultCamera()
         {
-            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 10.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 500.0f);
+            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 1000.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
@@ -118,7 +118,8 @@ namespace AlkaronViewer
 
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
-            //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
+            //PresentModel("BoxAnimated", false, GltfModelEntryType.Base);
+            //PresentModel("2CylinderEngine", false, GltfModelEntryType.Base);
             //PresentModel("Suzanne", false, GltfModelEntryType.Base);
             //PresentModel("NormalTangentTest", false, GltfModelEntryType.Base);
             //PresentModel("SciFiHelmet", false, GltfModelEntryType.Base);

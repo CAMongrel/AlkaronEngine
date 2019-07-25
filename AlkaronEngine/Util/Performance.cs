@@ -4,217 +4,216 @@ using System.Collections.Generic;
 
 namespace AlkaronEngine.Util
 {
-   public interface ITimeProvider
-   {
-      long GetTimestamp();
-      long GetFrequency();
-   }
+    public interface ITimeProvider
+    {
+        long GetTimestamp();
+        long GetFrequency();
+    }
 
-   public static class Performance
-   {
-      private class AggregateEntry
-      {
-         public double TotalTimeInSeconds;
-         public long StartTime;
-         public string Description;
-         public int Count;
-      }
+    public static class Performance
+    {
+        private class AggregateEntry
+        {
+            public double TotalTimeInSeconds;
+            public long StartTime;
+            public string Description;
+            public int Count;
+        }
 
-      private class PerfEntry
-      {
-         public long StartTime;
-         public string Description;
-      }
+        private class PerfEntry
+        {
+            public long StartTime;
+            public string Description;
+        }
 
-      public static bool Enabled;
+        public static bool Enabled = true;
 
-      public static bool LogLongRunningTasksOnly;
-      public static double LongRunningTaskThresholdInSeconds;
+        public static bool LogLongRunningTasksOnly = false;
+        public static double LongRunningTaskThresholdInSeconds = 1.0;
 
-      public static ITimeProvider TimeProvider;
+        public static ITimeProvider TimeProvider;
 
-      private static Stack<PerfEntry> counterStack;
+        private static Stack<PerfEntry> counterStack;
 
-      private static Dictionary<string, AggregateEntry> aggregateEntries;
+        private static Dictionary<string, AggregateEntry> aggregateEntries;
 
-      static Performance()
-      {
-         LogLongRunningTasksOnly = false;
-         Enabled = true;
-         aggregateEntries = new Dictionary<string, AggregateEntry>();
-         counterStack = new Stack<PerfEntry>();
-      }
+        static Performance()
+        {
+            Enabled = true;
+            aggregateEntries = new Dictionary<string, AggregateEntry>();
+            counterStack = new Stack<PerfEntry>();
+        }
 
-      private static void LogAggregate(AggregateEntry entry)
-      {
-         bool performLog = true;
-         if (LogLongRunningTasksOnly == true)
-         {
-            performLog = (entry.TotalTimeInSeconds >= LongRunningTaskThresholdInSeconds);
-         }
-
-         if (performLog)
-         {
-            double msecs = (entry.TotalTimeInSeconds * 1000);
-            double msecsAvgPerEntry = 0;
-            if (entry.Count > 0)
+        private static void LogAggregate(AggregateEntry entry)
+        {
+            bool performLog = true;
+            if (LogLongRunningTasksOnly == true)
             {
-               msecsAvgPerEntry = msecs / (float)entry.Count;
+                performLog = (entry.TotalTimeInSeconds >= LongRunningTaskThresholdInSeconds);
             }
 
-            Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " took a total " + msecs + " ms with " +
-                      msecsAvgPerEntry + " ms on average per entry with a total of " + entry.Count + " entries.");
-         }
-      }
+            if (performLog)
+            {
+                double msecs = (entry.TotalTimeInSeconds * 1000);
+                double msecsAvgPerEntry = 0;
+                if (entry.Count > 0)
+                {
+                    msecsAvgPerEntry = msecs / (float)entry.Count;
+                }
 
-      public static void StartAggregateFrame()
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+                Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " took a total " + msecs + " ms with " +
+                          msecsAvgPerEntry + " ms on average per entry with a total of " + entry.Count + " entries.");
+            }
+        }
 
-         aggregateEntries.Clear();
-      }
+        public static void StartAggregateFrame()
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-      public static void EndAggregateFrame()
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            aggregateEntries.Clear();
+        }
 
-         var values = aggregateEntries.Values.ToList();
-         aggregateEntries.Clear();
+        public static void EndAggregateFrame()
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         for (int i = 0; i < values.Count; i++)
-         {
-            LogAggregate(values[i]);
-         }
-      }
+            var values = aggregateEntries.Values.ToList();
+            aggregateEntries.Clear();
 
-      public static void PushAggregate(string description)
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            for (int i = 0; i < values.Count; i++)
+            {
+                LogAggregate(values[i]);
+            }
+        }
 
-         if (aggregateEntries.ContainsKey(description) == true)
-         {
-            return;
-         }
+        public static void PushAggregate(string description)
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         AggregateEntry entry = new AggregateEntry();
-         entry.Count = 0;
-         entry.StartTime = 0;
-         entry.Description = description;
-         entry.TotalTimeInSeconds = 0;
-         aggregateEntries.Add(description, entry);
-      }
+            if (aggregateEntries.ContainsKey(description) == true)
+            {
+                return;
+            }
 
-      public static void StartAppendAggreate(string description)
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            AggregateEntry entry = new AggregateEntry();
+            entry.Count = 0;
+            entry.StartTime = 0;
+            entry.Description = description;
+            entry.TotalTimeInSeconds = 0;
+            aggregateEntries.Add(description, entry);
+        }
 
-         if (aggregateEntries.ContainsKey(description) == false)
-         {
-            return;
-         }
+        public static void StartAppendAggreate(string description)
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         AggregateEntry entry = aggregateEntries[description];
-         entry.StartTime = TimeProvider.GetTimestamp();
-      }
+            if (aggregateEntries.ContainsKey(description) == false)
+            {
+                return;
+            }
 
-      public static void EndAppendAggreate(string description)
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            AggregateEntry entry = aggregateEntries[description];
+            entry.StartTime = TimeProvider.GetTimestamp();
+        }
 
-         if (aggregateEntries.ContainsKey(description) == false)
-         {
-            return;
-         }
+        public static void EndAppendAggreate(string description)
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         AggregateEntry entry = aggregateEntries[description];
-         long diff = TimeProvider.GetTimestamp() - entry.StartTime;
-         double seconds = (double)diff / (double)TimeProvider.GetFrequency();
+            if (aggregateEntries.ContainsKey(description) == false)
+            {
+                return;
+            }
 
-         entry.Count++;
-         entry.TotalTimeInSeconds += seconds;
-      }
+            AggregateEntry entry = aggregateEntries[description];
+            long diff = TimeProvider.GetTimestamp() - entry.StartTime;
+            double seconds = (double)diff / (double)TimeProvider.GetFrequency();
 
-      public static void PopAggregate(string description)
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            entry.Count++;
+            entry.TotalTimeInSeconds += seconds;
+        }
 
-         if (aggregateEntries.ContainsKey(description) == false)
-         {
-            return;
-         }
+        public static void PopAggregate(string description)
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         AggregateEntry entry = aggregateEntries[description];
-         aggregateEntries.Remove(description);
+            if (aggregateEntries.ContainsKey(description) == false)
+            {
+                return;
+            }
 
-         LogAggregate(entry);
-      }
+            AggregateEntry entry = aggregateEntries[description];
+            aggregateEntries.Remove(description);
 
-      public static void Push(string description)
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return;
-         }
+            LogAggregate(entry);
+        }
 
-         PerfEntry entry = new PerfEntry();
-         entry.StartTime = TimeProvider.GetTimestamp();
-         entry.Description = description;
-         counterStack.Push(entry);
+        public static void Push(string description)
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return;
+            }
 
-         if (LogLongRunningTasksOnly == false)
-         {
-            Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " starts");
-         }
-      }
+            PerfEntry entry = new PerfEntry();
+            entry.StartTime = TimeProvider.GetTimestamp();
+            entry.Description = description;
+            counterStack.Push(entry);
 
-      public static double Pop()
-      {
-         if (Enabled == false || TimeProvider == null)
-         {
-            return 0;
-         }
+            if (LogLongRunningTasksOnly == false)
+            {
+                Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " starts");
+            }
+        }
 
-         if (counterStack.Count == 0)
-         {
-            return 0;
-         }
+        public static double Pop()
+        {
+            if (Enabled == false || TimeProvider == null)
+            {
+                return 0;
+            }
 
-         PerfEntry entry = counterStack.Pop();
+            if (counterStack.Count == 0)
+            {
+                return 0;
+            }
 
-         long diff = TimeProvider.GetTimestamp() - entry.StartTime;
-         double seconds = (double)diff / (double)TimeProvider.GetFrequency();
+            PerfEntry entry = counterStack.Pop();
 
-         bool performLog = true;
-         if (LogLongRunningTasksOnly == true)
-         {
-            performLog = (seconds >= LongRunningTaskThresholdInSeconds);
-         }
+            long diff = TimeProvider.GetTimestamp() - entry.StartTime;
+            double seconds = (double)diff / (double)TimeProvider.GetFrequency();
 
-         if (performLog)
-         {
-            Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " took " + (seconds * 1000) + " ms");
-         }
+            bool performLog = true;
+            if (LogLongRunningTasksOnly == true)
+            {
+                performLog = (seconds >= LongRunningTaskThresholdInSeconds);
+            }
 
-         return seconds;
-      }
-   }
+            if (performLog)
+            {
+                Log.Write(LogType.Performance, LogSeverity.Debug, entry.Description + " took " + (seconds * 1000) + " ms");
+            }
+
+            return seconds;
+        }
+    }
 }
 

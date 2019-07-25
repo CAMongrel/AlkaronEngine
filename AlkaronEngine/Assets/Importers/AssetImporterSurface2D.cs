@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using AlkaronEngine.Assets.Materials;
+using AlkaronEngine.Util;
 using Veldrid;
 
 namespace AlkaronEngine.Assets.Importers
@@ -42,21 +43,21 @@ namespace AlkaronEngine.Assets.Importers
             string inputFile = fullFilename;
             if (File.Exists(inputFile) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' is not valid!");
+                Log.Status("Import file '" + inputFile + "' is not valid!");
                 return false;
             }
 
             string extension = Path.GetExtension(inputFile);
             if (string.IsNullOrWhiteSpace(extension))
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
             extension = extension.ToLowerInvariant();
             if (allowedExtensions.Contains(extension) == false)
             {
-                AlkaronCoreGame.Core.Log("Import file '" + inputFile + "' has an invalid file extension!");
+                Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
                 return false;
             }
 
@@ -124,7 +125,7 @@ namespace AlkaronEngine.Assets.Importers
 
             if (packageToSaveIn == null)
             {
-                AlkaronCoreGame.Core.Log("Unable to create or find the package for this asset");
+                Log.Status("Unable to create or find the package for this asset");
                 return false;
             }
 
@@ -149,7 +150,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             catch (Exception ex)
             {
-                AlkaronCoreGame.Core.Log("Failed to import Surface2D: " + ex.ToString());
+                Log.Status("Failed to import Surface2D: " + ex.ToString());
                 return false;
             }
 
