@@ -82,6 +82,8 @@ namespace AlkaronViewer
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+
+            label.Text = "Camera Position: " + CurrentCamera.CameraComponent.Center;
         }
 
         protected override void CreateDefaultCamera()
@@ -105,7 +107,7 @@ namespace AlkaronViewer
                 new Vector3( 1, -1, 0),
                 new Vector3(-1,  5, 0),
                 new Vector3( 1,  5, 0),
-            }, MainGame.Instance.GraphicsDevice);
+            }, MainGame.Instance.GraphicsDevice, false);
             //AddStaticMesh(box);
 
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SkinnedEffect.dx11.mgfxo", "SkinnedEffect", "EngineMaterials", out var material);
@@ -117,8 +119,13 @@ namespace AlkaronViewer
             //var mat = MainGame.Instance.AssetManager.Load<AlkaronEngine.Assets.Materials.Material>("EngineMaterials.BasicEffect.material");
 
             //PresentModel("BoxAnimated", true, GltfModelEntryType.Base);
-            PresentModel("Monster", false, GltfModelEntryType.Base);
-            
+            //PresentModel("Suzanne", false, GltfModelEntryType.Base);
+            //PresentModel("NormalTangentTest", false, GltfModelEntryType.Base);
+            //PresentModel("SciFiHelmet", false, GltfModelEntryType.Base);
+            //PresentModel("MetalRoughSpheres", false, GltfModelEntryType.Base);
+            //PresentModel("WaterBottle", false, GltfModelEntryType.Base);
+            PresentModel("Sponza", false, GltfModelEntryType.Base);
+
             /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
             var meshes = package.GetAssetsByType("StaticMesh");
 
@@ -162,6 +169,8 @@ namespace AlkaronViewer
             package.Save();*/
         }
 
+        private UILabel label;
+
         protected override void InitUI()
         {
             base.InitUI();
@@ -187,7 +196,7 @@ namespace AlkaronViewer
             image.Height = 200;
             window.AddComponent(image);
 
-            UILabel label = new UILabel("Hello World!");
+            label = new UILabel("Hello World!");
             label.X = 0;
             label.Y = 0;
             label.Width = 200;

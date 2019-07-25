@@ -92,8 +92,6 @@ namespace AlkaronEngine.Assets.Meshes
                     new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle()),
                     new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                        reader.ReadSingle()),
-                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle()));
             }
 
@@ -170,27 +168,82 @@ namespace AlkaronEngine.Assets.Meshes
         }
         #endregion
 
+        internal override void CalculateTangents()
+        {
+            base.CalculateTangents();
+
+            Vector3[] tangents = new Vector3[objectVertices.Length];
+            Vector3[] tangents2 = new Vector3[objectVertices.Length];
+
+            for (int i = 0; i < objectIndices.Length; i+=3)
+            {
+                uint i1 = objectIndices[i + 0];
+                uint i2 = objectIndices[i + 1];
+                uint i3 = objectIndices[i + 2];
+
+                TangentVertex vert1 = objectVertices[i1];
+                TangentVertex vert2 = objectVertices[i2];
+                TangentVertex vert3 = objectVertices[i3];
+
+                float x1 = vert2.Position.X - vert1.Position.X;
+                float x2 = vert3.Position.X - vert1.Position.X;
+                float y1 = vert2.Position.Y - vert1.Position.Y;
+                float y2 = vert3.Position.Y - vert1.Position.Y;
+                float z1 = vert2.Position.Z - vert1.Position.Z;
+                float z2 = vert3.Position.Z - vert1.Position.Z;
+
+                float s1 = vert2.TexCoord.X - vert1.TexCoord.X;
+                float s2 = vert3.TexCoord.X - vert1.TexCoord.X;
+                float t1 = vert2.TexCoord.Y - vert1.TexCoord.Y;
+                float t2 = vert3.TexCoord.Y - vert1.TexCoord.Y;
+
+                float r = 1.0F / (s1 * t2 - s2 * t1);
+                Vector3 sdir = new Vector3((t2 * x1 -t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+                Vector3 tdir = new Vector3((s1* x2 -s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+                tangents[i1] += sdir;
+                tangents[i2] += sdir;
+                tangents[i3] += sdir;
+
+                tangents2[i1] += tdir;
+                tangents2[i2] += tdir;
+                tangents2[i3] += tdir;
+            }
+
+            for (int i = 0; i < objectVertices.Length; i++)
+            {
+                Vector3 n = objectVertices[i].Normal;
+                Vector3 t = tangents[i];
+
+                // Gram-Schmidt orthogonalize                
+                objectVertices[i].Tangent = Vector3.Normalize(t - n * Vector3.Dot(n, t));
+
+                // Calculate handedness
+                float w = (Vector3.Dot(Vector3.Cross(n, t), tangents2[i]) < 0.0F) ? -1.0f : 1.0f;
+            }
+        }
+
         #region FromVertices
         /// <summary>
         /// Creates a static mesh directly from vertices (triangles only)
         /// </summary>
-        public static StaticMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice)
+        public static StaticMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             TangentVertex[] verts = new TangentVertex[vertices.Length];
             for (int i = 0; i < verts.Length; i++)
             {
                 verts[i] = new TangentVertex(
                     vertices[i], Vector2.Zero, new Vector3(0, 1, 0),
-                    Vector3.Zero, Vector3.Zero);
+                    Vector3.Zero);
             }
 
-            return FromVertices(verts, graphicsDevice);
+            return FromVertices(verts, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from tangent vertices (triangles only)
         /// </summary>
-        public static StaticMesh FromVertices(TangentVertex[] vertices, GraphicsDevice graphicsDevice)
+        public static StaticMesh FromVertices(TangentVertex[] vertices, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             uint[] indices = new uint[vertices.Length];
             for (uint i = 0; i < vertices.Length; i++)
@@ -198,18 +251,23 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices, graphicsDevice);
+            return FromVertices(vertices, indices, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
-        public static StaticMesh FromVertices(TangentVertex[] vertices, uint[] indices, GraphicsDevice graphicsDevice)
+        public static StaticMesh FromVertices(TangentVertex[] vertices, uint[] indices, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             StaticMesh mesh = new StaticMesh();
 
             mesh.objectVertices = vertices;
             mesh.objectIndices = indices;
+
+            if (calcTangents)
+            {
+                mesh.CalculateTangents();
+            }
 
             BufferDescription vertexBufferDesc = new BufferDescription((uint)(TangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
             mesh.vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
@@ -255,10 +313,6 @@ namespace AlkaronEngine.Assets.Meshes
                 writer.Write(objectVertices[i].Tangent.X);
                 writer.Write(objectVertices[i].Tangent.Y);
                 writer.Write(objectVertices[i].Tangent.Z);
-
-                writer.Write(objectVertices[i].Bitangent.X);
-                writer.Write(objectVertices[i].Bitangent.Y);
-                writer.Write(objectVertices[i].Bitangent.Z);
             }
 
             writer.Write(objectIndices.Length);

@@ -41,7 +41,7 @@ namespace AlkaronEngine.Components
                 StaticMesh mesh = staticMeshes[i];
 
                 StaticMeshRenderProxy proxy = new StaticMeshRenderProxy(mesh);
-                proxy.WorldMatrix = worldMatrix;
+                proxy.WorldMatrix = worldMatrix * mesh.RootTransform;
                 proxy.Material = mesh.Material;
                 //proxy.BoundingBox = BoundingBox.CreateMerged(proxy.BoundingBox, BoundingBox.CreateFromSphere(staticMeshes[i].BoundingSphere));
                 resultList.Add(proxy);

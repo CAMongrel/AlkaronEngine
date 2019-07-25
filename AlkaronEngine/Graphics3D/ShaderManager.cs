@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using AlkaronEngine.Assets.Materials;
+using System.Collections.Generic;
 using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
@@ -29,7 +30,7 @@ namespace AlkaronEngine.Graphics3D
 
             CompileFragmentShader("SimpleColorFragment",
                 Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SimpleColorFragment.glsl")));
-            CompileFragmentShader("DefaultPBRFragment",
+            CompileFragmentShader(Material.DefaultPBRFragmentName,
                 Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("DefaultPBRFragment.glsl")));
         }
 

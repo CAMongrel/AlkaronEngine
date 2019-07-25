@@ -1,6 +1,7 @@
 using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics3D;
 using glTFLoader.Schema;
 using System;
 using System.Collections.Generic;
@@ -382,6 +383,7 @@ namespace AlkaronEngine.Assets.Importers
                         new ReadOnlySpan<byte>(context.RawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
                 }
 
+                bool calcTangents = tangentSpan == null && normalsSpan != null;
                 for (int v = 0; v < vertices.Length; v++)
                 {
                     vertices[v].Position = positionSpan[v];
@@ -399,10 +401,10 @@ namespace AlkaronEngine.Assets.Importers
                     if (tangentSpan != null)
                     {
                         vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
-                        if (normalsSpan != null)
-                        {
-                            vertices[v].Bitangent = Vector3.Cross(normalsSpan[v], vertices[v].Tangent) * tangentSpan[v].W;
-                        }
+                    }
+                    else
+                    {
+                        // Calculate tangents
                     }
                 }
 
@@ -410,7 +412,7 @@ namespace AlkaronEngine.Assets.Importers
 
                 if (prim.Indices == null)
                 {
-                    staticMesh = StaticMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice);
+                    staticMesh = StaticMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice, calcTangents);
                 }
                 else
                 {
@@ -465,13 +467,14 @@ namespace AlkaronEngine.Assets.Importers
                                 throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
                         }
 
-                        staticMesh = StaticMesh.FromVertices(vertices, indices, context.AssetSettings.GraphicsDevice);
+                        staticMesh = StaticMesh.FromVertices(vertices, indices, context.AssetSettings.GraphicsDevice, calcTangents);
                     }
                 }
 
                 staticMesh.Name = mesh.Name + "_" + p + ".staticMesh";
                 context.PackageToSaveIn.StoreAsset(staticMesh);
 
+                staticMesh.RootTransform = worldMatrix;
                 staticMesh.Material = CreateMaterialForMesh(prim, context);
 
                 context.ImportedAssets.Add(staticMesh);
@@ -480,29 +483,56 @@ namespace AlkaronEngine.Assets.Importers
 
         private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, AssetImporterGltfMeshContext context)
         {
+            Materials.Material result = new Materials.Material();
             if (prim.Material == null)
             {
-                return new Materials.Material();
+                throw new NotImplementedException();
             }
 
             int matIndex = prim.Material.Value;
             var mat = context.Model.Materials[matIndex];
             if (mat.PbrMetallicRoughness == null)
             {
-                return new Materials.Material();
-            }
+                throw new NotImplementedException();
+            }            
 
             var pbr = mat.PbrMetallicRoughness;
 
-            Materials.Material result = new Materials.Material();
+            ConstructedShader constructedShader = new ConstructedShader(context.BaseAssetName + "_Material_" + mat.Name);
+
             if (pbr.BaseColorTexture != null)
             {
-                result.AlbedoTexture = ((Surface2D)context.ImportedAssets[pbr.BaseColorTexture.Index]).Texture;
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Albedo",
+                    Type = ConstructedShaderInputType.DiffuseAlbedo,
+                    Value = (Surface2D)context.ImportedAssets[pbr.BaseColorTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
             }
             if (pbr.MetallicRoughnessTexture != null)
             {
-                result.MetallicRoughnessTexture = ((Surface2D)context.ImportedAssets[pbr.MetallicRoughnessTexture.Index]).Texture;
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "MetallicRoughness",
+                    Type = ConstructedShaderInputType.MetallicRoughnessCombined,
+                    Value = (Surface2D)context.ImportedAssets[pbr.MetallicRoughnessTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
             }
+            if (mat.NormalTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Normal",
+                    Type = ConstructedShaderInputType.Normal,
+                    Value = (Surface2D)context.ImportedAssets[mat.NormalTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+
+            result.LoadFromConstructedShader(constructedShader);
+
             return result;
         }
 

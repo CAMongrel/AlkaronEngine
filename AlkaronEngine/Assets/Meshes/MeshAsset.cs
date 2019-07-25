@@ -38,6 +38,12 @@ namespace AlkaronEngine.Assets.Meshes
         /// </summary>
         protected uint[] objectIndices;
 
+        /// <summary>
+        /// Transform to the root node, must be applied during rendering.
+        /// Defaults to Identity matrix
+        /// </summary>
+        public Matrix4x4 RootTransform = Matrix4x4.Identity;
+
         public IMaterial Material { get; set; }
 
         protected const float EPSILON = 0.000001f;
@@ -58,5 +64,10 @@ namespace AlkaronEngine.Assets.Meshes
         {
             //
         } // class MeshAsset
+
+        internal virtual void CalculateTangents()
+        {
+            //
+        }
     }
 } // namespace HellspawnEngine.Assets.Meshes

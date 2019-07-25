@@ -78,7 +78,7 @@ namespace AlkaronEngine.Assets.Materials
             Material = setMaterial;
         }
 
-        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldViewProjectio)
+        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix)
         {
             //var effect = Material.Effect;
 

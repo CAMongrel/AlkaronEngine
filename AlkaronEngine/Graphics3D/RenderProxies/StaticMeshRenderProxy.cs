@@ -31,8 +31,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            Matrix4x4 worldViewProj = WorldMatrix * renderContext.RenderManager.ViewTarget.ViewMatrix * renderContext.RenderManager.ViewTarget.ProjectionMatrix;
-            materialToUse.ApplyParameters(renderContext, worldViewProj);
+            materialToUse.ApplyParameters(renderContext, WorldMatrix);
             Performance.EndAppendAggreate("Setup");
 
             /*if (StaticMesh.DiffuseTexture != null)

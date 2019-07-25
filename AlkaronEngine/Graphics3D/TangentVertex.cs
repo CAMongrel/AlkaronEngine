@@ -30,10 +30,6 @@ namespace AlkaronEngine.Graphics
         /// Normal
         /// </summary>
         public Vector3 Tangent;
-        /// <summary>
-        /// Tangent
-        /// </summary>
-        public Vector3 Bitangent;
         #endregion
 
         #region Properties
@@ -65,14 +61,12 @@ namespace AlkaronEngine.Graphics
             Vector3 setPos,
             float setU, float setV,
             Vector3 setNormal,
-            Vector3 setTangent,
-            Vector3 setBitangent)
+            Vector3 setTangent)
         {
             Position = setPos;
             TexCoord = new Vector2(setU, setV);
             Normal = setNormal;
             Tangent = setTangent;
-            Bitangent = setBitangent;
         } // TangentVertex(setPos, setU, setV)
 
         /// <summary>
@@ -86,14 +80,12 @@ namespace AlkaronEngine.Graphics
             Vector3 setPos,
             Vector2 setUv,
             Vector3 setNormal,
-            Vector3 setTangent,
-            Vector3 setBitangent)
+            Vector3 setTangent)
         {
             Position = setPos;
             TexCoord = setUv;
             Normal = setNormal;
             Tangent = setTangent;
-            Bitangent = setBitangent;
         } // TangentVertex(setPos, setUv, setNormal)
         #endregion
 
@@ -107,8 +99,7 @@ namespace AlkaronEngine.Graphics
                 "u=" + TexCoord.X + ", " +
                 "v=" + TexCoord.Y + ", " +
                 "normal=" + Normal + ", " +
-                "tangent=" + Tangent + ", " +
-                "bitangent=" + Bitangent + ")";
+                "tangent=" + Tangent + ")";
         } // ToString()
         #endregion
 
@@ -130,7 +121,6 @@ namespace AlkaronEngine.Graphics
                 new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate),
                 new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
                 new VertexElementDescription("Tangent", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
-                new VertexElementDescription("Bitangent", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate),
             });
 
             return result;
@@ -150,7 +140,6 @@ namespace AlkaronEngine.Graphics
         public int positionIndex;
         public int normalIndex;
         public int tangentIndex;
-        public int bitangentIndex;
         public int texCoordIndex;
         #endregion
 
@@ -163,12 +152,11 @@ namespace AlkaronEngine.Graphics
         /// <param name="setTangentIndex"></param>
         /// <param name="setTexCoordIndex"></param>
         public IndexVertex(int setPositionIndex, int setNormalIndex,
-            int setTangentIndex, int setBitangentIndex, int setTexCoordIndex)
+            int setTangentIndex, int setTexCoordIndex)
         {
             positionIndex = setPositionIndex;
             normalIndex = setNormalIndex;
             tangentIndex = setTangentIndex;
-            bitangentIndex = setBitangentIndex;
             texCoordIndex = setTexCoordIndex;
         }
         #endregion

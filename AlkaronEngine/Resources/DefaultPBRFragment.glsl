@@ -9,20 +9,17 @@ const float PI = 3.14159265359;
 layout(location = 0) in vec2 fsin_TexCoords;
 layout(location = 1) in vec3 fsin_WorldPos;
 layout(location = 2) in vec3 fsin_Normal;
+layout(location = 3) in vec3 fsin_TBN;
 
-layout(set = 0, binding = 1) uniform CameraBuffer
+layout(set = 0, binding = 3) uniform CameraBuffer
 {
     vec4 CameraPos;
 };
 
-layout(set = 0, binding = 2) uniform texture2D AlbedoTexture;
-//layout(set = 0, binding = 2) uniform texture2D NormalTexture;
-layout(set = 0, binding = 3) uniform texture2D MetallicRoughnessTexture;
-//layout(set = 0, binding = 4) uniform texture2D RoughnessTexture;
-//layout(set = 0, binding = 5) uniform texture2D AOTexture;
-
-layout(set = 0, binding = 4) uniform sampler AlbedoSampler;
-layout(set = 0, binding = 5) uniform sampler MetallicRoughnessSampler;
+layout(set = 0, binding = 4) uniform texture2D AlbedoTexture;
+layout(set = 0, binding = 5) uniform sampler AlbedoSampler;
+layout(set = 0, binding = 6) uniform texture2D MetallicRoughnessTexture;
+layout(set = 0, binding = 7) uniform sampler MetallicRoughnessSampler;
 
 layout(location = 0) out vec4 OutColor;
 
