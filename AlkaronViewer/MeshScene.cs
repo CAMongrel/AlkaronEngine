@@ -88,7 +88,7 @@ namespace AlkaronViewer
 
         protected override void CreateDefaultCamera()
         {
-            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 1000.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
+            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 100.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
@@ -125,7 +125,8 @@ namespace AlkaronViewer
             //PresentModel("SciFiHelmet", false, GltfModelEntryType.Base);
             //PresentModel("MetalRoughSpheres", false, GltfModelEntryType.Base);
             //PresentModel("WaterBottle", false, GltfModelEntryType.Base);
-            PresentModel("Sponza", false, GltfModelEntryType.Base);
+            //PresentModel("Sponza", false, GltfModelEntryType.Base);
+            PresentModel("AlphaBlendModeTest", false, GltfModelEntryType.Base);
 
             /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
             var meshes = package.GetAssetsByType("StaticMesh");

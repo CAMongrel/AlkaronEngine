@@ -26,7 +26,12 @@ namespace AlkaronEngine.Assets.Importers
             internal string FullFilename;
             internal string BaseAssetName;
             internal Package PackageToSaveIn = null;
-            internal List<Asset> ImportedAssets = new List<Asset>();
+            //internal List<Asset> ImportedAssets = new List<Asset>();
+
+            internal List<Surface2D> ImportedSurfaces = new List<Surface2D>();
+            internal List<Materials.Material> ImportedMaterials = new List<Materials.Material>();
+            internal List<MeshAsset> ImportedMeshes = new List<MeshAsset>();
+
             internal bool ImportStaticMeshOnly;
             internal bool ImportAsSkeletalMesh;
             internal AssetSettings AssetSettings;
@@ -110,7 +115,9 @@ namespace AlkaronEngine.Assets.Importers
                 {
                     ImportGLTFFile(context); //fullFilename, assetName, packageToSaveIn, importedAssets);
 
-                    importedAssets = context.ImportedAssets;
+                    importedAssets.AddRange(context.ImportedSurfaces);
+                    importedAssets.AddRange(context.ImportedMaterials);
+                    importedAssets.AddRange(context.ImportedMeshes);
                 }
                 else
                 {
@@ -164,7 +171,128 @@ namespace AlkaronEngine.Assets.Importers
             for (int i = 0; i < context.Model.Materials.Length; i++)
             {
                 glTFLoader.Schema.Material mat = context.Model.Materials[i];
+
+                CreateMaterial(mat, context);
             }
+        }
+
+        private static void CreateMaterial(glTFLoader.Schema.Material mat, AssetImporterGltfMeshContext context)
+        {
+            if (mat.PbrMetallicRoughness == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            var pbr = mat.PbrMetallicRoughness;
+
+            Materials.Material result = new Materials.Material();
+
+            ConstructedShader constructedShader = new ConstructedShader(context.BaseAssetName + "_Material_" + mat.Name);
+            switch (mat.AlphaMode)
+            {
+                case glTFLoader.Schema.Material.AlphaModeEnum.OPAQUE:
+                    constructedShader.BlendMode = BlendMode.Opaque;
+                    break;
+                case glTFLoader.Schema.Material.AlphaModeEnum.MASK:
+                    constructedShader.BlendMode = BlendMode.Mask;
+                    constructedShader.AlphaCutoff = mat.AlphaCutoff;
+                    break;
+                case glTFLoader.Schema.Material.AlphaModeEnum.BLEND:
+                    constructedShader.BlendMode = BlendMode.Blend;
+                    break;
+            }
+
+            // Albedo
+            if (pbr.BaseColorTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Albedo",
+                    Type = ConstructedShaderInputType.DiffuseAlbedo,
+                    Value = (Surface2D)context.ImportedSurfaces[pbr.BaseColorTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+            else
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Albedo",
+                    Type = ConstructedShaderInputType.DiffuseAlbedo,
+                    Value = pbr.BaseColorFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+            }
+
+            // Metallic/Roughness
+            if (pbr.MetallicRoughnessTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "MetallicRoughness",
+                    Type = ConstructedShaderInputType.MetallicRoughnessCombined,
+                    Value = (Surface2D)context.ImportedSurfaces[pbr.MetallicRoughnessTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+            else
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Metallic",
+                    Type = ConstructedShaderInputType.Metallic,
+                    Value = pbr.MetallicFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Roughness",
+                    Type = ConstructedShaderInputType.Roughness,
+                    Value = pbr.RoughnessFactor,
+                    ValueType = ConstructedShaderInputValueType.ConstantValue
+                });
+            }
+
+            // Normal Map
+            if (mat.NormalTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Normal",
+                    Type = ConstructedShaderInputType.Normal,
+                    Value = (Surface2D)context.ImportedSurfaces[mat.NormalTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+
+            // AmbientOcclusion
+            if (mat.OcclusionTexture != null)
+            {
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "AmbientOcclusion",
+                    Type = ConstructedShaderInputType.AmbientOcclusion,
+                    Value = (Surface2D)context.ImportedSurfaces[mat.OcclusionTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
+            }
+
+            // Emissive
+            if (mat.EmissiveTexture != null)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (mat.EmissiveFactor != null)
+                {
+                    //throw new NotImplementedException();
+                }
+            }
+
+            result.LoadFromConstructedShader(constructedShader);
+
+            context.ImportedMaterials.Add(result);
         }
 
         private static void LoadScenes(AssetImporterGltfMeshContext context)
@@ -185,37 +313,34 @@ namespace AlkaronEngine.Assets.Importers
 
         private static Matrix4x4 GetWorldMatrix(Node node)
         {
+            Matrix4x4 resultMatrix = Matrix4x4.Identity;
             if (node.Matrix != null)
             {
-                return new Matrix4x4(node.Matrix[ 0], node.Matrix[ 1], node.Matrix[ 2], node.Matrix[ 3],
-                                     node.Matrix[ 4], node.Matrix[ 5], node.Matrix[ 6], node.Matrix[ 7],
-                                     node.Matrix[ 8], node.Matrix[ 9], node.Matrix[10], node.Matrix[11],
-                                     node.Matrix[12], node.Matrix[13], node.Matrix[14], node.Matrix[15]);
+                resultMatrix *= new Matrix4x4(node.Matrix[ 0], node.Matrix[ 1], node.Matrix[ 2], node.Matrix[ 3],
+                                              node.Matrix[ 4], node.Matrix[ 5], node.Matrix[ 6], node.Matrix[ 7],
+                                              node.Matrix[ 8], node.Matrix[ 9], node.Matrix[10], node.Matrix[11],
+                                              node.Matrix[12], node.Matrix[13], node.Matrix[14], node.Matrix[15]);
             }
-            else
+
+            if (node.Scale != null)
             {
-                Matrix4x4 resultMatrix = Matrix4x4.Identity;
-
-                if (node.Translation != null)
-                {
-                    Matrix4x4 translationMat = Matrix4x4.CreateTranslation(node.Translation[0], node.Translation[1], node.Translation[2]);
-                    resultMatrix *= translationMat;
-                }
-
-                if (node.Rotation != null)
-                {
-                    Matrix4x4 rotationMat = Matrix4x4.CreateFromQuaternion(new Quaternion(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]));
-                    resultMatrix *= rotationMat;
-                }
-
-                if (node.Scale != null)
-                {
-                    Matrix4x4 scaleMat = Matrix4x4.CreateScale(node.Scale[0], node.Scale[1], node.Scale[2]);
-                    resultMatrix *= scaleMat;
-                }
-
-                return resultMatrix;
+                Matrix4x4 scaleMat = Matrix4x4.CreateScale(node.Scale[0], node.Scale[1], node.Scale[2]);
+                resultMatrix *= scaleMat;
             }
+
+            if (node.Rotation != null)
+            {
+                Matrix4x4 rotationMat = Matrix4x4.CreateFromQuaternion(new Quaternion(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]));
+                resultMatrix *= rotationMat;
+            }
+
+            if (node.Translation != null)
+            {
+                Matrix4x4 translationMat = Matrix4x4.CreateTranslation(node.Translation[0], node.Translation[1], node.Translation[2]);
+                resultMatrix *= translationMat;
+            }
+
+            return resultMatrix;
         }
 
         private static void LoadNode(AssetImporterGltfMeshContext context, Node node, Matrix4x4 parentMatrix)
@@ -288,12 +413,13 @@ namespace AlkaronEngine.Assets.Importers
                 using (Stream str = glTFLoader.Interface.OpenImageFile(context.Model, imageIndex, context.FullFilename))
                 {                    
                     string surfaceAssetName = GetImageAssetName(img, imageIndex, context.FullFilename);
+                    surfaceAssetName += "_" + context.ImportedSurfaces.Count;
 
                     AssetImporterSurface2D.Import(str, surfaceAssetName, context.PackageToSaveIn.PackageName, context.FullFilename, 
                         context.AssetSettings, out Surface2D surface);
                     if (surface != null)
                     {
-                        context.ImportedAssets.Add(surface);
+                        context.ImportedSurfaces.Add(surface);
                     }
                 }
             }
@@ -479,122 +605,20 @@ namespace AlkaronEngine.Assets.Importers
                 context.PackageToSaveIn.StoreAsset(staticMesh);
 
                 staticMesh.RootTransform = worldMatrix;
-                staticMesh.Material = CreateMaterialForMesh(prim, context);
+                staticMesh.Material = LookupMaterialForMesh(prim, context);
 
-                context.ImportedAssets.Add(staticMesh);
+                context.ImportedMeshes.Add(staticMesh);
             }
         }
 
-        private static Materials.Material CreateMaterialForMesh(MeshPrimitive prim, AssetImporterGltfMeshContext context)
+        private static Materials.Material LookupMaterialForMesh(MeshPrimitive prim, AssetImporterGltfMeshContext context)
         {
-            Materials.Material result = new Materials.Material();
             if (prim.Material == null)
             {
                 throw new NotImplementedException();
             }
 
-            int matIndex = prim.Material.Value;
-            var mat = context.Model.Materials[matIndex];
-            if (mat.PbrMetallicRoughness == null)
-            {
-                throw new NotImplementedException();
-            }            
-
-            var pbr = mat.PbrMetallicRoughness;
-
-            ConstructedShader constructedShader = new ConstructedShader(context.BaseAssetName + "_Material_" + mat.Name);
-
-            // Albedo
-            if (pbr.BaseColorTexture != null)
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "Albedo",
-                    Type = ConstructedShaderInputType.DiffuseAlbedo,
-                    Value = (Surface2D)context.ImportedAssets[pbr.BaseColorTexture.Index],
-                    ValueType = ConstructedShaderInputValueType.Texture
-                });
-            }
-            else
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "Albedo",
-                    Type = ConstructedShaderInputType.DiffuseAlbedo,
-                    Value = pbr.BaseColorFactor,
-                    ValueType = ConstructedShaderInputValueType.ConstantValue
-                });
-            }
-
-            // Metallic/Roughness
-            if (pbr.MetallicRoughnessTexture != null)
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "MetallicRoughness",
-                    Type = ConstructedShaderInputType.MetallicRoughnessCombined,
-                    Value = (Surface2D)context.ImportedAssets[pbr.MetallicRoughnessTexture.Index],
-                    ValueType = ConstructedShaderInputValueType.Texture
-                });
-            }
-            else
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "Metallic",
-                    Type = ConstructedShaderInputType.Metallic,
-                    Value = pbr.MetallicFactor,
-                    ValueType = ConstructedShaderInputValueType.ConstantValue
-                });
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "Roughness",
-                    Type = ConstructedShaderInputType.Roughness,
-                    Value = pbr.RoughnessFactor,
-                    ValueType = ConstructedShaderInputValueType.ConstantValue
-                });
-            }
-
-            // Normal Map
-            if (mat.NormalTexture != null)
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "Normal",
-                    Type = ConstructedShaderInputType.Normal,
-                    Value = (Surface2D)context.ImportedAssets[mat.NormalTexture.Index],
-                    ValueType = ConstructedShaderInputValueType.Texture
-                });
-            }
-
-            // AmbientOcclusion
-            if (mat.OcclusionTexture != null)
-            {
-                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
-                {
-                    Name = "AmbientOcclusion",
-                    Type = ConstructedShaderInputType.AmbientOcclusion,
-                    Value = (Surface2D)context.ImportedAssets[mat.OcclusionTexture.Index],
-                    ValueType = ConstructedShaderInputValueType.Texture
-                });
-            }
-
-            // Emissive
-            if (mat.EmissiveTexture != null)
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                if (mat.EmissiveFactor != null)
-                {
-                    //throw new NotImplementedException();
-                }
-            }
-
-            result.LoadFromConstructedShader(constructedShader);
-
-            return result;
+            return context.ImportedMaterials[prim.Material.Value];
         }
 
         private static Accessor GetAccessorByType(string attribute, Gltf model, MeshPrimitive prim)

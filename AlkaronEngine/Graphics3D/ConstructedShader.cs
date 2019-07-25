@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using AlkaronEngine.Assets.Materials;
@@ -28,9 +29,11 @@ namespace AlkaronEngine.Graphics3D
         Vector4
     }
 
-    class ConstructedShaderElement
+    enum BlendMode
     {
-
+        Opaque,
+        Mask,
+        Blend
     }
 
     class ConstructedShaderInputElement
@@ -165,11 +168,16 @@ namespace AlkaronEngine.Graphics3D
 
         public string Name { get; private set; }
 
+        public BlendMode BlendMode { get; internal set; }
+        public float AlphaCutoff { get; internal set; }
+
         public ConstructedShaderInput Inputs { get; private set; }
 
         public ConstructedShader(string setName)
         {
             Name = setName;
+            BlendMode = BlendMode.Opaque;
+            AlphaCutoff = 0.0f;
             Inputs = new ConstructedShaderInput();
         }
 
@@ -300,8 +308,8 @@ namespace AlkaronEngine.Graphics3D
             AddLights(sb);
             AddLocalVars(sb);
             AddPbrCode(sb);
-            sb.AppendLine("    " + ColorOutputName + " = vec4(color, 1.0);");
-            sb.AppendLine("    " + ColorOutputName + " = vec4(albedo, 1.0);");
+            sb.AppendLine("    " + ColorOutputName + " = vec4(color, albedo.a);");
+            //sb.AppendLine("    " + ColorOutputName + " = albedo;");
             sb.AppendLine("}");
         }
 
@@ -309,8 +317,8 @@ namespace AlkaronEngine.Graphics3D
         {
             sb.AppendLine("    // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 ");
             sb.AppendLine("    // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)");
-            sb.AppendLine("    vec3 F0 = vec3(0.04); ");
-            sb.AppendLine("    F0 = mix(F0, albedo, metallic);");
+            sb.AppendLine("    vec3 F0 = vec3(0.04);");
+            sb.AppendLine("    F0 = mix(F0, albedo.rgb, metallic);");
             sb.AppendLine("");
             sb.AppendLine("    // reflectance equation");
             sb.AppendLine("    vec3 Lo = vec3(0.0);");
@@ -347,12 +355,12 @@ namespace AlkaronEngine.Graphics3D
             sb.AppendLine("        float NdotL = max(dot(N, L), 0.0);");
             sb.AppendLine("");
             sb.AppendLine("        // add to outgoing radiance Lo");
-            sb.AppendLine("        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again");
+            sb.AppendLine("        Lo += (kD * albedo.rgb / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again");
             sb.AppendLine("    }");
             sb.AppendLine("");
             sb.AppendLine("    // ambient lighting (note that the next IBL tutorial will replace ");
             sb.AppendLine("    // this ambient lighting with environment lighting).");
-            sb.AppendLine("    vec3 ambient = vec3(0.03) * albedo * ao;");
+            sb.AppendLine("    vec3 ambient = vec3(0.03) * albedo.rgb * ao;");
             sb.AppendLine("");
             sb.AppendLine("    vec3 color = ambient + Lo;");
             sb.AppendLine("");
@@ -370,18 +378,26 @@ namespace AlkaronEngine.Graphics3D
             {
                 if (albedoInput.ValueType == ConstructedShaderInputValueType.Texture)
                 {
-                    sb.AppendLine("    vec3 albedo = texture(sampler2D(" + albedoInput.Name + "Texture, " + albedoInput.Name + "Sampler), " + TexCoordsInputName + ").rgb;");
+                    sb.AppendLine("    vec4 albedo = texture(sampler2D(" + albedoInput.Name + "Texture, " + albedoInput.Name + "Sampler), " + TexCoordsInputName + ");");
                 }
                 else if (albedoInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
                 {
-                    sb.AppendLine("    vec3 albedo = " + albedoInput.Name + "Constant.xyz;");
+                    sb.AppendLine("    vec4 albedo = " + albedoInput.Name + "Constant;");
                 }
             }
             else
             {
-                sb.AppendLine("    vec3 albedo = vec3(1, 0, 1);");
+                sb.AppendLine("    vec4 albedo = vec3(1.0, 0.0, 1.0, 1.0);");
             }
-            sb.AppendLine("    albedo = pow(albedo, vec3(2.2));");
+            sb.AppendLine("    albedo.xyz = pow(albedo.xyz, vec3(2.2));");
+
+            if (BlendMode == BlendMode.Mask)
+            {
+                sb.AppendLine("    if (albedo.a <= " + AlphaCutoff.ToString(CultureInfo.InvariantCulture) + ")");
+                sb.AppendLine("    {");
+                sb.AppendLine("        discard;");
+                sb.AppendLine("    }");
+            }
 
             var metRoughInput = GetInputForType(ConstructedShaderInputType.MetallicRoughnessCombined);
             if (metRoughInput != null)
@@ -436,7 +452,14 @@ namespace AlkaronEngine.Graphics3D
             var aoInput = GetInputForType(ConstructedShaderInputType.AmbientOcclusion);
             if (aoInput != null)
             {
-                throw new NotImplementedException();
+                if (aoInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    sb.AppendLine("    float ao = texture(sampler2D(" + aoInput.Name + "Texture, " + aoInput.Name + "Sampler), " + TexCoordsInputName + ").r;");
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
             else
             {
@@ -451,7 +474,7 @@ namespace AlkaronEngine.Graphics3D
             sb.AppendLine("    vec3 lightColors[4];");
             sb.AppendLine("");
             sb.AppendLine("    lightPositions[0] = " + TangentLightPos0InputName + ";");
-            sb.AppendLine("    lightColors[0] = vec3(300.0, 300.0, 300.0);");
+            sb.AppendLine("    lightColors[0] = vec3(30000.0, 30000.0, 30000.0);");
             //sb.AppendLine("    lightPositions[1] = vec3(-10, -10, 10);");
             //sb.AppendLine("    lightColors[1] = vec3(300.0, 0.0, 300.0);");
             sb.AppendLine();
@@ -551,6 +574,19 @@ namespace AlkaronEngine.Graphics3D
                 else if (roughnessInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
                 {
                     material.RoughnessFactor = (float)roughnessInput.Value;
+                }
+            }
+
+            var ambientOcclusionInput = GetInputForType(ConstructedShaderInputType.AmbientOcclusion);
+            if (ambientOcclusionInput != null)
+            {
+                if (ambientOcclusionInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    material.AmbientOcclusionTexture = ((Surface2D)ambientOcclusionInput.Value).Texture;
+                }
+                else if (ambientOcclusionInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    throw new NotImplementedException();
                 }
             }
         }

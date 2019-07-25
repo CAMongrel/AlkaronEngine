@@ -51,9 +51,14 @@ namespace AlkaronEngine.Components
         public void Zoom(float absoluteDelta)
         {
             Vector3 camVector = Center - LookAt;
-            float length = camVector.Length() + absoluteDelta;
+            float length = camVector.Length();// + absoluteDelta;
+
+            float delta = length * 0.05f * absoluteDelta;
+
+            length += delta;
+
             camVector = Vector3.Normalize(camVector);
-            Center = LookAt + camVector * length;
+            Center = LookAt + (camVector * length);
         }
 
         private void UpdateMatrices()

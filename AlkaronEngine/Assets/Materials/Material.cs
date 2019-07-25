@@ -40,10 +40,12 @@ namespace AlkaronEngine.Assets.Materials
         private DeviceBuffer worldViewProjMatrixBuffer;
         private DeviceBuffer environmentBuffer;
         private ResourceSet graphicsResourceSet;
+
         private TextureView albedoTextureView;
         private TextureView normalTextureView;
-        private TextureView aoTextureView;
+        private TextureView ambientOcclusionTextureView;
         private TextureView metallicRoughnessTextureView;
+
         private DeviceBuffer albedoFactorBuffer;
         private DeviceBuffer metallicFactorBuffer;
         private DeviceBuffer roughnessFactorBuffer;
@@ -61,7 +63,14 @@ namespace AlkaronEngine.Assets.Materials
                 var factory = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory;
 
                 albedoTexture = value;
-                albedoTextureView = factory.CreateTextureView(albedoTexture);
+                try
+                {
+                    albedoTextureView = factory.CreateTextureView(albedoTexture);
+                }
+                catch
+                {
+                    albedoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
+                }                
 
                 CreateGraphicsResourceSet(factory);
             }
@@ -82,16 +91,16 @@ namespace AlkaronEngine.Assets.Materials
             }
         }
 
-        private Texture aoTexture;
+        private Texture ambientOcclusionTexture;
         public Texture AmbientOcclusionTexture
         {
-            get { return aoTexture; }
+            get { return ambientOcclusionTexture; }
             set
             {
                 var factory = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory;
 
-                aoTexture = value;
-                aoTextureView = factory.CreateTextureView(aoTexture);
+                ambientOcclusionTexture = value;
+                ambientOcclusionTextureView = factory.CreateTextureView(ambientOcclusionTexture);
 
                 CreateGraphicsResourceSet(factory);
             }
@@ -159,13 +168,30 @@ namespace AlkaronEngine.Assets.Materials
 
             albedoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             normalTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
-            aoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
+            ambientOcclusionTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             metallicRoughnessTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
 
+            BlendStateDescription blendStateDesc = BlendStateDescription.SingleAlphaBlend;
             if (ConstructedShader != null)
             {
                 graphicsLayout = factory.CreateResourceLayout(
                     ConstructedShader.GetResourceLayoutDescription());
+
+                switch (ConstructedShader.BlendMode)
+                {
+                    case BlendMode.Opaque:
+                        blendStateDesc = BlendStateDescription.SingleDisabled;
+                        RequiresOrderingBackToFront = false;
+                        break;
+                    case BlendMode.Mask:
+                        blendStateDesc = BlendStateDescription.SingleOverrideBlend;
+                        RequiresOrderingBackToFront = false;
+                        break;
+                    case BlendMode.Blend:
+                        blendStateDesc = BlendStateDescription.SingleAlphaBlend;
+                        RequiresOrderingBackToFront = true;
+                        break;
+                }
 
                 ConstructedShader.ApplyToMaterial(this);
             }
@@ -185,7 +211,7 @@ namespace AlkaronEngine.Assets.Materials
             }
 
             GraphicsPipelineDescription fullScreenQuadDesc = new GraphicsPipelineDescription(
-                BlendStateDescription.SingleAlphaBlend,
+                blendStateDesc,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 new RasterizerStateDescription(FaceCullMode.Back, PolygonFillMode.Solid, FrontFace.CounterClockwise, true, false),
                 PrimitiveTopology.TriangleList,
@@ -212,7 +238,7 @@ namespace AlkaronEngine.Assets.Materials
                 if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo, ConstructedShaderInputValueType.Texture))
                 {
                     bindableResources.Add(albedoTextureView);
-                    bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
+                    bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.Aniso4xSampler);
                 }
                 if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo, ConstructedShaderInputValueType.ConstantValue))
                 {
@@ -238,6 +264,13 @@ namespace AlkaronEngine.Assets.Materials
                 if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Normal, ConstructedShaderInputValueType.Texture))
                 {
                     bindableResources.Add(normalTextureView);
+                    bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
+                }
+
+                // AmbientOcclusion
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.AmbientOcclusion, ConstructedShaderInputValueType.Texture))
+                {
+                    bindableResources.Add(ambientOcclusionTextureView);
                     bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
                 }
             }
