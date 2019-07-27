@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlkaronEngine.Components;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Graphics3D.RenderProxies;
 using AlkaronEngine.Scene;
 using BepuPhysics.Collidables;
@@ -44,8 +45,17 @@ namespace AlkaronEngine.Actors
 
         internal virtual IShape CreatePhysicsShape()
         {
-
             return null; 
+        }
+
+        internal void Draw(double deltaTime, RenderManager renderManager)
+        {
+            var renderProxies = GetRenderProxies();
+
+            foreach (var proxy in renderProxies)
+            {
+                renderManager.EnqueueRenderProxy(proxy);
+            }
         }
 
         internal IEnumerable<BaseRenderProxy> GetRenderProxies()

@@ -120,6 +120,7 @@ namespace AlkaronEngine.Scene
         public virtual void Update(double deltaTime)
         {
             // Update 3D graph
+            RenderManager.SetWorldOriginForDepthSorting(CurrentCamera.CameraComponent);
             SceneGraph.Update(deltaTime);
 
             // Update 2D UI

@@ -10,6 +10,7 @@ using System.Numerics;
 using AlkaronEngine.Gui;
 using Veldrid.SPIRV;
 using System.Text;
+using AlkaronEngine.Graphics3D.RenderPasses;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -37,7 +38,7 @@ namespace AlkaronEngine.Graphics3D
         /// <summary>
         /// Needs locking with lockObj ... accessed by multiple threads.
         /// </summary>
-        private List<BaseRenderProxy> renderProxyStagingArea;
+        //private List<BaseRenderProxy> renderProxyStagingArea;
 
         private long frameRenderStartTime;
 
@@ -50,14 +51,17 @@ namespace AlkaronEngine.Graphics3D
         public float CurrentFPS { get; private set; }
         public int RenderedComponentsLastFrame { get; private set; }
 
-        private List<RenderPass> renderPasses;
+        //private List<RenderPass> renderPasses;
 
         internal ViewTarget ViewTarget { get; private set; }
+
         /// <summary>
         /// Applied to viewTarget at the start of the next frame
         /// Needs locking with lockObj ... accessed by multiple threads.
         /// </summary>
         private ViewTarget nextViewTarget;
+
+        private StaticMeshRenderPass staticMeshRenderPass;
 
         public RenderManager()
         {
@@ -69,9 +73,10 @@ namespace AlkaronEngine.Graphics3D
             renderThread = null;
             renderThreadActive = false;
             lockObj = new Object();
-            renderProxyStagingArea = new List<BaseRenderProxy>();
+            //renderProxyStagingArea = new List<BaseRenderProxy>();
 
-            renderPasses = new List<RenderPass>();
+            //renderPasses = new List<RenderPass>();
+            staticMeshRenderPass = new StaticMeshRenderPass();
 
             CreateRenderTarget();
             CreateEffectLibrary();
@@ -142,6 +147,11 @@ namespace AlkaronEngine.Graphics3D
                                               0);*/
         }
 
+        internal void SetWorldOriginForDepthSorting(CameraComponent cameraComponent)
+        {
+            staticMeshRenderPass.SetWorldOriginForDepthSorting(cameraComponent.Center);
+        }
+
         public void SizeChanged()
         {
             CreateRenderTarget();
@@ -155,12 +165,24 @@ namespace AlkaronEngine.Graphics3D
             }
         }
 
-        internal void SetRenderProxies(List<BaseRenderProxy> list)
+        /*internal void SetRenderProxies(List<BaseRenderProxy> list)
         {
             lock (lockObj)
             {
                 renderProxyStagingArea.Clear();
                 renderProxyStagingArea.AddRange(list);
+            }
+        }*/
+
+        internal void EnqueueRenderProxy(BaseRenderProxy proxy)
+        {
+            if (proxy is StaticMeshRenderProxy smrr)
+            {
+                staticMeshRenderPass.EnqueueRenderProxy(smrr);
+            }
+            else
+            {
+                Log.Error("Cannot handle proxy of type: " + proxy?.GetType() ?? "null");
             }
         }
 
@@ -255,8 +277,6 @@ namespace AlkaronEngine.Graphics3D
 
             Performance.Push("RenderManager.Draw");
 
-            //GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
             // Apply update before rendering (adding new rendering proxies,
             // updating existing proxies)
             ApplyPreFrame(delta);
@@ -273,8 +293,6 @@ namespace AlkaronEngine.Graphics3D
 
             // Don't fry the CPU
             Thread.Sleep(1);
-
-            RemoveAllRenderPasses();
         }
 
         private void RenderThreadFunc(RenderContext renderContext)
@@ -291,32 +309,29 @@ namespace AlkaronEngine.Graphics3D
         {
             int componentCount = 0;
 
-            for (int i = 0; i < renderPasses.Count; i++)
+            staticMeshRenderPass.Render(renderContext);
+
+            /*for (int i = renderPasses.Count - 1; i >= 0; i--)
             {
                 componentCount += renderPasses[i].Draw(renderContext, componentCount, MaxRenderCount);
             }
 
-            RenderedComponentsLastFrame = componentCount;
+            RenderedComponentsLastFrame = componentCount;*/
         }
 
-        private void RemoveAllRenderPasses()
-        {
-            renderPasses.Clear();
-        }
-
-        private RenderPass CreateAndAddRenderPassForMaterial(IMaterial material)
+        /*private RenderPass CreateAndAddRenderPassForMaterial(IMaterial material)
         {
             RenderPass renderPass = new RenderPass(material);
             renderPasses.Add(renderPass);
             return renderPass;
-        }
+        }*/
 
         #region Pre-frame handling
         /// <summary>
         /// Must only be called from inside ApplyPreFrame() or otherwise secured with
         /// lock (lockObj).
         /// </summary>
-        private void ApplyRenderProxyStagingArea()
+        /*private void ApplyRenderProxyStagingArea()
         {
             // Apply stage to current process
             Dictionary<IMaterial, RenderPass> renderPassDict = new Dictionary<IMaterial, RenderPass>();
@@ -358,7 +373,7 @@ namespace AlkaronEngine.Graphics3D
             {
                 renderPasses[i].Clear();
             }
-        }
+        }*/
 
         private void ApplyPreFrame(double deltaTime)
         {
@@ -370,8 +385,9 @@ namespace AlkaronEngine.Graphics3D
                     nextViewTarget = null;
                 }
 
-                ClearRenderPasses();
-                ApplyRenderProxyStagingArea();
+                //ClearRenderPasses();
+                //ApplyRenderProxyStagingArea();
+                staticMeshRenderPass.SwapListsAndClearStage();
             }
 
             UpdateRenderProxies(deltaTime);
@@ -379,11 +395,13 @@ namespace AlkaronEngine.Graphics3D
 
         private void UpdateRenderProxies(double deltaTime)
         {
+            staticMeshRenderPass.Update(deltaTime);
+
             // Update all render proxies
-            for (int i = 0; i < renderPasses.Count; i++)
+            /*for (int i = 0; i < renderPasses.Count; i++)
             {
                 renderPasses[i].Update(deltaTime);
-            }
+            }*/
         }
         #endregion
     }

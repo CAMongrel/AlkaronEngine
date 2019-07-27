@@ -19,7 +19,7 @@ namespace AlkaronEngine.Components
                                         Vector2 setScreenSize,
                                         float setNearClip, float setFarClip)
            : base(Vector3.Zero, Vector3.UnitY, setLookAt, setScreenSize,
-                  setNearClip, setFarClip)
+                  setNearClip, setFarClip, CameraViewType.Perspective)
         {
             yawRadians = BepuUtilities.MathHelper.ToRadians(setYawDegrees);
             pitchRadians = BepuUtilities.MathHelper.ToRadians(setPitchDegrees);

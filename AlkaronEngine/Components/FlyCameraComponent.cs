@@ -19,7 +19,7 @@ namespace AlkaronEngine.Components
         public FlyCameraComponent(Vector3 setCenter, Vector2 setScreenSize,
                                float setNearClip, float setFarClip)
            : base(setCenter, Vector3.UnitY, setCenter + Vector3.UnitZ, setScreenSize,
-                  setNearClip, setFarClip)
+                  setNearClip, setFarClip, CameraViewType.Perspective)
         {
             yaw = 0;
             pitch = 0;

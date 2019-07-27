@@ -5,6 +5,12 @@ using Veldrid;
 
 namespace AlkaronEngine.Components
 {
+    public enum CameraViewType
+    {
+        Perspective,
+        Orthographic
+    }
+
     public class CameraComponent : BaseComponent
     {
         public Vector3 UpVector { get; set; }
@@ -20,12 +26,16 @@ namespace AlkaronEngine.Components
 
         public float SpeedModifier { get; set; }
 
+        public CameraViewType CameraViewType { get; private set; }
+
         public CameraComponent(Vector3 setCenter, Vector3 setUpVector,
                                Vector3 setLookAt,
                                Vector2 setScreenSize,
-                               float setNearClip, float setFarClip)
+                               float setNearClip, float setFarClip,
+                               CameraViewType setCameraViewType)
            : base(setCenter)
         {
+            CameraViewType = setCameraViewType;
             SpeedModifier = 1.0f;
 
             UpVector = setUpVector;
@@ -36,8 +46,18 @@ namespace AlkaronEngine.Components
 
             ScreenSize = setScreenSize;
 
-            ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(BepuUtilities.MathHelper.ToRadians(60.0f),
-                                                                   ScreenSize.X / ScreenSize.Y, NearClip, FarClip);
+            switch (CameraViewType)
+            {
+                case CameraViewType.Perspective:
+                    ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(BepuUtilities.MathHelper.ToRadians(60.0f),
+                                                                           ScreenSize.X / ScreenSize.Y, NearClip, FarClip);
+                    break;
+
+                case CameraViewType.Orthographic:
+                    ProjectionMatrix = Matrix4x4.CreateOrthographic(ScreenSize.X, ScreenSize.Y, NearClip, FarClip);
+                    break;
+            }
+            
             ViewMatrix = Matrix4x4.CreateLookAt(Center, LookAt, UpVector);
         }
 

@@ -37,7 +37,12 @@ namespace AlkaronEngine.Scene
                 Actors[i].Update(deltaTime);
             }
 
-            SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());
+            for (int i = 0; i < Actors.Count; i++)
+            {
+                Actors[i].Draw(deltaTime, SceneOwner.RenderManager);
+            }
+
+            //SceneOwner.RenderManager.SetRenderProxies(GetSceneRenderProxies());
         }
 
         public void AddActor(BaseActor newActor)
