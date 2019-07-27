@@ -280,7 +280,7 @@ namespace AlkaronEngine.Assets.Importers
             // Emissive
             if (mat.EmissiveTexture != null)
             {
-                throw new NotImplementedException();
+                //throw new NotImplementedException();
             }
             else
             {
@@ -299,7 +299,7 @@ namespace AlkaronEngine.Assets.Importers
         {
             for (int i = 0; i < context.Model.Scenes.Length; i++)
             {
-                ReportProgress(context, "Loading scene #" + i);
+                ReportProgress(context, "Loading scene #" + i + " of " + context.Model.Scenes.Length);
 
                 // Load all nodes
                 for (int j = 0; j < context.Model.Scenes[i].Nodes.Length; j++)
@@ -345,7 +345,7 @@ namespace AlkaronEngine.Assets.Importers
 
         private static void LoadNode(AssetImporterGltfMeshContext context, Node node, Matrix4x4 parentMatrix)
         {
-            Matrix4x4 worldMatrix = parentMatrix * GetWorldMatrix(node);
+            Matrix4x4 worldMatrix = GetWorldMatrix(node) * parentMatrix;
 
             if (node.Camera.HasValue)
             {

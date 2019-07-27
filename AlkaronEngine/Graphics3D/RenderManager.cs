@@ -35,11 +35,6 @@ namespace AlkaronEngine.Graphics3D
         private Thread renderThread;
         private bool renderThreadActive;
 
-        /// <summary>
-        /// Needs locking with lockObj ... accessed by multiple threads.
-        /// </summary>
-        //private List<BaseRenderProxy> renderProxyStagingArea;
-
         private long frameRenderStartTime;
 
         public int MaxRenderCount;
@@ -51,15 +46,13 @@ namespace AlkaronEngine.Graphics3D
         public float CurrentFPS { get; private set; }
         public int RenderedComponentsLastFrame { get; private set; }
 
-        //private List<RenderPass> renderPasses;
-
-        internal ViewTarget ViewTarget { get; private set; }
+        internal ViewTarget? ViewTarget { get; private set; }
 
         /// <summary>
         /// Applied to viewTarget at the start of the next frame
         /// Needs locking with lockObj ... accessed by multiple threads.
         /// </summary>
-        private ViewTarget nextViewTarget;
+        private ViewTarget? nextViewTarget;
 
         private StaticMeshRenderPass staticMeshRenderPass;
 
@@ -164,15 +157,6 @@ namespace AlkaronEngine.Graphics3D
                 nextViewTarget = new ViewTarget(cameraComponent.Center, cameraComponent.ViewMatrix, cameraComponent.ProjectionMatrix);
             }
         }
-
-        /*internal void SetRenderProxies(List<BaseRenderProxy> list)
-        {
-            lock (lockObj)
-            {
-                renderProxyStagingArea.Clear();
-                renderProxyStagingArea.AddRange(list);
-            }
-        }*/
 
         internal void EnqueueRenderProxy(BaseRenderProxy proxy)
         {
@@ -309,72 +293,15 @@ namespace AlkaronEngine.Graphics3D
         {
             int componentCount = 0;
 
+            // Depth passes for lights/shadows
+            IMaterial? depthMaterial = null;
+            //staticMeshRenderPass.Render(renderContext, depthMaterial);
+
+            // Color pass
             staticMeshRenderPass.Render(renderContext);
-
-            /*for (int i = renderPasses.Count - 1; i >= 0; i--)
-            {
-                componentCount += renderPasses[i].Draw(renderContext, componentCount, MaxRenderCount);
-            }
-
-            RenderedComponentsLastFrame = componentCount;*/
         }
-
-        /*private RenderPass CreateAndAddRenderPassForMaterial(IMaterial material)
-        {
-            RenderPass renderPass = new RenderPass(material);
-            renderPasses.Add(renderPass);
-            return renderPass;
-        }*/
 
         #region Pre-frame handling
-        /// <summary>
-        /// Must only be called from inside ApplyPreFrame() or otherwise secured with
-        /// lock (lockObj).
-        /// </summary>
-        /*private void ApplyRenderProxyStagingArea()
-        {
-            // Apply stage to current process
-            Dictionary<IMaterial, RenderPass> renderPassDict = new Dictionary<IMaterial, RenderPass>();
-
-            for (int p = 0; p < renderProxyStagingArea.Count; p++)
-            {
-                BaseRenderProxy proxy = renderProxyStagingArea[p];
-
-                IMaterial materialToUse = proxy.Material;
-                if (proxy.Material == null)
-                {
-                    materialToUse = AlkaronCoreGame.Core.AssetManager.Load<Material>(
-                        "EngineMaterials.BasicEffect.material");
-                }
-
-                RenderPass passToUse = null;
-
-                if (renderPassDict.ContainsKey(materialToUse) == false)
-                {
-                    passToUse = CreateAndAddRenderPassForMaterial(materialToUse);
-                    renderPassDict.Add(materialToUse, passToUse);
-                }
-                else
-                {
-                    passToUse = renderPassDict[materialToUse];
-                }
-
-                passToUse.WorldOriginForDepthSorting = ViewTarget?.CameraLocation ?? Vector3.Zero;
-
-                passToUse.AddProxy(proxy);
-            }
-
-            renderProxyStagingArea.Clear();
-        }
-
-        private void ClearRenderPasses()
-        {
-            for (int i = 0; i < renderPasses.Count; i++)
-            {
-                renderPasses[i].Clear();
-            }
-        }*/
-
         private void ApplyPreFrame(double deltaTime)
         {
             lock (lockObj)
@@ -385,8 +312,6 @@ namespace AlkaronEngine.Graphics3D
                     nextViewTarget = null;
                 }
 
-                //ClearRenderPasses();
-                //ApplyRenderProxyStagingArea();
                 staticMeshRenderPass.SwapListsAndClearStage();
             }
 
@@ -396,12 +321,6 @@ namespace AlkaronEngine.Graphics3D
         private void UpdateRenderProxies(double deltaTime)
         {
             staticMeshRenderPass.Update(deltaTime);
-
-            // Update all render proxies
-            /*for (int i = 0; i < renderPasses.Count; i++)
-            {
-                renderPasses[i].Update(deltaTime);
-            }*/
         }
         #endregion
     }

@@ -126,7 +126,9 @@ namespace AlkaronViewer
             //PresentModel("MetalRoughSpheres", false, GltfModelEntryType.Base);
             //PresentModel("WaterBottle", false, GltfModelEntryType.Base);
             //PresentModel("Sponza", false, GltfModelEntryType.Base);
-            PresentModel("AlphaBlendModeTest", false, GltfModelEntryType.Base);
+            //PresentModel("AlphaBlendModeTest", false, GltfModelEntryType.Base);
+            PresentModel("Lantern", false, GltfModelEntryType.Base);
+            //PresentModel("FlightHelmet", false, GltfModelEntryType.Base);
 
             /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
             var meshes = package.GetAssetsByType("StaticMesh");

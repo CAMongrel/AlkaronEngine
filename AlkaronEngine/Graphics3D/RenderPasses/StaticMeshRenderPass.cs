@@ -40,11 +40,11 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             }
         }
 
-        internal void Render(RenderContext renderContext)
+        internal void Render(RenderContext renderContext, IMaterial? materialOverride = null)
         {
-            FrontToBackList.Render(renderContext);
-            IgnoreOrderingList.Render(renderContext);
-            BackToFrontList.Render(renderContext);
+            FrontToBackList.Render(renderContext, materialOverride);
+            IgnoreOrderingList.Render(renderContext, materialOverride);
+            BackToFrontList.Render(renderContext, materialOverride);
         }
 
         internal void Update(double deltaTime)
@@ -64,8 +64,6 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
 
     internal class MaterialPhase
     {
-        internal IMaterial Material;
-
         internal Vector3 WorldOriginForDepthSorting;
 
         internal Ordering Ordering = Ordering.Ignore;
@@ -123,11 +121,16 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             Proxies.Insert(insertLoc, proxy);
         }
 
-        internal void Render(RenderContext renderContext)
+        internal void Render(RenderContext renderContext, IMaterial? materialOverride = null)
         {
-            IMaterial? lastMaterial = null;
+            IMaterial? lastMaterial = materialOverride;
 
             BoundingFrustum frustum = renderContext.RenderManager.ViewTarget.CameraFrustum;
+
+            if (materialOverride != null)
+            {
+                materialOverride.SetupMaterialForRenderPass(renderContext);
+            }
 
             int renderedProxies = 0;
             for (int i = 0; i < Proxies.Count; i++)
@@ -144,15 +147,21 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
                     continue;
                 }
 
-                IMaterial activeMat = proxy.Material;
-                if (lastMaterial != activeMat)
+                if (materialOverride == null)
                 {
-                    lastMaterial = activeMat;
+                    IMaterial activeMat = proxy.Material;
+                    if (lastMaterial != activeMat)
+                    {
+                        lastMaterial = activeMat;
 
-                    lastMaterial.SetupMaterialForRenderPass(renderContext);
+                        lastMaterial.SetupMaterialForRenderPass(renderContext);
+                    }
+                    proxy.Render(renderContext, activeMat);
                 }
-
-                proxy.Render(renderContext, activeMat);
+                else
+                {
+                    proxy.Render(renderContext, materialOverride);
+                }
 
                 //renderCount++;
                 renderedProxies++;
@@ -201,7 +210,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             StagingRenderProxyList.AddProxy(renderProxy);
         }
 
-        internal void Render(RenderContext renderContext)
+        internal void Render(RenderContext renderContext, IMaterial? materialOverride = null)
         {
             if (renderContext.RenderManager.ViewTarget == null)
             {
@@ -213,7 +222,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             Performance.PushAggregate("SetVertexBuffer");
             Performance.PushAggregate("DrawPrimitives");
 
-            ActiveRenderProxyList.Render(renderContext);
+            ActiveRenderProxyList.Render(renderContext, materialOverride);
 
             Performance.PopAggregate("DrawPrimitives");
             Performance.PopAggregate("SetVertexBuffer");

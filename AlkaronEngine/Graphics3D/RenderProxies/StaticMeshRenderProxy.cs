@@ -1,6 +1,7 @@
 using AlkaronEngine.Assets.Materials;
 using AlkaronEngine.Assets.Meshes;
 using AlkaronEngine.Util;
+using System;
 using System.Numerics;
 
 namespace AlkaronEngine.Graphics3D.RenderProxies
@@ -31,6 +32,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
+            Console.WriteLine("Translation: " + WorldMatrix.Translation);
             materialToUse.ApplyParameters(renderContext, WorldMatrix);
             Performance.EndAppendAggreate("Setup");
 
