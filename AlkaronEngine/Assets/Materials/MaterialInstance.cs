@@ -86,7 +86,7 @@ namespace AlkaronEngine.Assets.Materials
             //effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        public virtual void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass)
+        public virtual void SetupMaterialForRenderPass(RenderContext renderContext)
         {
             //AlkaronCoreGame.Core.GraphicsDevice.SamplerStates[0] = SamplerState;
             //AlkaronCoreGame.Core.GraphicsDevice.BlendState = BlendState;

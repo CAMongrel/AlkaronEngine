@@ -149,7 +149,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
                 {
                     lastMaterial = activeMat;
 
-                    lastMaterial.SetupMaterialForRenderPass(renderContext, null);
+                    lastMaterial.SetupMaterialForRenderPass(renderContext);
                 }
 
                 proxy.Render(renderContext, activeMat);

@@ -334,7 +334,7 @@ namespace AlkaronEngine.Assets.Materials
             Performance.EndAppendAggreate("Setup Texture");
         }
 
-        public void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass)
+        public void SetupMaterialForRenderPass(RenderContext renderContext)
         {
             Performance.StartAppendAggreate("Setup");
             renderContext.CommandList.SetPipeline(graphicsPipeline);

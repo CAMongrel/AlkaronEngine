@@ -8,6 +8,6 @@ namespace AlkaronEngine.Assets.Materials
         bool RequiresOrderingBackToFront { get; set; }
 
         void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix);
-        void SetupMaterialForRenderPass(RenderContext renderContext, RenderPass renderPass);
+        void SetupMaterialForRenderPass(RenderContext renderContext);
     }
 }
