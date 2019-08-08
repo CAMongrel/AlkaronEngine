@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using AlkaronEngine.Assets.Materials;
 using Veldrid;
@@ -15,7 +16,8 @@ namespace AlkaronEngine.Graphics3D
         AmbientOcclusion,
         Metallic,
         Roughness,
-        MetallicRoughnessCombined
+        MetallicRoughnessCombined,
+        Emissive
     }
 
     enum ConstructedShaderInputValueType
@@ -308,9 +310,25 @@ namespace AlkaronEngine.Graphics3D
             AddLights(sb);
             AddLocalVars(sb);
             AddPbrCode(sb);
+            AddShadow(sb);
+            AddHDRGamma(sb);
             sb.AppendLine("    " + ColorOutputName + " = vec4(color, albedo.a);");
             //sb.AppendLine("    " + ColorOutputName + " = albedo;");
             sb.AppendLine("}");
+        }
+
+        private void AddShadow(StringBuilder sb)
+        {
+            //
+        }
+
+        private void AddHDRGamma(StringBuilder sb)
+        {
+            sb.AppendLine("    // HDR tonemapping");
+            sb.AppendLine("    color = color / (color + vec3(1.0));");
+            sb.AppendLine("    // gamma correct");
+            sb.AppendLine("    color = pow(color, vec3(1.0/2.2));");
+            sb.AppendLine();
         }
 
         private void AddPbrCode(StringBuilder sb)
@@ -329,6 +347,7 @@ namespace AlkaronEngine.Graphics3D
             sb.AppendLine("        vec3 H = normalize(V + L);");
             sb.AppendLine("        float distance = length(lightPositions[i] - " + TangentWorldPosInputName + ");");
             sb.AppendLine("        float attenuation = 1.0 / (distance * distance);");
+            //sb.AppendLine("        float attenuation = 1.0 / distance;");
             sb.AppendLine("        vec3 radiance = lightColors[i] * attenuation;");
             sb.AppendLine("");
             sb.AppendLine("        // Cook-Torrance BRDF");
@@ -363,12 +382,12 @@ namespace AlkaronEngine.Graphics3D
             sb.AppendLine("    vec3 ambient = vec3(0.03) * albedo.rgb * ao;");
             sb.AppendLine("");
             sb.AppendLine("    vec3 color = ambient + Lo;");
+            var emissiveInput = GetInputForType(ConstructedShaderInputType.Emissive);
+            if (emissiveInput != null)
+            {
+                sb.AppendLine("    color += emissive;");
+            }
             sb.AppendLine("");
-            sb.AppendLine("    // HDR tonemapping");
-            sb.AppendLine("    color = color / (color + vec3(1.0));");
-            sb.AppendLine("    // gamma correct");
-            sb.AppendLine("    color = pow(color, vec3(1.0/2.2));");
-            sb.AppendLine();
         }
 
         private void AddLocalVars(StringBuilder sb)
@@ -458,12 +477,28 @@ namespace AlkaronEngine.Graphics3D
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    sb.AppendLine("    float ao = " + aoInput.Name + "Constant.x;");
                 }
             }
             else
             {
                 sb.AppendLine("    float ao = 0.0;");
+            }
+            var emissiveInput = GetInputForType(ConstructedShaderInputType.Emissive);
+            if (emissiveInput != null)
+            {
+                if (emissiveInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    sb.AppendLine("    vec3 emissive = texture(sampler2D(" + emissiveInput.Name + "Texture, " + emissiveInput.Name + "Sampler), " + TexCoordsInputName + ").rgb;");
+                }
+                else
+                {
+                    sb.AppendLine("    vec3 emissive = " + emissiveInput.Name + "Constant.x;");
+                }
+            }
+            else
+            {
+                sb.AppendLine("    vec3 emissive = vec3(0.0);");
             }
             sb.AppendLine();
         }
@@ -586,7 +621,28 @@ namespace AlkaronEngine.Graphics3D
                 }
                 else if (ambientOcclusionInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
                 {
-                    throw new NotImplementedException();
+                    material.AmbientOcclusionFactor = (float)ambientOcclusionInput.Value;
+                }
+            }
+
+            var emissiveInput = GetInputForType(ConstructedShaderInputType.Emissive);
+            if (emissiveInput != null)
+            {
+                if (emissiveInput.ValueType == ConstructedShaderInputValueType.Texture)
+                {
+                    material.EmissiveTexture = ((Surface2D)emissiveInput.Value).Texture;
+                }
+                else if (emissiveInput.ValueType == ConstructedShaderInputValueType.ConstantValue)
+                {
+                    float[] values = (float[])emissiveInput.Value;
+                    if (values.Length == 3)
+                    {
+                        material.EmissiveFactor = new Vector3(values[0], values[1], values[2]);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
             }
         }

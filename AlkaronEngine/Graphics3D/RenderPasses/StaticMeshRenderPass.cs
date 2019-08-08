@@ -29,7 +29,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             BackToFrontList.Clear();
         }
 
-        internal void AddProxy(StaticMeshRenderProxy proxy)
+        internal void AddProxy(BaseRenderProxy proxy)
         {
             if (proxy.Material.RequiresOrderingBackToFront)
             {
@@ -68,7 +68,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
 
         internal Ordering Ordering = Ordering.Ignore;
 
-        internal List<StaticMeshRenderProxy> Proxies = new List<StaticMeshRenderProxy>();
+        internal List<BaseRenderProxy> Proxies = new List<BaseRenderProxy>();
 
         internal void Clear()
         {
@@ -109,7 +109,7 @@ namespace AlkaronEngine.Graphics3D.RenderPasses
             }
         }
 
-        internal void AddProxy(StaticMeshRenderProxy proxy)
+        internal void AddProxy(BaseRenderProxy proxy)
         {
             if (Ordering == Ordering.Ignore)
             {

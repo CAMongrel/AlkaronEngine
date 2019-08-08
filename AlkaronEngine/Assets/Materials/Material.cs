@@ -45,14 +45,19 @@ namespace AlkaronEngine.Assets.Materials
         private TextureView normalTextureView;
         private TextureView ambientOcclusionTextureView;
         private TextureView metallicRoughnessTextureView;
+        private TextureView emissiveTextureView;
 
         private DeviceBuffer albedoFactorBuffer;
         private DeviceBuffer metallicFactorBuffer;
         private DeviceBuffer roughnessFactorBuffer;
+        private DeviceBuffer ambientOcclusionFactorBuffer;
+        private DeviceBuffer emissiveFactorBuffer;
 
         public RgbaFloat AlbedoFactor = RgbaFloat.Black;
         public float MetallicFactor = 1.0f;
         public float RoughnessFactor = 1.0f;
+        public float AmbientOcclusionFactor = 1.0f;
+        public Vector3 EmissiveFactor = Vector3.Zero;
 
         private Texture albedoTexture;
         public Texture AlbedoTexture
@@ -121,6 +126,21 @@ namespace AlkaronEngine.Assets.Materials
             }
         }
 
+        private Texture emissiveTexture;
+        public Texture EmissiveTexture
+        {
+            get { return emissiveTexture; }
+            set
+            {
+                var factory = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory;
+
+                emissiveTexture = value;
+                emissiveTextureView = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory.CreateTextureView(emissiveTexture);
+
+                CreateGraphicsResourceSet(factory);
+            }
+        }
+
         internal Shader FragmentShader { get; set; }
 
         internal ConstructedShader? ConstructedShader { get; private set; }
@@ -165,11 +185,14 @@ namespace AlkaronEngine.Assets.Materials
             albedoFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             metallicFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             roughnessFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            emissiveFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            ambientOcclusionFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             albedoTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             normalTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             ambientOcclusionTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
             metallicRoughnessTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
+            emissiveTextureView = Graphics2D.ScreenQuad.SingleWhiteTextureView;
 
             BlendStateDescription blendStateDesc = BlendStateDescription.SingleAlphaBlend;
             if (ConstructedShader != null)
@@ -273,6 +296,21 @@ namespace AlkaronEngine.Assets.Materials
                     bindableResources.Add(ambientOcclusionTextureView);
                     bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
                 }
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.AmbientOcclusion, ConstructedShaderInputValueType.ConstantValue))
+                {
+                    bindableResources.Add(ambientOcclusionFactorBuffer);
+                }
+
+                // Emissive
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Emissive, ConstructedShaderInputValueType.Texture))
+                {
+                    bindableResources.Add(emissiveTextureView);
+                    bindableResources.Add(AlkaronCoreGame.Core.GraphicsDevice.LinearSampler);
+                }
+                if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.Emissive, ConstructedShaderInputValueType.ConstantValue))
+                {
+                    bindableResources.Add(emissiveFactorBuffer);
+                }
             }
             else
             {
@@ -327,6 +365,8 @@ namespace AlkaronEngine.Assets.Materials
             renderContext.CommandList.UpdateBuffer(metallicFactorBuffer, 0, MetallicFactor);
             renderContext.CommandList.UpdateBuffer(roughnessFactorBuffer, 0, RoughnessFactor);
             renderContext.CommandList.UpdateBuffer(albedoFactorBuffer, 0, AlbedoFactor);
+            renderContext.CommandList.UpdateBuffer(ambientOcclusionFactorBuffer, 0, AmbientOcclusionFactor);
+            renderContext.CommandList.UpdateBuffer(emissiveFactorBuffer, 0, EmissiveFactor);
             renderContext.CommandList.UpdateBuffer(environmentBuffer, 0, environmentBufferObj);
             renderContext.CommandList.UpdateBuffer(worldViewProjMatrixBuffer, 0, worldViewProjection);
             renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, worldMatrix);

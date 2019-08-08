@@ -280,13 +280,25 @@ namespace AlkaronEngine.Assets.Importers
             // Emissive
             if (mat.EmissiveTexture != null)
             {
-                //throw new NotImplementedException();
+                constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                {
+                    Name = "Emissive",
+                    Type = ConstructedShaderInputType.Emissive,
+                    Value = (Surface2D)context.ImportedSurfaces[mat.EmissiveTexture.Index],
+                    ValueType = ConstructedShaderInputValueType.Texture
+                });
             }
             else
             {
                 if (mat.EmissiveFactor != null)
                 {
-                    //throw new NotImplementedException();
+                    constructedShader.Inputs.Elements.Add(new ConstructedShaderInputElement()
+                    {
+                        Name = "Emissive",
+                        Type = ConstructedShaderInputType.Emissive,
+                        Value = mat.EmissiveFactor,
+                        ValueType = ConstructedShaderInputValueType.ConstantValue
+                    });
                 }
             }
 

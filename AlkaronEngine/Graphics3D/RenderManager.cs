@@ -55,6 +55,7 @@ namespace AlkaronEngine.Graphics3D
         private ViewTarget? nextViewTarget;
 
         private StaticMeshRenderPass staticMeshRenderPass;
+        private SkeletalMeshRenderPass skeletalMeshRenderPass;
 
         public RenderManager()
         {
