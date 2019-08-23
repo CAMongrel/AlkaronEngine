@@ -71,6 +71,7 @@ namespace AlkaronEngine.Graphics3D
 
             //renderPasses = new List<RenderPass>();
             staticMeshRenderPass = new StaticMeshRenderPass();
+            skeletalMeshRenderPass = new SkeletalMeshRenderPass();
 
             CreateRenderTarget();
             CreateEffectLibrary();
@@ -164,6 +165,10 @@ namespace AlkaronEngine.Graphics3D
             if (proxy is StaticMeshRenderProxy smrr)
             {
                 staticMeshRenderPass.EnqueueRenderProxy(smrr);
+            }
+            else if (proxy is SkeletalMeshRenderProxy smrr2)
+            {
+                skeletalMeshRenderPass.EnqueueRenderProxy(smrr2);
             }
             else
             {
@@ -300,6 +305,7 @@ namespace AlkaronEngine.Graphics3D
 
             // Color pass
             staticMeshRenderPass.Render(renderContext);
+            skeletalMeshRenderPass.Render(renderContext);
         }
 
         #region Pre-frame handling
@@ -314,6 +320,7 @@ namespace AlkaronEngine.Graphics3D
                 }
 
                 staticMeshRenderPass.SwapListsAndClearStage();
+                skeletalMeshRenderPass.SwapListsAndClearStage();
             }
 
             UpdateRenderProxies(deltaTime);
@@ -322,6 +329,7 @@ namespace AlkaronEngine.Graphics3D
         private void UpdateRenderProxies(double deltaTime)
         {
             staticMeshRenderPass.Update(deltaTime);
+            skeletalMeshRenderPass.Update(deltaTime);
         }
         #endregion
     }

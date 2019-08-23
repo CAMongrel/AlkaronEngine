@@ -7,7 +7,7 @@ namespace AlkaronEngine.Assets.Materials
     {
         bool RequiresOrderingBackToFront { get; set; }
 
-        void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix);
+        void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix, Matrix4x4[]? boneMatrices = null);
         void SetupMaterialForRenderPass(RenderContext renderContext);
     }
 }

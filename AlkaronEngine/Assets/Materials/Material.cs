@@ -39,6 +39,7 @@ namespace AlkaronEngine.Assets.Materials
         private DeviceBuffer worldMatrixBuffer;
         private DeviceBuffer worldViewProjMatrixBuffer;
         private DeviceBuffer environmentBuffer;
+        private DeviceBuffer jointMatricesBuffer;
         private ResourceSet graphicsResourceSet;
 
         private TextureView albedoTextureView;
@@ -155,23 +156,29 @@ namespace AlkaronEngine.Assets.Materials
             ConstructedShader = constructedShader;
 
             string code = constructedShader.GenerateShaderCode();
-            AlkaronCoreGame.Core.ShaderManager.CompileFragmentShader(constructedShader.Name, code);
+            AlkaronCoreGame.Core.ShaderManager.CompileFragmentShader(constructedShader.Name, code, constructedShader.IsSkeletalShader);
 
-            LoadFragmentShader(constructedShader.Name);
+            LoadFragmentShader(constructedShader);
         }
 
-        internal void LoadFragmentShader(string name)
+        internal void LoadFragmentShader(ConstructedShader constructedShader)
         {
             Shader[] shaders = new Shader[]
             {
-                AlkaronCoreGame.Core.ShaderManager.StaticMeshVertexShader,
-                AlkaronCoreGame.Core.ShaderManager.GetFragmentShaderByName(name)
+                constructedShader.VertexShader,
+                AlkaronCoreGame.Core.ShaderManager.GetFragmentShaderByName(constructedShader.Name)
             };
+
+            VertexLayoutDescription usedVDesc = TangentVertex.VertexLayout;
+            if (constructedShader.IsSkeletalShader)
+            {
+                usedVDesc = SkinnedTangentVertex.VertexLayout;
+            }
 
             ShaderSetDescription shaderSet = new ShaderSetDescription(
                 new VertexLayoutDescription[]
                 {
-                    TangentVertex.VertexLayout
+                    usedVDesc
                 },
                 shaders);
 
@@ -180,6 +187,10 @@ namespace AlkaronEngine.Assets.Materials
             worldMatrixBuffer = factory.CreateBuffer(new BufferDescription(4 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             worldViewProjMatrixBuffer = factory.CreateBuffer(new BufferDescription(4 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             environmentBuffer = factory.CreateBuffer(new BufferDescription(5 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            if (constructedShader.IsSkeletalShader)
+            {
+                jointMatricesBuffer = factory.CreateBuffer(new BufferDescription(80 * 4 * 4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            }
 
             // TODO: Adapt if optimized packing is used in shader
             albedoFactorBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(float), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -257,6 +268,11 @@ namespace AlkaronEngine.Assets.Materials
             bindableResources.Add(environmentBuffer);
             if (ConstructedShader != null)
             {
+                if (ConstructedShader.IsSkeletalShader)
+                {
+                    bindableResources.Add(jointMatricesBuffer);
+                }
+
                 // DiffuseAlbedo
                 if (ConstructedShader.HasInputOfType(ConstructedShaderInputType.DiffuseAlbedo, ConstructedShaderInputValueType.Texture))
                 {
@@ -349,7 +365,7 @@ namespace AlkaronEngine.Assets.Materials
             writer.Write(RequiresOrderingBackToFront);
         }
 
-        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix)
+        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix, Matrix4x4[]? boneMatrices = null)
         {
             Performance.StartAppendAggreate("Setup Texture");
             Matrix4x4 worldViewProjection = worldMatrix * renderContext.RenderManager.ViewTarget.ViewMatrix * 
@@ -362,14 +378,29 @@ namespace AlkaronEngine.Assets.Materials
             environmentBufferObj.LightPosition2 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
             environmentBufferObj.LightPosition3 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 
+            // Vertex Shader
+            renderContext.CommandList.UpdateBuffer(worldViewProjMatrixBuffer, 0, worldViewProjection);
+            renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, worldMatrix);
+            renderContext.CommandList.UpdateBuffer(environmentBuffer, 0, environmentBufferObj);
+            if (ConstructedShader != null &&
+                ConstructedShader.IsSkeletalShader &&
+                boneMatrices != null)
+            {
+                if (boneMatrices.Length > 80)
+                {
+                    throw new NotSupportedException("boneMatrices can have a maximum length of 80 matrices");
+                }
+
+                renderContext.CommandList.UpdateBuffer(jointMatricesBuffer, 0, boneMatrices);
+            }
+
+            // Fragment Shader
             renderContext.CommandList.UpdateBuffer(metallicFactorBuffer, 0, MetallicFactor);
             renderContext.CommandList.UpdateBuffer(roughnessFactorBuffer, 0, RoughnessFactor);
             renderContext.CommandList.UpdateBuffer(albedoFactorBuffer, 0, AlbedoFactor);
             renderContext.CommandList.UpdateBuffer(ambientOcclusionFactorBuffer, 0, AmbientOcclusionFactor);
             renderContext.CommandList.UpdateBuffer(emissiveFactorBuffer, 0, EmissiveFactor);
-            renderContext.CommandList.UpdateBuffer(environmentBuffer, 0, environmentBufferObj);
-            renderContext.CommandList.UpdateBuffer(worldViewProjMatrixBuffer, 0, worldViewProjection);
-            renderContext.CommandList.UpdateBuffer(worldMatrixBuffer, 0, worldMatrix);
+
             renderContext.CommandList.SetGraphicsResourceSet(0, graphicsResourceSet);
             Performance.EndAppendAggreate("Setup Texture");
         }

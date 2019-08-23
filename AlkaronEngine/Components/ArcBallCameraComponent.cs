@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Components
 {
@@ -31,6 +32,28 @@ namespace AlkaronEngine.Components
             Vector3 directionVec = Vector3.Transform(backward, quaternion);
 
             SetCenter(directionVec * setDistance, false);
+        }
+
+        public override bool KeyPressed(Key key)
+        {
+            if (key == Key.ShiftLeft)
+            {
+                SpeedModifier *= 5.0f;
+                return true;
+            }
+
+            return base.KeyPressed(key);
+        }
+
+        public override bool KeyReleased(Key key)
+        {
+            if (key == Key.ShiftLeft)
+            {
+                SpeedModifier /= 5.0f;
+                return true;
+            }
+
+            return base.KeyReleased(key);
         }
 
         public override bool PointerDown(Vector2 position, Input.PointerType pointerType)

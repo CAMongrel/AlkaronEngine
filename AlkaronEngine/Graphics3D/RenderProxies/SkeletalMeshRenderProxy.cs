@@ -106,17 +106,24 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }*/
         }
 
+        int counter = 0;
+
         public override void Render(RenderContext renderContext, IMaterial materialToUse)
         {
             base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            //Matrix4x4 worldViewProj = WorldMatrix * renderManager.ViewTarget.ViewMatrix * renderManager.ViewTarget.ProjectionMatrix;
-            //materialToUse.ApplyParameters(worldViewProj);
+            SkeletalMesh.UpdateAnimation(counter++);
+            materialToUse.ApplyParameters(renderContext, WorldMatrix, SkeletalMesh.GetBoneMatrices(WorldMatrix));
             Performance.EndAppendAggreate("Setup");
 
+            if (counter > 100)
+            {
+                counter = 0;
+            }
+
             Performance.StartAppendAggreate("Render Mesh");
-            //SkeletalMesh.Render();
+            SkeletalMesh.Render(renderContext);
             Performance.EndAppendAggreate("Render Mesh");
 
             /*SkeletalMesh.SetAnimationTime(AnimationTime);

@@ -26,6 +26,8 @@ namespace AlkaronEngine.Components
 
         public void SetSkeletalMesh(SkeletalMesh skeletalMesh)
         {
+            SkeletalMesh = skeletalMesh;
+
             CreateRenderProxies();
         }
 

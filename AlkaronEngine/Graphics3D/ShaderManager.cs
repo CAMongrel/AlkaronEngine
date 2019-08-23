@@ -13,8 +13,10 @@ namespace AlkaronEngine.Graphics3D
 
         internal Shader StaticMeshVertexShader { get; private set; }
 
+        internal Shader SkeletalMeshVertexShader { get; private set; }
+
         private byte[] staticMeshVertexShaderSpirv;
-        //private byte[] skeletalMeshVertexShader;
+        private byte[] skeletalMeshVertexShaderSpirv;
 
         internal ShaderManager()
         {
@@ -28,23 +30,36 @@ namespace AlkaronEngine.Graphics3D
                 null, ShaderStages.Vertex, new GlslCompileOptions());
             staticMeshVertexShaderSpirv = result.SpirvBytes;
 
-            CompileFragmentShader("SimpleColorFragment",
-                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SimpleColorFragment.glsl")));
-            CompileFragmentShader(Material.DefaultPBRFragmentName,
-                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("DefaultPBRFragment.glsl")));
+            result = SpirvCompilation.CompileGlslToSpirv(
+                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SkeletalMeshVertex.glsl")),
+                null, ShaderStages.Vertex, new GlslCompileOptions());
+            skeletalMeshVertexShaderSpirv = result.SpirvBytes;
+
+            CompileFragmentShader("SimpleColorFragment_Static",
+                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SimpleColorFragment.glsl")), false);
+            CompileFragmentShader("SimpleColorFragment_Skeletal",
+                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("SimpleColorFragment.glsl")), true);
+            /*CompileFragmentShader(Material.DefaultPBRFragmentName,
+                Encoding.UTF8.GetString(AlkaronCoreGame.Core.AlkaronContent.OpenResourceBytes("DefaultPBRFragment.glsl")));*/
         }
 
-        internal void CompileFragmentShader(string name, string shaderCode, string entryPoint = "main")
+        internal void CompileFragmentShader(string name, string shaderCode, bool isSkeletalMesh, string entryPoint = "main")
         {
             name = name.ToLowerInvariant();
 
             var result = SpirvCompilation.CompileGlslToSpirv(
                 shaderCode, null, ShaderStages.Fragment, new GlslCompileOptions());
 
+            byte[] vertexShaderSpirv = staticMeshVertexShaderSpirv;
+            if (isSkeletalMesh)
+            {
+                vertexShaderSpirv = skeletalMeshVertexShaderSpirv;
+            }
+
             var shaders = AlkaronCoreGame.Core.GraphicsDevice.ResourceFactory.CreateFromSpirv(
                 new ShaderDescription(
                     ShaderStages.Vertex,
-                    staticMeshVertexShaderSpirv,
+                    vertexShaderSpirv,
                     "main"),
                 new ShaderDescription(
                     ShaderStages.Fragment,
@@ -54,9 +69,19 @@ namespace AlkaronEngine.Graphics3D
 
             lock (lockObj)
             {
-                if (StaticMeshVertexShader == null)
+                if (isSkeletalMesh)
                 {
-                    StaticMeshVertexShader = shaders[0];
+                    if (SkeletalMeshVertexShader == null)
+                    {
+                        SkeletalMeshVertexShader = shaders[0];
+                    }
+                }
+                else
+                {
+                    if (StaticMeshVertexShader == null)
+                    {
+                        StaticMeshVertexShader = shaders[0];
+                    }
                 }
 
                 if (loadedFragmentShaders.ContainsKey(name))

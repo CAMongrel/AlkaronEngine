@@ -57,11 +57,16 @@ namespace AlkaronEngine.Graphics3D
     {
         internal List<ConstructedShaderInputElement> Elements = new List<ConstructedShaderInputElement>();
 
-        private static readonly int VertexShaderBindingCount = 3;
+        private int vertexShaderBindingCount;
+
+        public ConstructedShaderInput(int setVertexShaderBindingCount)
+        {
+            vertexShaderBindingCount = setVertexShaderBindingCount;
+        }
 
         internal int GetBindingLocation(ConstructedShaderInputType type)
         {
-            int bindingLoc = VertexShaderBindingCount;
+            int bindingLoc = vertexShaderBindingCount;
             for (int i = 0; i < Elements.Count; i++)
             {
                 var elem = Elements[i];
@@ -173,22 +178,35 @@ namespace AlkaronEngine.Graphics3D
         public BlendMode BlendMode { get; internal set; }
         public float AlphaCutoff { get; internal set; }
 
+        public bool IsSkeletalShader { get; private set; }
+
+        public Shader VertexShader { get; private set; }
+
         public ConstructedShaderInput Inputs { get; private set; }
 
-        public ConstructedShader(string setName)
+        public ConstructedShader(string setName, Shader setVertexShader, bool setIsSkeletalShader)
         {
+            IsSkeletalShader = setIsSkeletalShader;
             Name = setName;
             BlendMode = BlendMode.Opaque;
             AlphaCutoff = 0.0f;
-            Inputs = new ConstructedShaderInput();
+            VertexShader = setVertexShader;
+            Inputs = new ConstructedShaderInput(IsSkeletalShader ? 4 : 3);
         }
 
         internal ResourceLayoutDescription GetResourceLayoutDescription()
         {
             List<ResourceLayoutElementDescription> elements = new List<ResourceLayoutElementDescription>();
+            // Vertex Shader
             elements.Add(new ResourceLayoutElementDescription("WorldViewProjBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex));
             elements.Add(new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex));
             elements.Add(new ResourceLayoutElementDescription("EnvironmentBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex));
+            if (IsSkeletalShader)
+            {
+                elements.Add(new ResourceLayoutElementDescription("JointMatricesBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex));
+            }
+
+            // Fragment Shader
             Inputs.AddElementsToResourceLayoutDescription(elements);
 
             return new ResourceLayoutDescription(elements.ToArray());
@@ -493,7 +511,7 @@ namespace AlkaronEngine.Graphics3D
                 }
                 else
                 {
-                    sb.AppendLine("    vec3 emissive = " + emissiveInput.Name + "Constant.x;");
+                    sb.AppendLine("    vec3 emissive = vec3(" + emissiveInput.Name + "Constant.x);");
                 }
             }
             else

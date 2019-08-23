@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Veldrid;
+using static AlkaronEngine.Assets.Meshes.SkeletalMesh;
 
 namespace AlkaronEngine.Assets.Importers
 {
@@ -26,7 +28,6 @@ namespace AlkaronEngine.Assets.Importers
             internal string FullFilename;
             internal string BaseAssetName;
             internal Package PackageToSaveIn = null;
-            //internal List<Asset> ImportedAssets = new List<Asset>();
 
             internal List<Surface2D> ImportedSurfaces = new List<Surface2D>();
             internal List<Materials.Material> ImportedMaterials = new List<Materials.Material>();
@@ -39,6 +40,9 @@ namespace AlkaronEngine.Assets.Importers
 
             internal Gltf Model;
             internal List<byte[]> RawBuffers = new List<byte[]>();
+
+            internal List<SkeletalAnimation> Animations = new List<SkeletalAnimation>();
+            internal List<RuntimeBone[]> BonesList = new List<RuntimeBone[]>();
 
             internal Action<AssetImporterGltfMeshProgress> ProgressCallback;
         }
@@ -63,7 +67,7 @@ namespace AlkaronEngine.Assets.Importers
                 return false;
             }
 
-            string extension = Path.GetExtension(inputFile);
+            string? extension = Path.GetExtension(inputFile);
             if (string.IsNullOrWhiteSpace(extension))
             {
                 Log.Status("Import file '" + inputFile + "' has an invalid file extension!");
@@ -82,7 +86,7 @@ namespace AlkaronEngine.Assets.Importers
             context.ProgressCallback = progressCallback;
             context.FullFilename = fullFilename;
             context.BaseAssetName = setBaseAssetName;
-            context.BaseFolder = Path.GetDirectoryName(fullFilename);
+            context.BaseFolder = Path.GetDirectoryName(fullFilename) ?? AlkaronCoreGame.Core.ContentDirectory;
             context.ImportStaticMeshOnly = importStaticMeshOnly;
             context.ImportAsSkeletalMesh = !context.ImportStaticMeshOnly;
             context.AssetSettings = assetSettings;
@@ -113,7 +117,7 @@ namespace AlkaronEngine.Assets.Importers
                 if (extension == ".gltf" ||
                     extension == ".glb")
                 {
-                    ImportGLTFFile(context); //fullFilename, assetName, packageToSaveIn, importedAssets);
+                    ImportGLTFFile(context);
 
                     importedAssets.AddRange(context.ImportedSurfaces);
                     importedAssets.AddRange(context.ImportedMaterials);
@@ -160,10 +164,200 @@ namespace AlkaronEngine.Assets.Importers
             // Import all materials
             LoadMaterials(context);
 
+            // Import all skins
+            if (context.ImportAsSkeletalMesh)
+            {
+                LoadAnimations(context);
+
+                LoadSkins(context);
+            }
+
             // Load all scenes
             LoadScenes(context);
 
             ReportProgress(context, "Finished");
+        }
+
+        private static void LoadAnimations(AssetImporterGltfMeshContext context)
+        {
+            for (int i = 0; i < context.Model.Animations.Length; i++)
+            {
+                Animation animation = context.Model.Animations[i];
+
+                var res = LoadAnimation(context, animation);
+                context.Animations.Add(res);
+            }
+        }
+
+        class AnimationFrame
+        {
+            public Vector3 translation = Vector3.Zero;
+            public Quaternion rotation = Quaternion.Identity;
+            public Vector3 scale = Vector3.One;
+            public Matrix4x4 transformationMat = Matrix4x4.Identity;
+
+            public Matrix4x4 Matrix =>
+                Matrix4x4.CreateScale(scale) *
+                Matrix4x4.CreateFromQuaternion(rotation) *
+                Matrix4x4.CreateTranslation(translation);
+        }
+
+        class AnimationBoneData
+        {
+            public int nodeIdx;
+
+            public AnimationFrame[] Frames = null;
+        }
+
+        class SkeletalAnimation
+        {
+            public List<AnimationBoneData> Bones = new List<AnimationBoneData>();
+        }
+
+        private static SkeletalAnimation LoadAnimation(AssetImporterGltfMeshContext context, Animation animation)
+        {
+            SkeletalAnimation result = new SkeletalAnimation();
+
+            for (int c = 0; c < animation.Channels.Length; c++)
+            {
+                AnimationChannel channel = animation.Channels[c];
+                AnimationSampler sampler = animation.Samplers[channel.Sampler];
+
+                var inputAccessor = GetAccessorByIndex(sampler.Input, context.Model);
+                var outputAccessor = GetAccessorByIndex(sampler.Output, context.Model);
+
+                BufferView? inputBufferView = null;
+                if (inputAccessor != null &&
+                    inputAccessor.BufferView != null)
+                {
+                    inputBufferView = context.Model.BufferViews[inputAccessor.BufferView.Value];
+                }
+
+                BufferView? outputBufferView = null;
+                if (outputAccessor != null &&
+                    outputAccessor.BufferView != null)
+                {
+                    outputBufferView = context.Model.BufferViews[outputAccessor.BufferView.Value];
+                }
+
+                ReadOnlySpan<float> inputSpan = null;
+                if (inputBufferView != null)
+                {
+                    inputSpan = MemoryMarshal.Cast<byte, float>(
+                        new ReadOnlySpan<byte>(
+                            context.RawBuffers[inputBufferView.Buffer], 
+                            inputBufferView.ByteOffset + inputAccessor.ByteOffset, inputAccessor.Count * 4));
+                }
+
+                int nodeIdx = channel.Target.Node.Value;
+                AnimationChannelTarget.PathEnum path = channel.Target.Path;
+
+                AnimationBoneData helper = (from h in result.Bones
+                                          where h.nodeIdx == nodeIdx
+                                          select h).FirstOrDefault();
+
+                if (helper == null)
+                {
+                    helper = new AnimationBoneData()
+                    {
+                        nodeIdx = nodeIdx
+                    };
+                    helper.Frames = new AnimationFrame[inputSpan.Length];
+
+                    result.Bones.Add(helper);
+                }
+
+                switch (outputAccessor.Type)
+                {
+                    case Accessor.TypeEnum.VEC3:
+                        {
+                            ReadOnlySpan<Vector3> outputSpan = null;
+                            if (outputBufferView != null)
+                            {
+                                outputSpan = MemoryMarshal.Cast<byte, Vector3>(
+                                    new ReadOnlySpan<byte>(
+                                        context.RawBuffers[outputBufferView.Buffer],
+                                        outputBufferView.ByteOffset + outputAccessor.ByteOffset, outputAccessor.Count * 12));
+                            }
+
+                            for (int idx = 0; idx < inputSpan.Length; idx++)
+                            {
+                                if (helper.Frames[idx] == null)
+                                {
+                                    helper.Frames[idx] = new AnimationFrame();
+                                }
+
+                                if (path == AnimationChannelTarget.PathEnum.translation)
+                                {
+                                    helper.Frames[idx].translation = outputSpan[idx];
+                                }
+                                if (path == AnimationChannelTarget.PathEnum.scale)
+                                {
+                                    helper.Frames[idx].scale = outputSpan[idx];
+                                }
+                            }
+                        }
+                        break;
+
+                    case Accessor.TypeEnum.VEC4:
+                        {
+                            ReadOnlySpan<Vector4> outputSpan = null;
+                            if (outputBufferView != null)
+                            {
+                                outputSpan = MemoryMarshal.Cast<byte, Vector4>(
+                                    new ReadOnlySpan<byte>(
+                                        context.RawBuffers[outputBufferView.Buffer],
+                                        outputBufferView.ByteOffset + outputAccessor.ByteOffset, outputAccessor.Count * 16));
+
+                                for (int idx = 0; idx < inputSpan.Length; idx++)
+                                {
+                                    if (helper.Frames[idx] == null)
+                                    {
+                                        helper.Frames[idx] = new AnimationFrame();
+                                    }
+
+                                    if (path == AnimationChannelTarget.PathEnum.rotation)
+                                    {
+                                        helper.Frames[idx].rotation = 
+                                            new Quaternion(outputSpan[idx].X, outputSpan[idx].Y, outputSpan[idx].Z, outputSpan[idx].W);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+
+                    case Accessor.TypeEnum.MAT4:
+                        {
+                            ReadOnlySpan<Matrix4x4> outputSpan = null;
+                            if (outputBufferView != null)
+                            {
+                                outputSpan = MemoryMarshal.Cast<byte, Matrix4x4>(
+                                    new ReadOnlySpan<byte>(
+                                        context.RawBuffers[outputBufferView.Buffer],
+                                        outputBufferView.ByteOffset + outputAccessor.ByteOffset, outputAccessor.Count * 4 * 16));
+
+                                for (int idx = 0; idx < inputSpan.Length; idx++)
+                                {
+                                    if (helper.Frames[idx] == null)
+                                    {
+                                        helper.Frames[idx] = new AnimationFrame();
+                                    }
+
+                                    if (path == AnimationChannelTarget.PathEnum.weights)
+                                    {
+                                        helper.Frames[idx].transformationMat = outputSpan[idx];
+                                    }
+                                }
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+
+            return result;
         }
 
         private static void LoadMaterials(AssetImporterGltfMeshContext context)
@@ -187,7 +381,18 @@ namespace AlkaronEngine.Assets.Importers
 
             Materials.Material result = new Materials.Material();
 
-            ConstructedShader constructedShader = new ConstructedShader(context.BaseAssetName + "_Material_" + mat.Name);
+            string extension = "Static";
+            Shader vertexShader = AlkaronCoreGame.Core.ShaderManager.StaticMeshVertexShader;
+            if (context.ImportAsSkeletalMesh)
+            {
+                extension = "Skeletal";
+                vertexShader = AlkaronCoreGame.Core.ShaderManager.SkeletalMeshVertexShader;
+            }
+
+            ConstructedShader constructedShader = new ConstructedShader(
+                context.BaseAssetName + "_Material_" + mat.Name + "_" + extension,
+                vertexShader,
+                context.ImportAsSkeletalMesh);
             switch (mat.AlphaMode)
             {
                 case glTFLoader.Schema.Material.AlphaModeEnum.OPAQUE:
@@ -364,7 +569,7 @@ namespace AlkaronEngine.Assets.Importers
                 LoadCamera(context, node.Camera.Value, worldMatrix);
             } else if (node.Mesh.HasValue)
             {
-                LoadMesh(context, node.Mesh.Value, worldMatrix);
+                LoadMesh(context, node.Mesh.Value, node.Skin.HasValue ? node.Skin.Value : -1, worldMatrix);
             }
             else
             {
@@ -375,6 +580,73 @@ namespace AlkaronEngine.Assets.Importers
                         LoadNode(context, context.Model.Nodes[node.Children[i]], worldMatrix);
                     }
                 }
+            }
+        }
+
+        private static void LoadSkins(AssetImporterGltfMeshContext context)
+        {
+            for (int sk = 0; sk < context.Model.Skins.Length; sk++)
+            {
+                Skin skin = context.Model.Skins[sk];
+
+                var ibmAccessor = GetAccessorByIndex(skin.InverseBindMatrices.Value, context.Model);
+
+                BufferView? ibmBufferView = null;
+                if (ibmAccessor != null &&
+                    ibmAccessor.BufferView != null)
+                {
+                    ibmBufferView = context.Model.BufferViews[ibmAccessor.BufferView.Value];
+                }
+
+                ReadOnlySpan<Matrix4x4> matrixSpan = null;
+                if (ibmBufferView != null)
+                {
+                    matrixSpan = MemoryMarshal.Cast<byte, Matrix4x4>(
+                        new ReadOnlySpan<byte>(context.RawBuffers[ibmBufferView.Buffer], ibmBufferView.ByteOffset + ibmAccessor.ByteOffset, ibmAccessor.Count * (4 * 4 * 4)));
+                }
+
+                RuntimeBone[] bones = new RuntimeBone[skin.Joints.Length];
+                for (int i = 0; i < skin.Joints.Length; i++)
+                {
+                    int jointIndex = skin.Joints[i];
+
+                    bones[i] = new RuntimeBone();
+                    bones[i].id = "Bone_" + i;
+                    bones[i].Tag = jointIndex;
+                    bones[i].invBoneSkinMatrix = matrixSpan[i];
+                    bones[i].initialMatrix = Matrix4x4.Identity;
+                    bones[i].animationMatrices = new Matrix4x4[context.Animations[0].Bones[i].Frames.Length];
+                    for (int j = 0; j < context.Animations[0].Bones[i].Frames.Length; j++)
+                    {
+                        bones[i].animationMatrices[j] = context.Animations[0].Bones[i].Frames[j].Matrix;
+                    }
+                }
+
+                // Build hierarchy
+                for (int i = 0; i < skin.Joints.Length; i++)
+                {
+                    int jointIndex = skin.Joints[i];
+                    var node = context.Model.Nodes[jointIndex];
+                    if (node.Children == null)
+                    {
+                        continue;
+                    }
+                    bones[i].children = (from b in bones
+                                         where node.Children.Contains(b.Tag)
+                                         select b).ToArray();
+                    for (int j = 0; j < bones[i].children.Length; j++)
+                    {
+                        bones[i].children[j].parent = bones[i];
+                    }
+                }
+
+                if (skin.Skeleton != null)
+                {
+                    var node = context.Model.Nodes[skin.Skeleton.Value];
+                    bones[0].initialMatrix = GetWorldMatrix(node);
+                }
+
+                context.BonesList.Add(bones);
             }
         }
 
@@ -445,7 +717,7 @@ namespace AlkaronEngine.Assets.Importers
             }
         }
 
-        private static void LoadMesh(AssetImporterGltfMeshContext context, int meshIndex, Matrix4x4 worldMatrix)
+        private static void LoadMesh(AssetImporterGltfMeshContext context, int meshIndex, int skinIndex, Matrix4x4 worldMatrix)
         {
             Mesh mesh = context.Model.Meshes[meshIndex];
 
@@ -485,22 +757,55 @@ namespace AlkaronEngine.Assets.Importers
                     throw new InvalidDataException("TANGENT accessor must have type VEC4");
                 }
 
-                TangentVertex[] vertices = new TangentVertex[positionAccessor.Count];
+                Accessor jointsAccessor = null;
+                Accessor weightsAccessor = null;
+                if (context.ImportAsSkeletalMesh)
+                {
+                    jointsAccessor = GetAccessorByType("JOINTS_0", context.Model, prim);
+                    if (jointsAccessor != null &&
+                        jointsAccessor.Type != Accessor.TypeEnum.VEC4)
+                    {
+                        throw new InvalidDataException("JOINTS_0 accessor must have type VEC4");
+                    }
+
+                    weightsAccessor = GetAccessorByType("WEIGHTS_0", context.Model, prim);
+                    if (weightsAccessor != null &&
+                        weightsAccessor.Type != Accessor.TypeEnum.VEC4)
+                    {
+                        throw new InvalidDataException("WEIGHTS_0 accessor must have type VEC4");
+                    }
+                }
+
                 BufferView positionBufferView = context.Model.BufferViews[positionAccessor.BufferView.Value];
-                BufferView normalsBufferView = null;
-                if (normalAccessor != null)
+                BufferView? normalsBufferView = null;
+                if (normalAccessor != null &&
+                    normalAccessor.BufferView != null)
                 {
                     normalsBufferView = context.Model.BufferViews[normalAccessor.BufferView.Value];
                 }
-                BufferView texCoordBufferView = null;
-                if (texcoordAccessor != null)
+                BufferView? texCoordBufferView = null;
+                if (texcoordAccessor != null &&
+                    texcoordAccessor.BufferView != null)
                 {
                     texCoordBufferView = context.Model.BufferViews[texcoordAccessor.BufferView.Value];
                 }
-                BufferView tangentBufferView = null;
-                if (tangentAccessor != null)
+                BufferView? tangentBufferView = null;
+                if (tangentAccessor != null &&
+                    tangentAccessor.BufferView != null)
                 {
                     tangentBufferView = context.Model.BufferViews[tangentAccessor.BufferView.Value];
+                }
+                BufferView? jointsBufferView = null;
+                if (jointsAccessor != null &&
+                    jointsAccessor.BufferView != null)
+                {
+                    jointsBufferView = context.Model.BufferViews[jointsAccessor.BufferView.Value];
+                }
+                BufferView? weightsBufferView = null;
+                if (weightsAccessor != null &&
+                    weightsAccessor.BufferView != null)
+                {
+                    weightsBufferView = context.Model.BufferViews[weightsAccessor.BufferView.Value];
                 }
 
                 ReadOnlySpan<Vector3> positionSpan = MemoryMarshal.Cast<byte, Vector3>(
@@ -523,39 +828,22 @@ namespace AlkaronEngine.Assets.Importers
                     tangentSpan = MemoryMarshal.Cast<byte, Vector4>(
                         new ReadOnlySpan<byte>(context.RawBuffers[tangentBufferView.Buffer], tangentBufferView.ByteOffset + tangentAccessor.ByteOffset, tangentAccessor.Count * 16));
                 }
-
-                bool calcTangents = tangentSpan == null && normalsSpan != null;
-                for (int v = 0; v < vertices.Length; v++)
+                ReadOnlySpan<Vector4us> jointsSpan = null;
+                if (jointsBufferView != null)
                 {
-                    vertices[v].Position = positionSpan[v];
-
-                    if (normalsSpan != null)
-                    {
-                        vertices[v].Normal = normalsSpan[v];
-                    }
-
-                    if (texCoordSpan != null)
-                    {
-                        vertices[v].TexCoord = texCoordSpan[v];
-                    }
-
-                    if (tangentSpan != null)
-                    {
-                        vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
-                    }
-                    else
-                    {
-                        // Calculate tangents
-                    }
+                    jointsSpan = MemoryMarshal.Cast<byte, Vector4us>(
+                        new ReadOnlySpan<byte>(context.RawBuffers[jointsBufferView.Buffer], jointsBufferView.ByteOffset + jointsAccessor.ByteOffset, jointsAccessor.Count * 16));
+                }
+                ReadOnlySpan<Vector4> weightsSpan = null;
+                if (weightsBufferView != null)
+                {
+                    weightsSpan = MemoryMarshal.Cast<byte, Vector4>(
+                        new ReadOnlySpan<byte>(context.RawBuffers[weightsBufferView.Buffer], weightsBufferView.ByteOffset + weightsAccessor.ByteOffset, weightsAccessor.Count * 16));
                 }
 
-                StaticMesh staticMesh = null;
-
-                if (prim.Indices == null)
-                {
-                    staticMesh = StaticMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice, calcTangents);
-                }
-                else
+                MeshAsset? meshAsset = null;
+                uint[] indices = null;
+                if (prim.Indices != null)
                 {
                     int primIndex = prim.Indices.Value;
                     Accessor indexAccessor = GetAccessorByIndex(primIndex, context.Model);
@@ -566,7 +854,7 @@ namespace AlkaronEngine.Assets.Importers
                             throw new InvalidDataException("Index accessor must have type SCALAR");
                         }
 
-                        uint[] indices = new uint[indexAccessor.Count];
+                        indices = new uint[indexAccessor.Count];
 
                         BufferView indexBufferView = context.Model.BufferViews[indexAccessor.BufferView.Value];
                         switch (indexAccessor.ComponentType)
@@ -607,19 +895,111 @@ namespace AlkaronEngine.Assets.Importers
                             default:
                                 throw new NotImplementedException("ComponentType " + indexAccessor.ComponentType + " not implemented.");
                         }
-
-                        staticMesh = StaticMesh.FromVertices(vertices, indices, context.AssetSettings.GraphicsDevice, calcTangents);
                     }
                 }
 
-                staticMesh.Name = mesh.Name + $"_{p}_{context.MeshCounter}.staticMesh";
-                context.MeshCounter++;
-                context.PackageToSaveIn.StoreAsset(staticMesh);
+                if (context.ImportAsSkeletalMesh == false)
+                {
+                    TangentVertex[] vertices = new TangentVertex[positionAccessor.Count];
+                    bool calcTangents = tangentSpan == null && normalsSpan != null;
+                    for (int v = 0; v < vertices.Length; v++)
+                    {
+                        vertices[v].Position = positionSpan[v];
 
-                staticMesh.RootTransform = worldMatrix;
-                staticMesh.Material = LookupMaterialForMesh(prim, context);
+                        if (normalsSpan != null)
+                        {
+                            vertices[v].Normal = normalsSpan[v];
+                        }
 
-                context.ImportedMeshes.Add(staticMesh);
+                        if (texCoordSpan != null)
+                        {
+                            vertices[v].TexCoord = texCoordSpan[v];
+                        }
+
+                        if (tangentSpan != null)
+                        {
+                            vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
+                        }
+                        else
+                        {
+                            // Calculate tangents
+                        }
+                    }
+
+                    if (indices == null)
+                    {
+                        meshAsset = StaticMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice, calcTangents);
+                    }
+                    else
+                    {
+                        meshAsset = StaticMesh.FromVertices(vertices, indices, context.AssetSettings.GraphicsDevice, calcTangents);
+                    }
+                    meshAsset.Name = mesh.Name + $"_{p}_{context.MeshCounter}.staticMesh";
+                }
+                else
+                {
+                    SkinnedTangentVertex[] vertices = new SkinnedTangentVertex[positionAccessor.Count];
+                    bool calcTangents = tangentSpan == null && normalsSpan != null;
+                    for (int v = 0; v < vertices.Length; v++)
+                    {
+                        vertices[v].Position = positionSpan[v];
+
+                        if (normalsSpan != null)
+                        {
+                            vertices[v].Normal = normalsSpan[v];
+                        }
+
+                        if (texCoordSpan != null)
+                        {
+                            vertices[v].TexCoord = texCoordSpan[v];
+                        }
+
+                        if (tangentSpan != null)
+                        {
+                            vertices[v].Tangent = new Vector3(tangentSpan[v].X, tangentSpan[v].Y, tangentSpan[v].Z);
+                        }
+                        else
+                        {
+                            // Calculate tangents
+                        }
+
+                        if (weightsSpan != null)
+                        {
+                            vertices[v].JointWeights = weightsSpan[v];
+                        }
+                        if (jointsSpan != null)
+                        {
+                            vertices[v].JointIndices = new Vector4(jointsSpan[v].X, jointsSpan[v].Y, jointsSpan[v].Z, jointsSpan[v].W);
+                        }
+                    }
+
+                    if (indices == null)
+                    {
+                        meshAsset = SkeletalMesh.FromVertices(vertices, context.AssetSettings.GraphicsDevice, calcTangents);
+                    }
+                    else
+                    {
+                        RuntimeBone[]? bones = null;
+                        if (skinIndex > -1)
+                        {
+                            bones = context.BonesList[skinIndex];
+                        }
+                        meshAsset = SkeletalMesh.FromVertices(vertices, indices, bones, context.AssetSettings.GraphicsDevice, calcTangents);
+                    }
+
+                    meshAsset.Name = mesh.Name + $"_{p}_{context.MeshCounter}.skeletalMesh";
+                }
+
+                if (meshAsset != null)
+                {
+                    context.MeshCounter++;
+                    context.PackageToSaveIn.StoreAsset(meshAsset);
+
+                    meshAsset.RootTransform = worldMatrix;
+                    meshAsset.Material = LookupMaterialForMesh(prim, context);
+
+                    context.ImportedMeshes.Add(meshAsset);
+                }
             }
         }
 

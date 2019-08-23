@@ -78,7 +78,7 @@ namespace AlkaronEngine.Assets.Materials
             Material = setMaterial;
         }
 
-        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix)
+        public void ApplyParameters(RenderContext renderContext, Matrix4x4 worldMatrix, Matrix4x4[]? boneMatrices = null)
         {
             //var effect = Material.Effect;
 

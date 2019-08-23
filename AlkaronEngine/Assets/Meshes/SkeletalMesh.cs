@@ -1,4 +1,6 @@
 using AlkaronEngine.Graphics;
+using AlkaronEngine.Graphics3D;
+using AlkaronEngine.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +42,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// Parent bone, very important to get all parent matrices when
             /// building the finalMatrix for rendering.
             /// </summary>
-            public RuntimeBone parent = null;
+            public RuntimeBone? parent = null;
 
             /// <summary>
             /// Children bones, not really used anywhere except for the ShowBones
@@ -94,6 +96,11 @@ namespace AlkaronEngine.Assets.Meshes
             /// the local space.
             /// </summary>
             public Matrix4x4 finalMatrix;
+
+            /// <summary>
+            /// A custom tag for this bone.
+            /// </summary>
+            public int Tag;
             #endregion
 
             #region Constructor
@@ -132,7 +139,9 @@ namespace AlkaronEngine.Assets.Meshes
                 // If we have a parent mesh, we have to multiply the matrix with the
                 // parent matrix.
                 if (parent != null)
+                {
                     ret *= parent.GetMatrixRecursively();
+                }
 
                 return ret;
             } // GetMatrixRecursively()
@@ -432,24 +441,23 @@ namespace AlkaronEngine.Assets.Meshes
         /// <summary>
         /// Creates a static mesh directly from vertices (triangles only)
         /// </summary>
-        public static SkeletalMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice)
+        public static SkeletalMesh FromVertices(Vector3[] vertices, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             SkinnedTangentVertex[] verts = new SkinnedTangentVertex[vertices.Length];
             for (int i = 0; i < verts.Length; i++)
             {
                 verts[i] = new SkinnedTangentVertex(
-                    vertices[i], Vector2.Zero, new Vector3(0, 1, 0),
-                    Vector3.Zero, Vector3.Zero,
-                    Vector4.Zero, Vector4.One);
+                    vertices[i], Vector2.Zero, new Vector3(0, 1, 0), Vector3.Zero, 
+                    new Vector4(0, 0, 0, 0), Vector4.One);
             }
 
-            return FromVertices(verts, graphicsDevice);
+            return FromVertices(verts, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from tangent vertices (triangles only)
         /// </summary>
-        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices, GraphicsDevice graphicsDevice)
+        public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             uint[] indices = new uint[vertices.Length];
             for (uint i = 0; i < vertices.Length; i++)
@@ -457,19 +465,26 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices, graphicsDevice);
+            return FromVertices(vertices, indices, null, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
         public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices,
-            uint[] indices, GraphicsDevice graphicsDevice)
+            uint[] indices, RuntimeBone[]? bones, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             SkeletalMesh mesh = new SkeletalMesh();
 
             mesh.objectVertices = vertices;
             mesh.objectIndices = indices;
+
+            if (calcTangents)
+            {
+                mesh.CalculateTangents();
+            }
+
+            mesh.bones = bones;
 
             BufferDescription vertexBufferDesc = new BufferDescription((uint)(SkinnedTangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
             mesh.vertexBuffer = graphicsDevice.ResourceFactory.CreateBuffer(vertexBufferDesc);
@@ -488,6 +503,61 @@ namespace AlkaronEngine.Assets.Meshes
             return mesh;
         }
         #endregion
+
+        internal override void CalculateTangents()
+        {
+            base.CalculateTangents();
+
+            Vector3[] tangents = new Vector3[objectVertices.Length];
+            Vector3[] tangents2 = new Vector3[objectVertices.Length];
+
+            for (int i = 0; i < objectIndices.Length; i += 3)
+            {
+                uint i1 = objectIndices[i + 0];
+                uint i2 = objectIndices[i + 1];
+                uint i3 = objectIndices[i + 2];
+
+                SkinnedTangentVertex vert1 = objectVertices[i1];
+                SkinnedTangentVertex vert2 = objectVertices[i2];
+                SkinnedTangentVertex vert3 = objectVertices[i3];
+
+                float x1 = vert2.Position.X - vert1.Position.X;
+                float x2 = vert3.Position.X - vert1.Position.X;
+                float y1 = vert2.Position.Y - vert1.Position.Y;
+                float y2 = vert3.Position.Y - vert1.Position.Y;
+                float z1 = vert2.Position.Z - vert1.Position.Z;
+                float z2 = vert3.Position.Z - vert1.Position.Z;
+
+                float s1 = vert2.TexCoord.X - vert1.TexCoord.X;
+                float s2 = vert3.TexCoord.X - vert1.TexCoord.X;
+                float t1 = vert2.TexCoord.Y - vert1.TexCoord.Y;
+                float t2 = vert3.TexCoord.Y - vert1.TexCoord.Y;
+
+                float r = 1.0F / (s1 * t2 - s2 * t1);
+                Vector3 sdir = new Vector3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+                Vector3 tdir = new Vector3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+                tangents[i1] += sdir;
+                tangents[i2] += sdir;
+                tangents[i3] += sdir;
+
+                tangents2[i1] += tdir;
+                tangents2[i2] += tdir;
+                tangents2[i3] += tdir;
+            }
+
+            for (int i = 0; i < objectVertices.Length; i++)
+            {
+                Vector3 n = objectVertices[i].Normal;
+                Vector3 t = tangents[i];
+
+                // Gram-Schmidt orthogonalize                
+                objectVertices[i].Tangent = Vector3.Normalize(t - n * Vector3.Dot(n, t));
+
+                // Calculate handedness
+                float w = (Vector3.Dot(Vector3.Cross(n, t), tangents2[i]) < 0.0F) ? -1.0f : 1.0f;
+            }
+        }
 
         #region Load
         /// <summary>
@@ -510,10 +580,8 @@ namespace AlkaronEngine.Assets.Meshes
                         reader.ReadSingle()),
                     new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle()),
-                    new Vector3(reader.ReadSingle(), reader.ReadSingle(),
-                        reader.ReadSingle()),
-                    new Vector4(reader.ReadSingle(), reader.ReadSingle(),
-                        reader.ReadSingle(), reader.ReadSingle()),
+                    new Vector4(reader.ReadInt32(), reader.ReadInt32(),
+                        reader.ReadInt32(), reader.ReadInt32()),
                     new Vector4(reader.ReadSingle(), reader.ReadSingle(),
                         reader.ReadSingle(), reader.ReadSingle()));
             } // for (int)
@@ -1026,8 +1094,13 @@ namespace AlkaronEngine.Assets.Meshes
         /// Update animation. Will do nothing if animation stayed the same since
         /// last time we called this method.
         /// </summary>
-        private void UpdateAnimation()
+        public void UpdateAnimation(int overrideCurrentAnimationNum = -1)
         {
+            if (overrideCurrentAnimationNum != -1)
+            {
+                currentAnimationNum = overrideCurrentAnimationNum;
+            }
+
             for (int i = 0; i < bones.Length; i++)
             {
                 RuntimeBone bone = bones[i];
@@ -1052,7 +1125,7 @@ namespace AlkaronEngine.Assets.Meshes
         /// all the animation data (see UpdateAnimation).
         /// </summary>
         /// <returns></returns>
-        private Matrix4x4[] GetBoneMatrices(Matrix4x4 renderMatrix)
+        public Matrix4x4[] GetBoneMatrices(Matrix4x4 renderMatrix)
         {
             // And get all bone matrices, we support max. 80 (see shader).
             Matrix4x4[] matrices = new Matrix4x4[Math.Min(80/*SkinnedEffect.MaxBones*/, bones.Length)];
@@ -1074,7 +1147,7 @@ namespace AlkaronEngine.Assets.Meshes
         #region SetBoneMatrices
         internal void SetBoneMatrices(Matrix4x4[] matrices)//, HVertexShader vertexShader)
         {
-            Vector4[] values = new Vector4[matrices.Length * 3];
+            /*Vector4[] values = new Vector4[matrices.Length * 3];
             for (int i = 0; i < matrices.Length; i++)
             {
                 // Note: We use the transpose matrix here.
@@ -1088,6 +1161,7 @@ namespace AlkaronEngine.Assets.Meshes
                 values[i * 3 + 2] = new Vector4(
                     matrices[i].M13, matrices[i].M23, matrices[i].M33, matrices[i].M43);
             } // for
+            */
             //vertexShader.SetValue("skinnedMatricesVS20", values);
             //skinnedEffect.SetBoneTransforms(matrices);
         }
@@ -1207,6 +1281,35 @@ namespace AlkaronEngine.Assets.Meshes
         #endregion
 
         #region Render
+        #region SetVertexData
+        /// <summary>
+        /// Sets the vertex and index data on the device
+        /// </summary>
+        public virtual void SetVertexData(RenderContext renderContext)
+        {
+            //Matrix4x4[] boneMats = GetBoneMatrices(Matrix4x4.Identity);
+
+            Performance.StartAppendAggreate("SetVertexBuffer");
+            renderContext.CommandList.SetVertexBuffer(0, vertexBuffer);
+            renderContext.CommandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt32);
+            Performance.EndAppendAggreate("SetVertexBuffer");
+        }
+        #endregion
+
+        #region Render
+        /// <summary>
+        /// Renders the mesh transformed by the world matrix
+        /// </summary>
+        public virtual void Render(RenderContext renderContext)
+        {
+            SetVertexData(renderContext);
+
+            Performance.StartAppendAggreate("DrawPrimitives");
+            renderContext.CommandList.DrawIndexed((uint)objectIndices.Length);
+            Performance.EndAppendAggreate("DrawPrimitives");
+        }
+        #endregion
+
         /// <summary>
         /// Render the animated model (will call UpdateAnimation internally,
         /// but if you do that yourself before calling this method, it gets

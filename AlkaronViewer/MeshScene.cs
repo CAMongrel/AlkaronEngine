@@ -88,7 +88,7 @@ namespace AlkaronViewer
 
         protected override void CreateDefaultCamera()
         {
-            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 100.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
+            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 2000.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
@@ -99,7 +99,7 @@ namespace AlkaronViewer
         {
             base.Init3D();
 
-            StaticMesh box = StaticMesh.FromVertices(new Vector3[] {
+            /*StaticMesh box = StaticMesh.FromVertices(new Vector3[] {
                 new Vector3(-1, -1, 0),
                 new Vector3(-1,  5, 0),
                 new Vector3( 1, -1, 0),
@@ -107,7 +107,7 @@ namespace AlkaronViewer
                 new Vector3( 1, -1, 0),
                 new Vector3(-1,  5, 0),
                 new Vector3( 1,  5, 0),
-            }, MainGame.Instance.GraphicsDevice, false);
+            }, MainGame.Instance.GraphicsDevice, false);*/
             //AddStaticMesh(box);
 
             //AssetImporterMaterial.Import("/Users/henning/Projects/Research/GitHub/SkinnedEffect.dx11.mgfxo", "SkinnedEffect", "EngineMaterials", out var material);
@@ -127,19 +127,9 @@ namespace AlkaronViewer
             //PresentModel("WaterBottle", false, GltfModelEntryType.Base);
             //PresentModel("Sponza", false, GltfModelEntryType.Base);
             //PresentModel("AlphaBlendModeTest", false, GltfModelEntryType.Base);
-            PresentModel("Lantern", false, GltfModelEntryType.Base);
+            //PresentModel("Lantern", false, GltfModelEntryType.Base);
             //PresentModel("FlightHelmet", false, GltfModelEntryType.Base);
-
-            /*var package = MainGame.Instance.PackageManager.LoadPackage("test", true);
-            var meshes = package.GetAssetsByType("StaticMesh");
-
-            for (int i = 0; i < meshes.Length; i++)
-            {
-                if (meshes[i] is StaticMesh)
-                {
-                    AddStaticMesh(meshes[i] as StaticMesh);
-                }
-            }*/
+            PresentModel("Monster", true, GltfModelEntryType.Base);
         }
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
@@ -151,7 +141,10 @@ namespace AlkaronViewer
             List<AlkaronEngine.Assets.Asset> importedAssets = null;
             if (isSkeletalMesh)
             {
-                //AssetImporterSkeletalMesh.Import(file, assetName, assetName, out importedAssets);
+                AssetImporterGltfMesh.Import(file, assetName, assetName, false, (obj) =>
+                {
+                    Console.WriteLine("Import state: " + obj.State);
+                }, MainGame.Instance.AssetManager.AssetSettings, out importedAssets);
             }
             else
             {
@@ -167,10 +160,11 @@ namespace AlkaronViewer
                 {
                     AddStaticMesh(importedAssets[i] as StaticMesh);
                 }
+                if (importedAssets[i] is SkeletalMesh)
+                {
+                    AddSkeletalMesh(importedAssets[i] as SkeletalMesh);
+                }
             }
-
-            /*var package = MainGame.Instance.PackageManager.LoadPackage(assetName, false);
-            package.Save();*/
         }
 
         private UILabel label;
@@ -219,6 +213,19 @@ namespace AlkaronViewer
 
             StaticMeshActor focusActor = new StaticMeshActor();
             ((StaticMeshActor)focusActor).StaticMeshComponent.AddStaticMesh(mesh);
+
+            SceneGraph.AddActor(focusActor);
+        }
+
+        public void AddSkeletalMesh(SkeletalMesh mesh)
+        {
+            if (mesh == null)
+            {
+                return;
+            }
+
+            SkeletalMeshActor focusActor = new SkeletalMeshActor();
+            ((SkeletalMeshActor)focusActor).SkeletalMeshComponent.SetSkeletalMesh(mesh);
 
             SceneGraph.AddActor(focusActor);
         }

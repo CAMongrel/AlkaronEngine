@@ -19,10 +19,17 @@ layout(set = 0, binding = 2) uniform EnvironmentBuffer
 	vec4 LightPos3;
 };
 
+layout(set = 0, binding = 3) uniform JointMatricesBuffer
+{
+    mat4 JointMatrices[80];
+};
+
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec2 TexCoords;
 layout (location = 2) in vec3 Normal;
 layout (location = 3) in vec3 Tangent;
+layout (location = 4) in vec4 Joints;
+layout (location = 5) in vec4 Weights;
 
 layout (location = 0) out vec2 fsin_TexCoords;
 layout (location = 1) out vec3 fsin_WorldPos;
@@ -54,5 +61,11 @@ void main()
     fsin_TangentViewPos   = TBN * ViewPosition.xyz;
     fsin_TangentWorldPos  = TBN * fsin_WorldPos;
 
-    gl_Position = WorldViewProj * vec4(Position, 1.0);
+	mat4 skinMatrix = 
+		Weights.x * JointMatrices[int(Joints.x)] + 
+		Weights.y * JointMatrices[int(Joints.y)] + 
+		Weights.z * JointMatrices[int(Joints.z)] + 
+		Weights.w * JointMatrices[int(Joints.w)];
+
+    gl_Position = WorldViewProj * skinMatrix * vec4(Position, 1.0);
 }

@@ -41,8 +41,8 @@ namespace AlkaronEngine.Graphics
             get
             {
                 // 4 bytes per float:
-                // 3 floats pos, 2 floats uv, 3 floats normal, 3 float tangent and 3 float bitangent
-                return 4 * (3 + 2 + 3 + 3 + 3);
+                // 3 floats pos, 2 floats uv, 3 floats normal, 3 float tangent
+                return 4 * (3 + 2 + 3 + 3);
             } // get
         } // StrideSize
         #endregion
