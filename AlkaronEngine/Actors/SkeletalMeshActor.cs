@@ -14,5 +14,10 @@ namespace AlkaronEngine.Actors
 
             AttachComponent(SkeletalMeshComponent);
         }
+
+        internal override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+        }
     }
 }

@@ -14,7 +14,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         /// Used by both threads, must be guarded by lock object
         /// </summary>
         private double nextAnimationTimeDelta;
-        public double AnimationTime { get; private set; }
+        public double AnimationTime { get; set; } = 0.0;
+        public string? AnimationName { get; set; } = null;
 
         public SkeletalMeshRenderProxy(SkeletalMesh setSkeletalMesh)
         {
@@ -111,6 +112,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
+            SkeletalMesh.ActiveAnimationIdentifier = AnimationName;
+            SkeletalMesh.SetAnimationTime(AnimationTime);
             materialToUse.ApplyParameters(renderContext, WorldMatrix, SkeletalMesh.GetBoneMatrices(WorldMatrix));
             Performance.EndAppendAggreate("Setup");
 
@@ -134,11 +137,13 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         {
             base.Update(deltaTime);
 
-            SkeletalMesh.UpdateAnimation(deltaTime);
+            //AnimationTime += deltaTime;
+
+            //SkeletalMesh.UpdateAnimation(deltaTime);
 
             lock (lockObj)
             {
-                AnimationTime += nextAnimationTimeDelta;
+                //AnimationTime += nextAnimationTimeDelta;
             }
         }
 
@@ -146,7 +151,7 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         {
             lock (lockObj)
             {
-                nextAnimationTimeDelta = deltaTime;
+                //nextAnimationTimeDelta = deltaTime;
             }
         }
     }

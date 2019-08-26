@@ -26,51 +26,75 @@ namespace AlkaronEngine.Assets.Meshes
             Quaternion rotation = Quaternion.Identity;
             Vector3 scale = Vector3.One;
 
-            if (TranslationFrames != null)
+            if (TranslationFrames != null &&
+                TranslationFrames.Length > 0)
             {
-                for (int i = 1; i < TranslationFrames.Length; i++)
+                if (timeIndex < TranslationFrames[0].timecode)
                 {
-                    var preFrame = TranslationFrames[i - 1];
-                    var postFrame = TranslationFrames[i];
-
-                    if (timeIndex >= preFrame.timecode &&
-                        timeIndex <= postFrame.timecode)
+                    translation = TranslationFrames[0].value;
+                }
+                else
+                {
+                    for (int i = 1; i < TranslationFrames.Length; i++)
                     {
-                        float lerpVal = (float)(timeIndex - preFrame.timecode);
-                        translation = Vector3.Lerp(preFrame.value, postFrame.value, lerpVal);
-                        break;
+                        var preFrame = TranslationFrames[i - 1];
+                        var postFrame = TranslationFrames[i];
+
+                        if (timeIndex >= preFrame.timecode &&
+                            timeIndex <= postFrame.timecode)
+                        {
+                            float lerpVal = (float)(timeIndex - preFrame.timecode);
+                            translation = Vector3.Lerp(preFrame.value, postFrame.value, lerpVal);
+                            break;
+                        }
                     }
                 }
             }
-            if (RotationFrames != null)
+            if (RotationFrames != null &&
+                RotationFrames.Length > 0)
             {
-                for (int i = 1; i < RotationFrames.Length; i++)
+                if (timeIndex < RotationFrames[0].timecode)
                 {
-                    var preFrame = RotationFrames[i - 1];
-                    var postFrame = RotationFrames[i];
-
-                    if (timeIndex >= preFrame.timecode &&
-                        timeIndex <= postFrame.timecode)
+                    rotation = RotationFrames[0].value;
+                }
+                else
+                {
+                    for (int i = 1; i < RotationFrames.Length; i++)
                     {
-                        float lerpVal = (float)(timeIndex - preFrame.timecode);
-                        rotation = Quaternion.Lerp(preFrame.value, postFrame.value, lerpVal);
-                        break;
+                        var preFrame = RotationFrames[i - 1];
+                        var postFrame = RotationFrames[i];
+
+                        if (timeIndex >= preFrame.timecode &&
+                            timeIndex <= postFrame.timecode)
+                        {
+                            float lerpVal = (float)(timeIndex - preFrame.timecode);
+                            rotation = Quaternion.Lerp(preFrame.value, postFrame.value, lerpVal);
+                            break;
+                        }
                     }
                 }
             }
-            if (ScalingFrames != null)
+            if (ScalingFrames != null &&
+                ScalingFrames.Length > 0)
             {
-                for (int i = 1; i < ScalingFrames.Length; i++)
+                if (timeIndex < ScalingFrames[0].timecode)
                 {
-                    var preFrame = ScalingFrames[i - 1];
-                    var postFrame = ScalingFrames[i];
-
-                    if (timeIndex >= preFrame.timecode &&
-                        timeIndex <= postFrame.timecode)
+                    scale = ScalingFrames[0].value;
+                }
+                else
+                {
+                    for (int i = 1; i < ScalingFrames.Length; i++)
                     {
-                        float lerpVal = (float)(timeIndex - preFrame.timecode);
-                        scale = Vector3.Lerp(preFrame.value, postFrame.value, lerpVal);
-                        break;
+                        var preFrame = ScalingFrames[i - 1];
+                        var postFrame = ScalingFrames[i];
+
+                        if (timeIndex >= preFrame.timecode &&
+                            timeIndex <= postFrame.timecode)
+                        {
+                            float lerpVal = (float)(timeIndex - preFrame.timecode);
+                            scale = Vector3.Lerp(preFrame.value, postFrame.value, lerpVal);
+                            break;
+                        }
                     }
                 }
             }
@@ -88,9 +112,15 @@ namespace AlkaronEngine.Assets.Meshes
 
         public string AnimationIdentifier { get; set; } = string.Empty;
 
-        public double AnimationLength { get; private set; }
+        public double AnimationStart { get; internal set; }
+        public double AnimationLength { get; internal set; }
 
         private List<AnimationBoneData> bones = new List<AnimationBoneData>();
+
+        internal void AddBone(AnimationBoneData bone)
+        {
+            bones.Add(bone);
+        }
 
         public AnimationBoneData DataByBoneIndex(int boneIndex)
         {

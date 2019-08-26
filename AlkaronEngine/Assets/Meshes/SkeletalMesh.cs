@@ -5,44 +5,13 @@ using AlkaronEngine.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Utilities;
 
 namespace AlkaronEngine.Assets.Meshes
 {
-    public class AnimationController
-    {
-        public double PlaybackSpeed { get; set; } = 1.0;
-
-        public List<BoneAnimationAsset> Animations { get; private set; } = new List<BoneAnimationAsset>();
-
-        public void Play(string animationIdentifier)
-        {
-
-        }
-
-        public void Pause()
-        {
-
-        }
-
-        public void Stop()
-        {
-
-        }
-
-        public void Resume()
-        {
-
-        }
-
-        public void Tick(double deltaTime)
-        {
-
-        }
-    }
-
     /// <summary>
     /// Collada model. Supports bones and animation for collada (.dae) exported
     /// 3D Models from 3D Studio Max (8 or 9).
@@ -54,15 +23,6 @@ namespace AlkaronEngine.Assets.Meshes
     public class SkeletalMesh : MeshAsset
     {
         protected override int MaxAssetVersion => 1;
-
-        #region Triangle helper class
-        struct Triangle
-        {
-            public int V1;
-            public int V2;
-            public int V3;
-        }
-        #endregion
 
         #region RuntimeBone helper class
         /// <summary>
@@ -104,13 +64,6 @@ namespace AlkaronEngine.Assets.Meshes
             public string id;
 
             /// <summary>
-            /// Animation matrices for the precalculated bone animations.
-            /// These matrices must be set each frame (use time) in order
-            /// for the animation to work.
-            /// </summary>
-            //public Matrix4x4[] animationMatrices;
-
-            /// <summary>
             /// invBoneMatrix is a special helper matrix loaded directly from
             /// the collada file. It is used to transform the final matrix
             /// back to a relative format after transforming and rotating each
@@ -128,7 +81,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// to apply the invBoneSkinMatrix first to transform all vertices into
             /// the local space.
             /// </summary>
-            public Matrix4x4 finalMatrix;
+            private Matrix4x4 finalMatrix;
 
             public Matrix4x4 FinalMatrix
             {
@@ -140,6 +93,10 @@ namespace AlkaronEngine.Assets.Meshes
                     }
 
                     return finalMatrix * parent.FinalMatrix;
+                }
+                set
+                {
+                    finalMatrix = value;
                 }
             }
 
@@ -329,23 +286,6 @@ namespace AlkaronEngine.Assets.Meshes
         } // class RuntimeSocket
         #endregion
 
-        #region RuntimeAnimation helper class
-        internal class RuntimeAnimation
-        {
-            public string Name;
-            public int Start;
-            public int End;
-
-            public int NumOfFrames
-            {
-                get
-                {
-                    return End - Start;
-                }
-            }
-        }
-        #endregion
-
         #region Variables
         /// <summary>
         /// Vertices for the main mesh (we only support one mesh here!).
@@ -356,8 +296,8 @@ namespace AlkaronEngine.Assets.Meshes
         /// Number of vertices and number of indices we got in the
         /// vertex and index buffers.
         /// </summary>
-        private int numOfVertices = 0,
-            numOfIndices = 0;
+        private int numOfVertices = 0;
+        private int numOfIndices = 0;
 
         /// <summary>
         /// Object matrix for our mesh. Often used to fix mesh to bone skeleton.
@@ -365,9 +305,11 @@ namespace AlkaronEngine.Assets.Meshes
         private Matrix4x4 objectMatrix = Matrix4x4.Identity;
 
         /// <summary>
-        /// 
+        /// Animations
         /// </summary>
-        internal SkeletalAnimation Animation { get; private set; }
+        internal List<BoneAnimationAsset> Animations { get; private set; } = new List<BoneAnimationAsset>();
+
+        private BoneAnimationAsset? activeAnimation = null;
 
         /// <summary>
         /// Flat list of bones, the first bone is always the root bone, all
@@ -376,29 +318,6 @@ namespace AlkaronEngine.Assets.Meshes
         /// course to quickly access all animation matrices.
         /// </summary>
         private RuntimeBone[] bones;
-
-        /// <summary>
-        /// Number of values in the animationMatrices in each bone.
-        /// TODO: Split the animations up into several states (stay, stay to walk,
-        /// walk, fight, etc.), but not required here in this test app yet ^^
-        /// </summary>
-        private int numOfAnimations = 1;
-
-        /// <summary>
-        /// Get frame rate from Collada file, should always be 30, but sometimes
-        /// test models might have different times (like 24).
-        /// </summary>
-        private float frameRate = 30;
-
-        /// <summary>
-        /// BoundingSphere
-        /// </summary>
-        private BoundingSphere boundingSphere;
-
-        /// <summary>
-        /// List of all animations this mesh has.
-        /// </summary>
-        internal List<RuntimeAnimation> runtimeAnimations;
 
         /// <summary>
         /// List of all sockets
@@ -432,17 +351,6 @@ namespace AlkaronEngine.Assets.Meshes
         } // TotalNumberOfBones
 
         /// <summary>
-        /// BoundingSphere
-        /// </summary>
-        public BoundingSphere BoundingSphere
-        {
-            get
-            {
-                return boundingSphere;
-            }
-        }
-
-        /// <summary>
         /// Number of vertices of this mesh
         /// </summary>
         public int NumberOfVertices
@@ -463,17 +371,6 @@ namespace AlkaronEngine.Assets.Meshes
                 return numOfIndices / 3;
             }
         }
-
-        /// <summary>
-        /// Animation frame rate
-        /// </summary>
-        public float FrameRate
-        {
-            get
-            {
-                return frameRate;
-            }
-        }
         #endregion
 
         #region Constructor
@@ -484,7 +381,6 @@ namespace AlkaronEngine.Assets.Meshes
         public SkeletalMesh()
         {
             sockets = new RuntimeSocket[0];
-            runtimeAnimations = new List<RuntimeAnimation>();
         } // ColladaModel(setFilename)
         #endregion
 
@@ -516,14 +412,14 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices, null, null, graphicsDevice, calcTangents);
+            return FromVertices(vertices, indices, null, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
         public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices,
-            uint[] indices, RuntimeBone[]? bones, SkeletalAnimation animation, GraphicsDevice graphicsDevice, bool calcTangents)
+            uint[] indices, RuntimeBone[]? bones, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             SkeletalMesh mesh = new SkeletalMesh();
 
@@ -535,7 +431,6 @@ namespace AlkaronEngine.Assets.Meshes
                 mesh.CalculateTangents();
             }
 
-            mesh.Animation = animation;
             mesh.bones = bones;
 
             BufferDescription vertexBufferDesc = new BufferDescription((uint)(SkinnedTangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
@@ -645,23 +540,13 @@ namespace AlkaronEngine.Assets.Meshes
                 objectIndices[i] = reader.ReadUInt32();
             } // for (int)
 
-            boundingSphere = new BoundingSphere(
+            BoundingSphere = new BoundingSphere(
                 new Vector3(reader.ReadSingle(), reader.ReadSingle(),
                     reader.ReadSingle()),
                 reader.ReadSingle());
 
             // Read animation data
-            runtimeAnimations.Clear();
-
-            int numAnim = reader.ReadInt32();
-            for (int i = 0; i < numAnim; i++)
-            {
-                RuntimeAnimation anim = new RuntimeAnimation();
-                anim.Name = reader.ReadString();
-                anim.Start = reader.ReadInt32();
-                anim.End = reader.ReadInt32();
-                runtimeAnimations.Add(anim);
-            } // for (int)
+            // TODO
 
             string semantic = reader.ReadString();
             string defaultDiffuseTexture = reader.ReadString();
@@ -669,8 +554,6 @@ namespace AlkaronEngine.Assets.Meshes
             string defaultNormalTexture = reader.ReadString();
 
             objectMatrix = ReadMatrixHelper(reader);
-
-            numOfAnimations = reader.ReadInt32();
 
             int boneCnt = reader.ReadInt32();
             bones = new RuntimeBone[boneCnt];
@@ -727,96 +610,7 @@ namespace AlkaronEngine.Assets.Meshes
             GenerateVertexAndIndexBuffers(assetSettings.GraphicsDevice);
 
             CreateBoundingSphere();
-
-            ValidateAnimations();
         } // Load(packageName, assetName, stream)
-        #endregion
-
-        #region ValidateAnimations
-        /// <summary>
-        /// Goes through the list of animations and validates their 
-        /// start/end positions.
-        /// </summary>
-        internal void ValidateAnimations()
-        {
-            //// tst: works fine
-            //runtimeAnimations.Clear();
-
-            //RuntimeAnimation anim = new RuntimeAnimation();
-            //anim.Start = 0;
-            //anim.End = 10;
-            //runtimeAnimations.Add(anim);
-
-            //anim = new RuntimeAnimation();
-            //anim.Start = 11;
-            //anim.End = 20;
-            //runtimeAnimations.Add(anim);
-
-            //anim = new RuntimeAnimation();
-            //anim.Start = 18;
-            //anim.End = 40;
-            //runtimeAnimations.Add(anim);
-
-            //anim = new RuntimeAnimation();
-            //anim.Start = 44;
-            //anim.End = 50;
-            //runtimeAnimations.Add(anim);
-
-            if (runtimeAnimations.Count == 0)
-            {
-                // No animations found, so create a default one
-                RuntimeAnimation defaultAnim = new RuntimeAnimation();
-                defaultAnim.Name = "Default";
-                defaultAnim.Start = 0;
-                defaultAnim.End = numOfAnimations;
-                runtimeAnimations.Add(defaultAnim);
-
-                return;
-            }
-
-            // Maybe auto sorting the animations is not a good idea, so
-            // don't do it.
-            /*
-			int curOffset = 0;
-			int curStart = 0;
-			
-			for (int i = 0; i < runtimeAnimations.Count; i++)
-			{
-				runtimeAnimations[i].Start += curOffset;
-				if (runtimeAnimations[i].Start >= numOfAnimations)
-					runtimeAnimations[i].Start = numOfAnimations - 1;
-				runtimeAnimations[i].End += curOffset;
-				if (runtimeAnimations[i].End >= numOfAnimations)
-					runtimeAnimations[i].End = numOfAnimations - 1;
-
-				curOffset = curStart - runtimeAnimations[i].Start;
-					
-				runtimeAnimations[i].Start += curOffset;
-				if (runtimeAnimations[i].Start >= numOfAnimations)
-					runtimeAnimations[i].Start = numOfAnimations - 1;
-				runtimeAnimations[i].End += curOffset;
-				if (runtimeAnimations[i].End >= numOfAnimations)
-					runtimeAnimations[i].End = numOfAnimations - 1;
-				
-				curStart = runtimeAnimations[i].End + 1;
-			}
-			*/
-        }
-        #endregion
-
-        #region GetAnimationByName
-        internal RuntimeAnimation GetAnimationByName(string name)
-        {
-            name = name.ToLower();
-
-            for (int i = 0; i < runtimeAnimations.Count; i++)
-            {
-                if (runtimeAnimations[i].Name.ToLower() == name)
-                    return runtimeAnimations[i];
-            }
-
-            return null;
-        }
         #endregion
 
         #region Save
@@ -969,7 +763,7 @@ namespace AlkaronEngine.Assets.Meshes
                     objectVertices[i].Position.Z);
             }
 
-            boundingSphere = BoundingSphere.CreateFromPoints(allVertices3D);
+            BoundingSphere = BoundingSphere.CreateFromPoints(allVertices3D);
         }
         #endregion
 
@@ -1128,43 +922,62 @@ namespace AlkaronEngine.Assets.Meshes
         #endregion
 
         #region Update animation
-        private int currentAnimationNum = 0;
-        public int CurrentAnimationNum
+        public string? ActiveAnimationIdentifier
         {
             get
-            {
-                return currentAnimationNum;
+            {                
+                return activeAnimation?.AnimationIdentifier ?? null;
             }
             set
             {
-                if (currentAnimationNum == value)
-                    return;
-
-                currentAnimationNum = value;
+                SetActiveAnimation(value);
             }
         }
 
-        private double animTime = 0.0;
+        private void SetActiveAnimation(string? identifier)
+        {
+            if (identifier == null)
+            {
+                activeAnimation = null;
+                return;
+            }
+
+            identifier = identifier.ToLowerInvariant();
+
+            if (activeAnimation != null)
+            {
+                if (activeAnimation.AnimationIdentifier.ToLowerInvariant() == identifier)
+                {
+                    // Don't set the same animation
+                    return;
+                }
+            }
+
+            activeAnimation = (from a in Animations
+                               where a.AnimationIdentifier.ToLowerInvariant() == identifier
+                               select a).FirstOrDefault();
+        }
 
         /// <summary>
-        /// Update animation. Will do nothing if animation stayed the same since
-        /// last time we called this method.
+        /// Updates bone locations with the animation time.
+        /// 
+        /// Should be called from the RenderThread from a RenderProxy
         /// </summary>
-        public void UpdateAnimation(double deltaTime)
+        public void SetAnimationTime(double animTime)
         {
-            animTime += deltaTime;
-            if (animTime > Animation.AnimationLength)
+            var actAnim = activeAnimation;
+            if (actAnim == null)
             {
-                animTime -= Animation.AnimationLength;
+                return;
             }
 
             for (int i = 0; i < bones.Length; i++)
             {
                 RuntimeBone bone = bones[i];
-                AnimationBoneData data = Animation.DataByJointIndex(bone.Tag);
+                AnimationBoneData data = actAnim.DataByBoneIndex(bone.Tag);
 
                 // Just assign the final matrix from the animation matrices.
-                bone.finalMatrix = data?.GetMatrix(animTime) ?? Matrix4x4.Identity;
+                bone.FinalMatrix = data?.GetMatrix(animTime) ?? Matrix4x4.Identity;
             } // foreach
         } // UpdateAnimation()
         #endregion
@@ -1251,7 +1064,7 @@ namespace AlkaronEngine.Assets.Meshes
             {
                 if (bones[i].id.ToLowerInvariant() == BoneName)
                 {
-                    return bones[i].finalMatrix.Translation;
+                    return bones[i].FinalMatrix.Translation;
                 } // if (bones[i].id.ToLowerInvariant)
             } // for (int)
 
@@ -1297,22 +1110,10 @@ namespace AlkaronEngine.Assets.Meshes
                 return Vector3.Zero;
             }
 
-            return socket.OwnerBone.finalMatrix.Translation + socket.Translation;
+            return socket.OwnerBone.FinalMatrix.Translation + socket.Translation;
         } // GetSocketLocation(SocketName)
         #endregion
 
-        #region Update
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Update()
-        {
-            // Update the animation data in case it is not up to date anymore.
-            UpdateAnimation(0.0);
-        }
-        #endregion
-
-        #region Render
         #region SetVertexData
         /// <summary>
         /// Sets the vertex and index data on the device
@@ -1340,46 +1141,6 @@ namespace AlkaronEngine.Assets.Meshes
             renderContext.CommandList.DrawIndexed((uint)objectIndices.Length);
             Performance.EndAppendAggreate("DrawPrimitives");
         }
-        #endregion
-
-        /// <summary>
-        /// Render the animated model (will call UpdateAnimation internally,
-        /// but if you do that yourself before calling this method, it gets
-        /// optimized out). Rendering always uses the skinnedNormalMapping shader
-        /// with the DiffuseSpecular20 technique.
-        /// </summary>
-        /// <param name="renderMatrix">Render matrix</param>
-        internal void Render(Matrix4x4 renderMatrix, double deltaTime)
-        {
-            if (IsValid == false)
-            {
-                return;
-            }
-
-            // Make sure we use the correct vertex declaration for our shader.
-            /*AlkaronCoreGame.Core.GraphicsDevice.VertexDeclaration =
-				SkinnedTangentVertex.VertexDecl;*/
-
-            Matrix4x4[] boneMats = GetBoneMatrices(renderMatrix);
-
-            // Set custom skinnedMatrices
-            //SetBoneMatrices(boneMats, effect);
-
-            // Render the mesh
-            RenderVertices();
-        }
-
-        /// <summary>
-        /// Render vertices
-        /// </summary>
-        private void RenderVertices()
-        {
-            /*AlkaronCoreGame.Core.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-            AlkaronCoreGame.Core.GraphicsDevice.Indices = indexBuffer;
-            AlkaronCoreGame.Core.GraphicsDevice.DrawIndexedPrimitives(
-                PrimitiveType.TriangleList,
-                0, 0, numOfIndices / 3);*/
-        } // RenderVertices()
         #endregion
     }
 } // namespace SkinningWithColladaModelsInXna.Graphics

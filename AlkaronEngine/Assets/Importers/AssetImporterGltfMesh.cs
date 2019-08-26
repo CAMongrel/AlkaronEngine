@@ -32,6 +32,7 @@ namespace AlkaronEngine.Assets.Importers
             internal List<Surface2D> ImportedSurfaces = new List<Surface2D>();
             internal List<Materials.Material> ImportedMaterials = new List<Materials.Material>();
             internal List<MeshAsset> ImportedMeshes = new List<MeshAsset>();
+            internal List<BoneAnimationAsset> ImportedAnimations = new List<BoneAnimationAsset>();
 
             internal bool ImportStaticMeshOnly;
             internal bool ImportAsSkeletalMesh;
@@ -41,7 +42,6 @@ namespace AlkaronEngine.Assets.Importers
             internal Gltf Model;
             internal List<byte[]> RawBuffers = new List<byte[]>();
 
-            internal List<SkeletalAnimation> Animations = new List<SkeletalAnimation>();
             internal List<RuntimeBone[]> BonesList = new List<RuntimeBone[]>();
 
             internal Action<AssetImporterGltfMeshProgress> ProgressCallback;
@@ -185,13 +185,14 @@ namespace AlkaronEngine.Assets.Importers
                 Animation animation = context.Model.Animations[i];
 
                 var res = LoadAnimation(context, animation);
-                context.Animations.Add(res);
+                context.ImportedAnimations.Add(res);
             }
         }
 
-        private static SkeletalAnimation LoadAnimation(AssetImporterGltfMeshContext context, Animation animation)
+        private static BoneAnimationAsset LoadAnimation(AssetImporterGltfMeshContext context, Animation animation)
         {
-            SkeletalAnimation result = new SkeletalAnimation();
+            BoneAnimationAsset result = new BoneAnimationAsset();
+            result.AnimationIdentifier = animation.Name;
 
             for (int c = 0; c < animation.Channels.Length; c++)
             {
@@ -201,6 +202,7 @@ namespace AlkaronEngine.Assets.Importers
                 var inputAccessor = GetAccessorByIndex(sampler.Input, context.Model);
                 var outputAccessor = GetAccessorByIndex(sampler.Output, context.Model);
 
+                result.AnimationStart = inputAccessor.Min[0];
                 result.AnimationLength = inputAccessor.Max[0];
 
                 BufferView? inputBufferView = null;
@@ -229,18 +231,16 @@ namespace AlkaronEngine.Assets.Importers
                 int nodeIdx = channel.Target.Node.Value;
                 AnimationChannelTarget.PathEnum path = channel.Target.Path;
 
-                AnimationBoneData data = (from h in result.Bones
-                                          where h.jointIdx == nodeIdx
-                                          select h).FirstOrDefault();
+                AnimationBoneData data = result.DataByBoneIndex(nodeIdx);
 
                 if (data == null)
                 {
                     data = new AnimationBoneData()
                     {
-                        jointIdx = nodeIdx
+                        boneIndex = nodeIdx
                     };
 
-                    result.Bones.Add(data);
+                    result.AddBone(data);
                 }
 
                 switch (outputAccessor.Type)
@@ -966,8 +966,9 @@ namespace AlkaronEngine.Assets.Importers
                         {
                             bones = context.BonesList[skinIndex];
                         }
-                        meshAsset = SkeletalMesh.FromVertices(vertices, indices, bones, context.Animations[0], 
+                        meshAsset = SkeletalMesh.FromVertices(vertices, indices, bones, 
                             context.AssetSettings.GraphicsDevice, calcTangents);
+                        ((SkeletalMesh)meshAsset).Animations.AddRange(context.ImportedAnimations);
                     }
 
                     meshAsset.Name = mesh.Name + $"_{p}_{context.MeshCounter}.skeletalMesh";

@@ -163,9 +163,9 @@ namespace AlkaronViewer
                 {
                     AddStaticMesh(importedAssets[i] as StaticMesh);
                 }
-                if (importedAssets[i] is SkeletalMesh)
+                if (importedAssets[i] is SkeletalMesh skelMesh)
                 {
-                    AddSkeletalMesh(importedAssets[i] as SkeletalMesh);
+                    AddSkeletalMesh(skelMesh);
                 }
             }
         }
@@ -239,6 +239,12 @@ namespace AlkaronViewer
 
             SkeletalMeshActor focusActor = new SkeletalMeshActor();
             ((SkeletalMeshActor)focusActor).SkeletalMeshComponent.SetSkeletalMesh(mesh);
+
+            string[] anims = ((SkeletalMeshActor)focusActor).SkeletalMeshComponent.AnimationController.GetAnimationIdentifiers();
+            if (anims.Length > 0)
+            {
+                ((SkeletalMeshActor)focusActor).SkeletalMeshComponent.AnimationController.Play(anims[0]);
+            }
 
             SceneGraph.AddActor(focusActor);
         }
