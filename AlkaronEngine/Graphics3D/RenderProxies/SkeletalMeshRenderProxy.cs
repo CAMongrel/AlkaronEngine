@@ -106,21 +106,13 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
             }*/
         }
 
-        int counter = 0;
-
         public override void Render(RenderContext renderContext, IMaterial materialToUse)
         {
             base.Render(renderContext, materialToUse);
 
             Performance.StartAppendAggreate("Setup");
-            SkeletalMesh.UpdateAnimation(counter++);
             materialToUse.ApplyParameters(renderContext, WorldMatrix, SkeletalMesh.GetBoneMatrices(WorldMatrix));
             Performance.EndAppendAggreate("Setup");
-
-            if (counter > 100)
-            {
-                counter = 0;
-            }
 
             Performance.StartAppendAggreate("Render Mesh");
             SkeletalMesh.Render(renderContext);
@@ -141,6 +133,8 @@ namespace AlkaronEngine.Graphics3D.RenderProxies
         internal override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+
+            SkeletalMesh.UpdateAnimation(deltaTime);
 
             lock (lockObj)
             {

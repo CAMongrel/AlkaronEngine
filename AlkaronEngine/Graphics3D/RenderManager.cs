@@ -11,6 +11,7 @@ using AlkaronEngine.Gui;
 using Veldrid.SPIRV;
 using System.Text;
 using AlkaronEngine.Graphics3D.RenderPasses;
+using System.Diagnostics;
 
 namespace AlkaronEngine.Graphics3D
 {
@@ -35,12 +36,9 @@ namespace AlkaronEngine.Graphics3D
         private Thread renderThread;
         private bool renderThreadActive;
 
-        private long frameRenderStartTime;
-
         public int MaxRenderCount;
 
         private int frameCounter;
-        private long frameCalcStart;
 
         // Public stats
         public float CurrentFPS { get; private set; }
@@ -57,12 +55,18 @@ namespace AlkaronEngine.Graphics3D
         private StaticMeshRenderPass staticMeshRenderPass;
         private SkeletalMeshRenderPass skeletalMeshRenderPass;
 
+        private double fpsSecondsCounter;
+        private Stopwatch renderStopwatch;
+
         public RenderManager()
         {
             maxFPS = -1;
 
             ViewTarget = null;
             nextViewTarget = null;
+
+            fpsSecondsCounter = 0.0;
+            renderStopwatch = new Stopwatch();
 
             renderThread = null;
             renderThreadActive = false;
@@ -78,7 +82,6 @@ namespace AlkaronEngine.Graphics3D
             CreateMaterialLibrary();
 
             frameCounter = 0;
-            frameCalcStart = System.Diagnostics.Stopwatch.GetTimestamp();
 
             MaxRenderCount = -1;
         }
@@ -95,7 +98,7 @@ namespace AlkaronEngine.Graphics3D
                 return;
             }
 
-            frameRenderStartTime = System.Diagnostics.Stopwatch.GetTimestamp();
+            renderStopwatch.Start();
 
             renderThreadActive = true;
 
@@ -232,28 +235,25 @@ namespace AlkaronEngine.Graphics3D
         // Main rendering function
         internal void RenderFrame(RenderContext renderContext, bool shouldSleep = false)
         {
-            long end = System.Diagnostics.Stopwatch.GetTimestamp();
-            double seconds = (double)(end - frameCalcStart) / (double)System.Diagnostics.Stopwatch.Frequency;
-            if (seconds >= 1.0f)
-            {
-                frameCalcStart = end;
-                CurrentFPS = frameCounter;
+            renderStopwatch.Stop();
+            double deltaTime = renderStopwatch.Elapsed.TotalSeconds;
+            renderStopwatch.Restart();
 
-                Console.WriteLine("CurrentFPS: " + CurrentFPS);
+            fpsSecondsCounter += deltaTime;
+
+            if (fpsSecondsCounter >= 1.0)
+            {
+                CurrentFPS = frameCounter;
 
                 frameCounter = 0;
             }
-
-            long now = System.Diagnostics.Stopwatch.GetTimestamp();
-            // Delta time in seconds since the last rendering pass
-            double delta = (double)(now - frameRenderStartTime) / (double)System.Diagnostics.Stopwatch.Frequency;
 
             if (maxFPS >= -1)
             {
                 // Check maxFPS delay
 
                 double minDelta = 1.0 / (double)maxFPS;
-                if (delta < minDelta)
+                if (deltaTime < minDelta)
                 {
                     if (shouldSleep)
                     {
@@ -263,13 +263,11 @@ namespace AlkaronEngine.Graphics3D
                 }
             }
 
-            frameRenderStartTime = System.Diagnostics.Stopwatch.GetTimestamp();
-
             Performance.Push("RenderManager.Draw");
 
             // Apply update before rendering (adding new rendering proxies,
             // updating existing proxies)
-            ApplyPreFrame(delta);
+            ApplyPreFrame(deltaTime);
 
             // Render all active proxies in rendering passes
             RenderRenderPasses(renderContext);

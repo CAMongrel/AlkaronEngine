@@ -1,3 +1,4 @@
+using AlkaronEngine.Assets.Importers;
 using AlkaronEngine.Graphics;
 using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Util;
@@ -10,6 +11,38 @@ using Veldrid.Utilities;
 
 namespace AlkaronEngine.Assets.Meshes
 {
+    public class AnimationController
+    {
+        public double PlaybackSpeed { get; set; } = 1.0;
+
+        public List<BoneAnimationAsset> Animations { get; private set; } = new List<BoneAnimationAsset>();
+
+        public void Play(string animationIdentifier)
+        {
+
+        }
+
+        public void Pause()
+        {
+
+        }
+
+        public void Stop()
+        {
+
+        }
+
+        public void Resume()
+        {
+
+        }
+
+        public void Tick(double deltaTime)
+        {
+
+        }
+    }
+
     /// <summary>
     /// Collada model. Supports bones and animation for collada (.dae) exported
     /// 3D Models from 3D Studio Max (8 or 9).
@@ -75,7 +108,7 @@ namespace AlkaronEngine.Assets.Meshes
             /// These matrices must be set each frame (use time) in order
             /// for the animation to work.
             /// </summary>
-            public Matrix4x4[] animationMatrices;
+            //public Matrix4x4[] animationMatrices;
 
             /// <summary>
             /// invBoneMatrix is a special helper matrix loaded directly from
@@ -96,6 +129,19 @@ namespace AlkaronEngine.Assets.Meshes
             /// the local space.
             /// </summary>
             public Matrix4x4 finalMatrix;
+
+            public Matrix4x4 FinalMatrix
+            {
+                get
+                {
+                    if (parent == null)
+                    {
+                        return finalMatrix;
+                    }
+
+                    return finalMatrix * parent.FinalMatrix;
+                }
+            }
 
             /// <summary>
             /// A custom tag for this bone.
@@ -319,6 +365,11 @@ namespace AlkaronEngine.Assets.Meshes
         private Matrix4x4 objectMatrix = Matrix4x4.Identity;
 
         /// <summary>
+        /// 
+        /// </summary>
+        internal SkeletalAnimation Animation { get; private set; }
+
+        /// <summary>
         /// Flat list of bones, the first bone is always the root bone, all
         /// children can be accessed from here. The main reason for having a flat
         /// list is easy access to all bones for showing bone previous and of
@@ -465,14 +516,14 @@ namespace AlkaronEngine.Assets.Meshes
                 indices[i] = i;
             }
 
-            return FromVertices(vertices, indices, null, graphicsDevice, calcTangents);
+            return FromVertices(vertices, indices, null, null, graphicsDevice, calcTangents);
         }
 
         /// <summary>
         /// Creates a static mesh directly from vertices and indices
         /// </summary>
         public static SkeletalMesh FromVertices(SkinnedTangentVertex[] vertices,
-            uint[] indices, RuntimeBone[]? bones, GraphicsDevice graphicsDevice, bool calcTangents)
+            uint[] indices, RuntimeBone[]? bones, SkeletalAnimation animation, GraphicsDevice graphicsDevice, bool calcTangents)
         {
             SkeletalMesh mesh = new SkeletalMesh();
 
@@ -484,6 +535,7 @@ namespace AlkaronEngine.Assets.Meshes
                 mesh.CalculateTangents();
             }
 
+            mesh.Animation = animation;
             mesh.bones = bones;
 
             BufferDescription vertexBufferDesc = new BufferDescription((uint)(SkinnedTangentVertex.SizeInBytes * mesh.objectVertices.Length), BufferUsage.VertexBuffer);
@@ -641,14 +693,15 @@ namespace AlkaronEngine.Assets.Meshes
                 bones[i].initialMatrix = ReadMatrixHelper(reader);
                 bones[i].invBoneSkinMatrix = ReadMatrixHelper(reader);
                 int aninMatCnt = reader.ReadInt32();
-                bones[i].animationMatrices = new Matrix4x4[aninMatCnt];
+                /*bones[i].animationMatrices = new Matrix4x4[aninMatCnt];
                 for (int j = 0; j < aninMatCnt; j++)
                 {
                     bones[i].animationMatrices[j] =
                         ReadMatrixHelper(reader);
-                } // for (int)
+                } // for (int)*/
             } // for (int)
 
+            /*
             for (int i = 0; i < bones.Length; i++)
             {
                 RuntimeBone bone = bones[i];
@@ -662,6 +715,7 @@ namespace AlkaronEngine.Assets.Meshes
                     bone.finalMatrix *=
                         bone.parent.finalMatrix;
             } // for (int)
+            */
 
             sockets = new RuntimeSocket[reader.ReadInt32()];
             for (int i = 0; i < sockets.Length; i++)
@@ -1090,30 +1144,27 @@ namespace AlkaronEngine.Assets.Meshes
             }
         }
 
+        private double animTime = 0.0;
+
         /// <summary>
         /// Update animation. Will do nothing if animation stayed the same since
         /// last time we called this method.
         /// </summary>
-        public void UpdateAnimation(int overrideCurrentAnimationNum = -1)
+        public void UpdateAnimation(double deltaTime)
         {
-            if (overrideCurrentAnimationNum != -1)
+            animTime += deltaTime;
+            if (animTime > Animation.AnimationLength)
             {
-                currentAnimationNum = overrideCurrentAnimationNum;
+                animTime -= Animation.AnimationLength;
             }
 
             for (int i = 0; i < bones.Length; i++)
             {
                 RuntimeBone bone = bones[i];
+                AnimationBoneData data = Animation.DataByJointIndex(bone.Tag);
 
                 // Just assign the final matrix from the animation matrices.
-                bone.finalMatrix = bone.animationMatrices[currentAnimationNum];
-
-                // Also use parent matrix if we got one
-                // This will always work because all the bones are in order.
-                if (bone.parent != null)
-                {
-                    bone.finalMatrix *= bone.parent.finalMatrix;
-                }
+                bone.finalMatrix = data?.GetMatrix(animTime) ?? Matrix4x4.Identity;
             } // foreach
         } // UpdateAnimation()
         #endregion
@@ -1127,6 +1178,9 @@ namespace AlkaronEngine.Assets.Meshes
         /// <returns></returns>
         public Matrix4x4[] GetBoneMatrices(Matrix4x4 renderMatrix)
         {
+            //Matrix4x4.Invert(renderMatrix, out var renderMatrixInverse);
+            Matrix4x4.Invert(bones[0].initialMatrix, out var renderMatrixInverse);
+
             // And get all bone matrices, we support max. 80 (see shader).
             Matrix4x4[] matrices = new Matrix4x4[Math.Min(80/*SkinnedEffect.MaxBones*/, bones.Length)];
             for (int num = 0; num < matrices.Length; num++)
@@ -1136,36 +1190,14 @@ namespace AlkaronEngine.Assets.Meshes
                 // and finally we add the render matrix too here.
                 matrices[num] =
                     bones[num].invBoneSkinMatrix *
-                    bones[num].finalMatrix *
-                    renderMatrix;
+                    bones[num].FinalMatrix *
+                    renderMatrixInverse
+                    ;
             }
 
             return matrices;
         } // GetBoneMatrices()
         #endregion
-
-        #region SetBoneMatrices
-        internal void SetBoneMatrices(Matrix4x4[] matrices)//, HVertexShader vertexShader)
-        {
-            /*Vector4[] values = new Vector4[matrices.Length * 3];
-            for (int i = 0; i < matrices.Length; i++)
-            {
-                // Note: We use the transpose matrix here.
-                // This has to be reconstructed in the shader, but this is not
-                // slower than directly using matrices and this is the only way
-                // we can store 80 matrices with ps2.0.
-                values[i * 3 + 0] = new Vector4(
-                    matrices[i].M11, matrices[i].M21, matrices[i].M31, matrices[i].M41);
-                values[i * 3 + 1] = new Vector4(
-                    matrices[i].M12, matrices[i].M22, matrices[i].M32, matrices[i].M42);
-                values[i * 3 + 2] = new Vector4(
-                    matrices[i].M13, matrices[i].M23, matrices[i].M33, matrices[i].M43);
-            } // for
-            */
-            //vertexShader.SetValue("skinnedMatricesVS20", values);
-            //skinnedEffect.SetBoneTransforms(matrices);
-        }
-        #endregion // SetBoneMatrices(matrices)
 
         #region RenderSkeleton
         /// <summary>
@@ -1276,7 +1308,7 @@ namespace AlkaronEngine.Assets.Meshes
         public void Update()
         {
             // Update the animation data in case it is not up to date anymore.
-            UpdateAnimation();
+            UpdateAnimation(0.0);
         }
         #endregion
 

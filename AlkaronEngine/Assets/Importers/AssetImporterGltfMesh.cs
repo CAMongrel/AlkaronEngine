@@ -189,31 +189,6 @@ namespace AlkaronEngine.Assets.Importers
             }
         }
 
-        class AnimationFrame
-        {
-            public Vector3 translation = Vector3.Zero;
-            public Quaternion rotation = Quaternion.Identity;
-            public Vector3 scale = Vector3.One;
-            public Matrix4x4 transformationMat = Matrix4x4.Identity;
-
-            public Matrix4x4 Matrix =>
-                Matrix4x4.CreateScale(scale) *
-                Matrix4x4.CreateFromQuaternion(rotation) *
-                Matrix4x4.CreateTranslation(translation);
-        }
-
-        class AnimationBoneData
-        {
-            public int nodeIdx;
-
-            public AnimationFrame[] Frames = null;
-        }
-
-        class SkeletalAnimation
-        {
-            public List<AnimationBoneData> Bones = new List<AnimationBoneData>();
-        }
-
         private static SkeletalAnimation LoadAnimation(AssetImporterGltfMeshContext context, Animation animation)
         {
             SkeletalAnimation result = new SkeletalAnimation();
@@ -225,6 +200,8 @@ namespace AlkaronEngine.Assets.Importers
 
                 var inputAccessor = GetAccessorByIndex(sampler.Input, context.Model);
                 var outputAccessor = GetAccessorByIndex(sampler.Output, context.Model);
+
+                result.AnimationLength = inputAccessor.Max[0];
 
                 BufferView? inputBufferView = null;
                 if (inputAccessor != null &&
@@ -252,19 +229,18 @@ namespace AlkaronEngine.Assets.Importers
                 int nodeIdx = channel.Target.Node.Value;
                 AnimationChannelTarget.PathEnum path = channel.Target.Path;
 
-                AnimationBoneData helper = (from h in result.Bones
-                                          where h.nodeIdx == nodeIdx
+                AnimationBoneData data = (from h in result.Bones
+                                          where h.jointIdx == nodeIdx
                                           select h).FirstOrDefault();
 
-                if (helper == null)
+                if (data == null)
                 {
-                    helper = new AnimationBoneData()
+                    data = new AnimationBoneData()
                     {
-                        nodeIdx = nodeIdx
+                        jointIdx = nodeIdx
                     };
-                    helper.Frames = new AnimationFrame[inputSpan.Length];
 
-                    result.Bones.Add(helper);
+                    result.Bones.Add(data);
                 }
 
                 switch (outputAccessor.Type)
@@ -280,20 +256,24 @@ namespace AlkaronEngine.Assets.Importers
                                         outputBufferView.ByteOffset + outputAccessor.ByteOffset, outputAccessor.Count * 12));
                             }
 
-                            for (int idx = 0; idx < inputSpan.Length; idx++)
+                            if (path == AnimationChannelTarget.PathEnum.translation)
                             {
-                                if (helper.Frames[idx] == null)
+                                data.TranslationFrames = new AnimationFrame<Vector3>[inputSpan.Length];
+                                for (int idx = 0; idx < inputSpan.Length; idx++)
                                 {
-                                    helper.Frames[idx] = new AnimationFrame();
+                                    data.TranslationFrames[idx] = new AnimationFrame<Vector3>();
+                                    data.TranslationFrames[idx].timecode = inputSpan[idx];
+                                    data.TranslationFrames[idx].value = outputSpan[idx];
                                 }
-
-                                if (path == AnimationChannelTarget.PathEnum.translation)
+                            }
+                            if (path == AnimationChannelTarget.PathEnum.scale)
+                            {
+                                data.ScalingFrames = new AnimationFrame<Vector3>[inputSpan.Length];
+                                for (int idx = 0; idx < inputSpan.Length; idx++)
                                 {
-                                    helper.Frames[idx].translation = outputSpan[idx];
-                                }
-                                if (path == AnimationChannelTarget.PathEnum.scale)
-                                {
-                                    helper.Frames[idx].scale = outputSpan[idx];
+                                    data.ScalingFrames[idx] = new AnimationFrame<Vector3>();
+                                    data.ScalingFrames[idx].timecode = inputSpan[idx];
+                                    data.ScalingFrames[idx].value = outputSpan[idx];
                                 }
                             }
                         }
@@ -309,24 +289,21 @@ namespace AlkaronEngine.Assets.Importers
                                         context.RawBuffers[outputBufferView.Buffer],
                                         outputBufferView.ByteOffset + outputAccessor.ByteOffset, outputAccessor.Count * 16));
 
-                                for (int idx = 0; idx < inputSpan.Length; idx++)
+                                if (path == AnimationChannelTarget.PathEnum.rotation)
                                 {
-                                    if (helper.Frames[idx] == null)
+                                    data.RotationFrames = new AnimationFrame<Quaternion>[inputSpan.Length];
+                                    for (int idx = 0; idx < inputSpan.Length; idx++)
                                     {
-                                        helper.Frames[idx] = new AnimationFrame();
-                                    }
-
-                                    if (path == AnimationChannelTarget.PathEnum.rotation)
-                                    {
-                                        helper.Frames[idx].rotation = 
-                                            new Quaternion(outputSpan[idx].X, outputSpan[idx].Y, outputSpan[idx].Z, outputSpan[idx].W);
+                                        data.RotationFrames[idx] = new AnimationFrame<Quaternion>();
+                                        data.RotationFrames[idx].timecode = inputSpan[idx];
+                                        data.RotationFrames[idx].value = new Quaternion(outputSpan[idx].X, outputSpan[idx].Y, outputSpan[idx].Z, outputSpan[idx].W);
                                     }
                                 }
                             }
                         }
                         break;
 
-                    case Accessor.TypeEnum.MAT4:
+                    /*case Accessor.TypeEnum.MAT4:
                         {
                             ReadOnlySpan<Matrix4x4> outputSpan = null;
                             if (outputBufferView != null)
@@ -350,7 +327,7 @@ namespace AlkaronEngine.Assets.Importers
                                 }
                             }
                         }
-                        break;
+                        break;*/
 
                     default:
                         throw new NotSupportedException();
@@ -585,6 +562,11 @@ namespace AlkaronEngine.Assets.Importers
 
         private static void LoadSkins(AssetImporterGltfMeshContext context)
         {
+            if (context.Model.Skins == null)
+            {
+                return;
+            }
+
             for (int sk = 0; sk < context.Model.Skins.Length; sk++)
             {
                 Skin skin = context.Model.Skins[sk];
@@ -602,7 +584,7 @@ namespace AlkaronEngine.Assets.Importers
                 if (ibmBufferView != null)
                 {
                     matrixSpan = MemoryMarshal.Cast<byte, Matrix4x4>(
-                        new ReadOnlySpan<byte>(context.RawBuffers[ibmBufferView.Buffer], ibmBufferView.ByteOffset + ibmAccessor.ByteOffset, ibmAccessor.Count * (4 * 4 * 4)));
+                        new ReadOnlySpan<byte>(context.RawBuffers[ibmBufferView.Buffer], ibmBufferView.ByteOffset + ibmAccessor.ByteOffset, ibmAccessor.Count * (4 * 16)));
                 }
 
                 RuntimeBone[] bones = new RuntimeBone[skin.Joints.Length];
@@ -615,11 +597,11 @@ namespace AlkaronEngine.Assets.Importers
                     bones[i].Tag = jointIndex;
                     bones[i].invBoneSkinMatrix = matrixSpan[i];
                     bones[i].initialMatrix = Matrix4x4.Identity;
-                    bones[i].animationMatrices = new Matrix4x4[context.Animations[0].Bones[i].Frames.Length];
+                    /*bones[i].animationMatrices = new Matrix4x4[context.Animations[0].Bones[i].Frames.Length];
                     for (int j = 0; j < context.Animations[0].Bones[i].Frames.Length; j++)
                     {
                         bones[i].animationMatrices[j] = context.Animations[0].Bones[i].Frames[j].Matrix;
-                    }
+                    }*/
                 }
 
                 // Build hierarchy
@@ -832,7 +814,7 @@ namespace AlkaronEngine.Assets.Importers
                 if (jointsBufferView != null)
                 {
                     jointsSpan = MemoryMarshal.Cast<byte, Vector4us>(
-                        new ReadOnlySpan<byte>(context.RawBuffers[jointsBufferView.Buffer], jointsBufferView.ByteOffset + jointsAccessor.ByteOffset, jointsAccessor.Count * 16));
+                        new ReadOnlySpan<byte>(context.RawBuffers[jointsBufferView.Buffer], jointsBufferView.ByteOffset + jointsAccessor.ByteOffset, jointsAccessor.Count * 8));
                 }
                 ReadOnlySpan<Vector4> weightsSpan = null;
                 if (weightsBufferView != null)
@@ -984,7 +966,8 @@ namespace AlkaronEngine.Assets.Importers
                         {
                             bones = context.BonesList[skinIndex];
                         }
-                        meshAsset = SkeletalMesh.FromVertices(vertices, indices, bones, context.AssetSettings.GraphicsDevice, calcTangents);
+                        meshAsset = SkeletalMesh.FromVertices(vertices, indices, bones, context.Animations[0], 
+                            context.AssetSettings.GraphicsDevice, calcTangents);
                     }
 
                     meshAsset.Name = mesh.Name + $"_{p}_{context.MeshCounter}.skeletalMesh";

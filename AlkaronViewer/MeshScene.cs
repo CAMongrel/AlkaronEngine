@@ -83,12 +83,13 @@ namespace AlkaronViewer
         {
             base.Update(deltaTime);
 
-            label.Text = "Camera Position: " + CurrentCamera.CameraComponent.Center;
+            camPosLabel.Text = "Camera Position: " + CurrentCamera.CameraComponent.Center;
+            fpsLabel.Text = "FPS: ??";
         }
 
         protected override void CreateDefaultCamera()
         {
-            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 2000.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
+            var camComponent = new ArcBallCameraComponent(Vector3.Zero, 50.0f, 45.0f, -45.0f, 0.0f, ScreenSize, 0.1f, 5000.0f);
 
             CurrentCamera = new CameraActor(camComponent);
 
@@ -129,7 +130,9 @@ namespace AlkaronViewer
             //PresentModel("AlphaBlendModeTest", false, GltfModelEntryType.Base);
             //PresentModel("Lantern", false, GltfModelEntryType.Base);
             //PresentModel("FlightHelmet", false, GltfModelEntryType.Base);
-            PresentModel("Monster", true, GltfModelEntryType.Base);
+            //PresentModel("Monster", true, GltfModelEntryType.Base);
+            //PresentModel("RiggedFigure", true, GltfModelEntryType.Base);
+            PresentModel("lingerie", true, GltfModelEntryType.Base);
         }
 
         private void PresentModel(string name, bool isSkeletalMesh, GltfModelEntryType type = GltfModelEntryType.Base)
@@ -167,7 +170,8 @@ namespace AlkaronViewer
             }
         }
 
-        private UILabel label;
+        private UILabel camPosLabel;
+        private UILabel fpsLabel;
 
         protected override void InitUI()
         {
@@ -194,14 +198,23 @@ namespace AlkaronViewer
             image.Height = 200;
             window.AddComponent(image);
 
-            label = new UILabel("Hello World!");
-            label.X = 0;
-            label.Y = 0;
-            label.Width = 200;
-            label.Height = 20;
-            label.TextAlignHorizontal = UITextAlignHorizontal.Left;
-            label.ForegroundColor = RgbaFloat.Yellow;
-            window.AddComponent(label);
+            camPosLabel = new UILabel("Hello World!");
+            camPosLabel.X = 0;
+            camPosLabel.Y = 0;
+            camPosLabel.Width = 200;
+            camPosLabel.Height = 20;
+            camPosLabel.TextAlignHorizontal = UITextAlignHorizontal.Left;
+            camPosLabel.ForegroundColor = RgbaFloat.Yellow;
+            window.AddComponent(camPosLabel);
+
+            fpsLabel = new UILabel("Hello World!");
+            fpsLabel.X = 0;
+            fpsLabel.Y = 0;
+            fpsLabel.Width = 200;
+            fpsLabel.Height = 40;
+            fpsLabel.TextAlignHorizontal = UITextAlignHorizontal.Left;
+            fpsLabel.ForegroundColor = RgbaFloat.Yellow;
+            window.AddComponent(fpsLabel);
         }
 
         public void AddStaticMesh(StaticMesh mesh)
