@@ -113,15 +113,9 @@ namespace AlkaronEngine.Components
 
     public class SkeletalMeshComponent : BaseComponent
     {
-        //private int frameIndex;
-        //private double lastFrameTime;
-
         public AnimationController AnimationController;
 
         public SkeletalMesh SkeletalMesh { get; private set; }
-
-        // Reference to the rendering proxy
-        //private SkeletalMeshRenderProxy proxy;
 
         public SkeletalMeshComponent(Vector3 setCenter)
            : base(setCenter)
@@ -149,7 +143,7 @@ namespace AlkaronEngine.Components
                        Matrix4x4.CreateTranslation(Center);
 
                 SkeletalMeshRenderProxy proxy = new SkeletalMeshRenderProxy(SkeletalMesh);
-                proxy.WorldMatrix = worldMatrix;
+                proxy.WorldMatrix = worldMatrix * SkeletalMesh.RootTransform;
                 proxy.Material = SkeletalMesh.Material;
                 proxy.AnimationTime = AnimationController.CurrentAnimationTime;
                 proxy.AnimationName = AnimationController.CurrentAnimationName;
@@ -169,7 +163,7 @@ namespace AlkaronEngine.Components
                     Matrix4x4 worldMatrix = Matrix4x4.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
                        Matrix4x4.CreateScale(Scale.X, Scale.Y, Scale.Z) *
                        Matrix4x4.CreateTranslation(Center);
-                    rp.WorldMatrix = worldMatrix;
+                    rp.WorldMatrix = worldMatrix * SkeletalMesh.RootTransform;
 
                     rp.AnimationTime = AnimationController.CurrentAnimationTime;
                     rp.AnimationName = AnimationController.CurrentAnimationName;
