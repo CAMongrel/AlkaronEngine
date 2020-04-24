@@ -39,6 +39,17 @@ namespace AlkaronEngine
             return assetName;
         }
 
+        private string FindContentFile(string assetName)
+        {
+            string fullname = Path.Combine(AlkaronCoreGame.Core.ContentDirectory, assetName);
+            if (File.Exists(fullname) == false)
+            {
+                return null;
+            }
+
+            return fullname;
+        }
+
         protected override Stream OpenStream(string assetName)
         {
             var fullName = FindResource(assetName);
@@ -68,6 +79,35 @@ namespace AlkaronEngine
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Directly opens a Stream to a file resource in the content folder
+        /// 
+        /// Completely unrelated to the XNA content pipeline.
+        /// </summary>
+        public Stream OpenContentStream(string contentFile)
+        {
+            var fullName = FindContentFile(contentFile);
+            if (fullName == null)
+            {
+                return null;
+            }
+            
+            try
+            {
+                var stream = File.OpenRead(fullName);
+                if (stream != null)
+                {
+                    return stream;
+                }
+
+                return null;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
