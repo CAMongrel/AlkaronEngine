@@ -44,7 +44,7 @@ namespace AlkaronEngine
             return fullname;
         }
 
-        protected override Stream OpenStream(string assetName)
+        protected Stream OpenStream(string assetName)
         {
             var fullName = FindResource(assetName);
 

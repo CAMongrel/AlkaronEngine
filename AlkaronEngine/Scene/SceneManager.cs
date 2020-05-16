@@ -139,13 +139,13 @@ namespace AlkaronEngine.Scene
             }
         }
 
-        public void UpdateFrameInput(InputSnapshot snapshot, double deltaTime)
+        internal void UpdateFrameInput(InputSnapshot snapshot, double deltaTime)
         {
             InputManager.UpdateInput(snapshot, deltaTime);
             CurrentScene?.UpdateInput(snapshot, deltaTime);
         }
 
-        public void Update(double deltaTime)
+        internal void Update(double deltaTime)
         {
             Performance.Push("Game loop");
 
@@ -176,7 +176,7 @@ namespace AlkaronEngine.Scene
             Performance.Pop();
         }
 
-        public void Draw(GraphicsDevice graphicsDevice, double deltaTime)
+        internal void Draw(GraphicsDevice graphicsDevice, double deltaTime)
         {
             Performance.Push("Render loop on main thread");
 
