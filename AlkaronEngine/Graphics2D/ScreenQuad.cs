@@ -148,6 +148,18 @@ namespace AlkaronEngine.Graphics2D
                 SingleWhiteTexture, col);
         }
 
+        internal static void FillRectangle(RenderContext renderContext, RectangleF destRect, RgbaFloat col)
+        {
+            Vector2 Scale = Vector2.One;
+            Vector2 ScaledOffset = Vector2.Zero;
+
+            destRect = new RectangleF(ScaledOffset.X + (int)(destRect.X * Scale.X), ScaledOffset.Y + (int)(destRect.Y * Scale.Y),
+               (int)(destRect.Width * Scale.X), (int)(destRect.Height * Scale.Y));
+
+            RenderQuad(renderContext, new Vector2(destRect.X, destRect.Y), new Vector2(destRect.Width, destRect.Height),
+                SingleWhiteTexture, col);
+        }
+
         internal static void RenderQuad(RenderContext renderContext, Vector2 screenPos, Vector2 size,
                                         Texture texture, RgbaFloat color, float rotation = 0)
         {

@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AlkaronEngine.Graphics2D;
-using Microsoft.Xna.Framework;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -31,22 +27,21 @@ namespace AlkaronEngine.Gui
             set { textLabel.Text = value; }
         }
 
-        public UIMessageBox(IRenderConfiguration renderConfig) 
-            : base(renderConfig)
+        public UIMessageBox() 
         {
-            BackgroundColor = new Color(Color.White, 0.0f);
+            BackgroundColor = new RgbaFloat(RgbaFloat.White.R, RgbaFloat.White.G, RgbaFloat.White.B, 0.0f);
 
-            dismissButton = new UIButton(renderConfig, "Ok", AlkaronCoreGame.Core.DefaultFont, UIButtonStyle.Flat);
+            dismissButton = new UIButton("Ok", AlkaronCoreGame.Core.DefaultFont, UIButtonStyle.Flat);
             dismissButton.OnPointerUpInside += DismissButton_OnPointerUpInside;
 
-            headerLabel = new UILabel(renderConfig, "", AlkaronCoreGame.Core.DefaultFont);
-            headerLabel.BackgroundColor = new Color(Color.Gray, 1.0f);
+            headerLabel = new UILabel("", AlkaronCoreGame.Core.DefaultFont);
+            headerLabel.BackgroundColor = new RgbaFloat(RgbaFloat.Grey.R, RgbaFloat.Grey.G, RgbaFloat.Grey.B, 1.0f);
 
-            textLabel = new UILabel(renderConfig, "", AlkaronCoreGame.Core.DefaultFont);
+            textLabel = new UILabel("", AlkaronCoreGame.Core.DefaultFont);
             textLabel.TextAlignVertical = UITextAlignVertical.Top;
 
-            backgroundPanel = new UIPanel(renderConfig);
-            backgroundPanel.BackgroundColor = new Color(Color.Gray, 0.9f);
+            backgroundPanel = new UIPanel();
+            backgroundPanel.BackgroundColor = new RgbaFloat(RgbaFloat.Grey.R, RgbaFloat.Grey.G, RgbaFloat.Grey.B, 0.9f);
 
             AddComponent(backgroundPanel);
             backgroundPanel.AddComponent(headerLabel);
@@ -54,14 +49,14 @@ namespace AlkaronEngine.Gui
             backgroundPanel.AddComponent(dismissButton);
         }
 
-        private void DismissButton_OnPointerUpInside(UIBaseComponent sender, Vector2 position, GameTime gameTime)
+        private void DismissButton_OnPointerUpInside(UIBaseComponent sender, Vector2 position, double gameTime)
         {
             Close();
         }
 
         public static void Show(string headerText, string messageText, Action dismissEvent)
         {
-            UIMessageBox box = new UIMessageBox(AlkaronCoreGame.Core.SceneManager);
+            UIMessageBox box = new UIMessageBox();
             box.OnClose += dismissEvent;
             box.Header = headerText;
             box.Text = messageText;

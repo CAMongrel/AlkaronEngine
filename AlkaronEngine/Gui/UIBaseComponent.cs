@@ -60,7 +60,7 @@ namespace AlkaronEngine.Gui
 
     public abstract class UIBaseComponent : IDisposable
     {
-        #region Member
+        #region Members
         public float X { get; set; }
         public float Y { get; set; }
 
@@ -294,6 +294,7 @@ namespace AlkaronEngine.Gui
         }
 
         //protected IRenderConfiguration renderConfig;
+        protected double totalTimeGameTime;
 
         private List<UIAnimation> animations;
         #endregion
@@ -309,6 +310,7 @@ namespace AlkaronEngine.Gui
             components = new List<UIBaseComponent>();
             animations = new List<UIAnimation>();
             parentComponent = null;
+            totalTimeGameTime = 0.0;
 
             Focusable = false;
             PositionAnchor = UIPositionAnchor.TopLeft;
@@ -654,6 +656,8 @@ namespace AlkaronEngine.Gui
         #region Game update
         public virtual void Update(double deltaTime)
         {
+            totalTimeGameTime += deltaTime;
+
             for (int i = 0; i < animations.Count; i++)
             {
                 if (animations[i].IsActive == false)

@@ -157,5 +157,15 @@ namespace AlkaronEngine.Scene
         {
             
         }
+
+        public bool ConfigureContactManifold<TManifold>(int workerIndex, CollidablePair pair, ref TManifold manifold, out PairMaterialProperties pairMaterial) where TManifold : struct, IContactManifold<TManifold>
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool ConfigureContactManifold(int workerIndex, CollidablePair pair, int childIndexA, int childIndexB, ref ConvexContactManifold manifold)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

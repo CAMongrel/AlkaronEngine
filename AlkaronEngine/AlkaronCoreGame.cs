@@ -15,42 +15,55 @@ using AlkaronEngine.Util;
 
 namespace AlkaronEngine
 {
+    public class EngineConfiguration
+    {
+        public int WindowWidth { get; set; } = 1280;
+        public int WindowHeight { get; set; } = 1024;
+        public int X { get; set; } = 100;
+        public int Y { get; set; } = 100;
+        public WindowState WindowState { get; set; } = WindowState.BorderlessFullScreen;
+        public string WindowTitle { get; set; } = "AlkaronEngine";
+        public string ContentFolder { get; set; } = "Content";
+    }
+
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
     public class AlkaronCoreGame : IDisposable, ITimeProvider, ILogWriter
     {
         internal readonly Sdl2Window Window;
-        public GraphicsDevice GraphicsDevice { get; private set; }
+        public GraphicsDevice? GraphicsDevice { get; private set; }
 
-        internal static AlkaronCoreGame Core;
+        internal static AlkaronCoreGame? Core;
 
-        public SceneManager SceneManager { get; protected set; }
+        public SceneManager? SceneManager { get; protected set; }
 
-        public TextureFont DefaultFont { get; protected set; }
+        public TextureFont? DefaultFont { get; protected set; }
 
         public string ContentDirectory { get; protected set; }
 
-        public PackageManager PackageManager { get; private set; }
+        public PackageManager? PackageManager { get; private set; }
 
-        public AssetManager AssetManager { get; private set; }
+        public AssetManager? AssetManager { get; private set; }
 
         public AlkaronContentManager AlkaronContent { get; private set; }
 
-        internal ShaderManager ShaderManager { get; private set; }
+        internal ShaderManager? ShaderManager { get; private set; }
 
-        public AlkaronCoreGame(int setWidth = 1280, int setHeight = 720,
-                               string setContentFolder = "Content",
-                               string setWindowTitle = "AlkaronEngine")
+        internal EngineConfiguration EngineConfiguration { get; private set; }
+
+        public AlkaronCoreGame(EngineConfiguration configuration)
         {
             Core = this;
+
+            EngineConfiguration = configuration;
 
             Performance.TimeProvider = this;
             Log.LogWriter = this;
 
             ContentDirectory = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
-                setContentFolder);
+                EngineConfiguration.ContentFolder);
 
             if (Directory.Exists(ContentDirectory) == false)
             {
@@ -59,12 +72,12 @@ namespace AlkaronEngine
 
             WindowCreateInfo wci = new WindowCreateInfo
             {
-                X = 100,
-                Y = 100,
-                WindowWidth = setWidth,
-                WindowHeight = setHeight,
-                WindowTitle = setWindowTitle,
-                WindowInitialState = WindowState.Normal
+                X = EngineConfiguration.X,
+                Y = EngineConfiguration.Y,
+                WindowWidth = EngineConfiguration.WindowWidth,
+                WindowHeight = EngineConfiguration.WindowHeight,
+                WindowTitle = EngineConfiguration.WindowTitle,
+                WindowInitialState = EngineConfiguration.WindowState
             };
             Window = VeldridStartup.CreateWindow(ref wci);
 

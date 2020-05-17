@@ -1,14 +1,10 @@
-﻿using AlkaronEngine.Graphics2D;
+﻿using AlkaronEngine.Assets.TextureFonts;
+using AlkaronEngine.Graphics2D;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -16,9 +12,9 @@ namespace AlkaronEngine.Gui
     {
         private double blinkTimeStartTotalSeconds;
 
-        public SpriteFont Font { get; set; }
+        public TextureFont Font { get; set; }
 
-        public Color BorderColor { get; set; }
+        public RgbaFloat BorderColor { get; set; }
         public int BorderWidth { get; set; }
 
         public int Padding { get; set; }
@@ -29,19 +25,18 @@ namespace AlkaronEngine.Gui
         private int cursorPos;
         private bool renderCursor;
         private bool firstKeyRepeat;
-        private Keys lastPressedKey;
+        private Key lastPressedKey;
         private double lastPressedKeyTimestamp;
 
-        public UITextField(IRenderConfiguration renderConfig, SpriteFont setFont = null, string setText = "")
-            : base(renderConfig)
+        public UITextField(string setText = "", TextureFont? setFont = null)
         {
             firstKeyRepeat = true;
-            lastPressedKey = Keys.None;
+            lastPressedKey = Key.Unknown;
             blinkTimeStartTotalSeconds = -1;
             lastPressedKeyTimestamp = -1;
             cursorPos = 0;
             Text = setText;
-            Font = setFont ?? renderConfig.PrimitiveRenderManager.EngineFont;
+            Font = setFont ?? AlkaronCoreGame.Core.DefaultFont;
             Padding = 10;
             renderCursor = false;
 
@@ -53,24 +48,24 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        protected override void Draw()
+        protected override void Draw(RenderContext renderContext)
         {
-            base.Draw();
+            base.Draw(renderContext);
 
             string textToDisplay = Text;
-            Color textColor = Color.FromNonPremultiplied(new Vector4(Vector3.One, CompositeAlpha));
+            RgbaFloat textColor = new RgbaFloat(new Vector4(Vector3.One, CompositeAlpha));
 
             if (string.IsNullOrWhiteSpace(textToDisplay))
             {
-                textColor = Color.FromNonPremultiplied(new Vector4(new Vector3(0.5f), CompositeAlpha));
+                textColor = new RgbaFloat(new Vector4(new Vector3(0.5f), CompositeAlpha));
                 textToDisplay = ShadowText;
             }
 
             Vector2 screenPos = ScreenPosition;
             RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
 
-            Color borderColor = Color.FromNonPremultiplied(new Vector4(BorderColor.ToVector3(), CompositeAlpha));
-            Graphics2D.Texture.RenderRectangle(renderConfig, rect, borderColor, BorderWidth);
+            RgbaFloat borderColor = new RgbaFloat(new Vector4(BorderColor.R, BorderColor.G, BorderColor.B, CompositeAlpha));
+            ScreenQuad.RenderRectangle(renderContext, rect, borderColor, BorderWidth);
 
             Vector2 fullSize = (Font != null ? (Vector2)Font.MeasureString(textToDisplay) : Vector2.Zero);
 
@@ -78,7 +73,7 @@ namespace AlkaronEngine.Gui
             Vector2 position = new Vector2(0, screenPos.Y - 3);
             position.X = screenPos.X + Padding;
             position.Y = screenPos.Y + (Height / 2.0f - fullSize.Y / 2.0f);
-            FontRenderer.DrawStringDirect(renderConfig, Font, textToDisplay, position.X, position.Y, textColor, 1.0f, CompositeRotation);
+            TextRenderer.RenderText(renderContext, textToDisplay, position.X, position.Y, textColor, Font);
 
             // Draw cursor at location of Text
             if (HasCapturedKeyboardFocus() &&
@@ -92,13 +87,13 @@ namespace AlkaronEngine.Gui
                     cursorLocation = textSubstringLength.X;
                 }
                 RectangleF cursorRect = new RectangleF(position.X + cursorLocation, position.Y, 2, fullSize.Y);
-                Graphics2D.Texture.FillRectangle(renderConfig, cursorRect, Color.White);
+                ScreenQuad.FillRectangle(renderContext, cursorRect, RgbaFloat.White);
             }
         }
 
-        public override void Update(GameTime gameTime)
+        public override void Update(double deltaTime)
         {
-            base.Update(gameTime);
+            base.Update(deltaTime);
 
             bool hasKeyboardFocus = HasCapturedKeyboardFocus();
 
@@ -106,74 +101,76 @@ namespace AlkaronEngine.Gui
             {
                 if (blinkTimeStartTotalSeconds < 0)
                 {
-                    blinkTimeStartTotalSeconds = gameTime.TotalGameTime.TotalSeconds;
+                    blinkTimeStartTotalSeconds = totalTimeGameTime;
                 }
 
-                double deltaTime = gameTime.TotalGameTime.TotalSeconds - blinkTimeStartTotalSeconds;
+                double globalDeltaTime = totalTimeGameTime - blinkTimeStartTotalSeconds;
                 double timeScale = 1.4;
-                deltaTime *= timeScale;
-                renderCursor = (int)(deltaTime) % 2 == 0;
+                globalDeltaTime *= timeScale;
+                renderCursor = (int)(globalDeltaTime) % 2 == 0;
             }
             else
             {
                 renderCursor = false;
             }
 
-            if (lastPressedKey != Keys.None)
+            if (lastPressedKey != Key.Unknown)
             {
-                double deltaTime = gameTime.TotalGameTime.TotalSeconds - lastPressedKeyTimestamp;
+                double globalDeltaTime = totalTimeGameTime - lastPressedKeyTimestamp;
                 double limit = 0.1;
                 if (firstKeyRepeat == true)
                 {
                     limit = 0.5;
                 }
-                if (deltaTime > limit)
+                if (globalDeltaTime > limit)
                 {
                     if (firstKeyRepeat == true)
                     {
                         firstKeyRepeat = false;
                     }
 
-                    KeyPressed(lastPressedKey, gameTime);
+                    KeyPressed(lastPressedKey, deltaTime);
                 }
             }
         }
 
-        public override void ReceiveFocus(GameTime gameTime)
+        public override void ReceiveFocus(double deltaTime)
         {
-            base.ReceiveFocus(gameTime);
+            base.ReceiveFocus(deltaTime);
 
-            blinkTimeStartTotalSeconds = gameTime?.TotalGameTime.TotalSeconds ?? -1;
+            blinkTimeStartTotalSeconds = totalTimeGameTime;
         }
 
         public override void RelinquishFocus()
         {
             base.RelinquishFocus();
 
-            lastPressedKey = Keys.None;
+            lastPressedKey = Key.Unknown;
             blinkTimeStartTotalSeconds = -1;
         }
 
-        protected internal override bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
+        protected internal override bool PointerUp(Vector2 position, PointerType pointerType, double gameTime)
         {
             ReceiveFocus(gameTime);
             return base.PointerUp(position, pointerType, gameTime);
         }
 
-        private char GetSpecialChar(Keys key)
+        private char GetSpecialChar(Key key)
         {
             switch (key)
             {
-                case Keys.OemPlus:
+                case Key.Plus:
+                case Key.KeypadPlus:
                     return '+';
-                case Keys.OemMinus:
+                case Key.Minus:
+                case Key.KeypadMinus:
                     return '-';
 
-                case Keys.OemPeriod:
+                case Key.KeypadPeriod:
                     return '.';
-                case Keys.OemComma:
+                case Key.Comma:
                     return ',';
-                case Keys.OemSemicolon:
+                case Key.Semicolon:
                     return ';';
 
                 default:
@@ -181,7 +178,7 @@ namespace AlkaronEngine.Gui
             }
         }
 
-        protected internal override bool KeyReleased(Keys key, GameTime gameTime)
+        protected internal override bool KeyReleased(Key key, double gameTime)
         {
             if (base.KeyReleased(key, gameTime) == true)
             {
@@ -190,13 +187,13 @@ namespace AlkaronEngine.Gui
 
             if (key == lastPressedKey)
             {
-                lastPressedKey = Keys.None;
+                lastPressedKey = Key.Unknown;
             }
 
             return true;
         }
 
-        protected internal override bool KeyPressed(Keys key, GameTime gameTime)
+        protected internal override bool KeyPressed(Key key, double gameTime)
         {
             if (base.KeyPressed(key, gameTime) == true ||
                 Text == null)
@@ -205,7 +202,7 @@ namespace AlkaronEngine.Gui
             }
 
             // Reset blinking cursor
-            blinkTimeStartTotalSeconds = gameTime.TotalGameTime.TotalSeconds;
+            blinkTimeStartTotalSeconds = totalTimeGameTime;
 
             if (lastPressedKey != key)
             {
@@ -213,9 +210,9 @@ namespace AlkaronEngine.Gui
             }
 
             lastPressedKey = key;
-            lastPressedKeyTimestamp = gameTime.TotalGameTime.TotalSeconds;
+            lastPressedKeyTimestamp = totalTimeGameTime;
 
-            if (key == Keys.Left)
+            if (key == Key.Left)
             {
                 cursorPos--;
                 if (cursorPos < 0)
@@ -223,7 +220,7 @@ namespace AlkaronEngine.Gui
                     cursorPos = 0;
                 }
             }
-            if (key == Keys.Right)
+            if (key == Key.Right)
             {
                 if (string.IsNullOrEmpty(Text) == false)
                 {
@@ -239,8 +236,8 @@ namespace AlkaronEngine.Gui
             char specialChar = GetSpecialChar(key);
             if (char.IsLetterOrDigit(keyCode))
             {
-                bool isShiftPressed = AlkaronCoreGame.Core.SceneManager.InputManager.IsKeyPressed(Keys.LeftShift) ||
-                                                     AlkaronCoreGame.Core.SceneManager.InputManager.IsKeyPressed(Keys.RightShift);
+                bool isShiftPressed = AlkaronCoreGame.Core.SceneManager.InputManager.IsKeyPressed(Key.LShift) ||
+                    AlkaronCoreGame.Core.SceneManager.InputManager.IsKeyPressed(Key.RShift);
 
                 if (isShiftPressed)
                 {
@@ -254,16 +251,16 @@ namespace AlkaronEngine.Gui
                 Text = Text.Insert(cursorPos, keyCode.ToString());
                 cursorPos++;
             }
-            if (key == Keys.Space)
+            if (key == Key.Space)
             {
                 Text = Text.Insert(cursorPos, keyCode.ToString());
                 cursorPos++;
             }
-            if (key == Keys.Home)
+            if (key == Key.Home)
             {
                 cursorPos = 0;
             }
-            if (key == Keys.End)
+            if (key == Key.End)
             {
                 cursorPos = Text.Length;
             }
@@ -272,13 +269,13 @@ namespace AlkaronEngine.Gui
                 Text = Text.Insert(cursorPos, specialChar.ToString());
                 cursorPos++;
             }
-            if (key == Keys.Back &&
+            if (key == Key.Back &&
                cursorPos > 0)
             {
                 Text = Text.Remove(cursorPos - 1, 1);
                 cursorPos--;
             }
-            if (key == Keys.Delete &&
+            if (key == Key.Delete &&
                 cursorPos < Text.Length)
             {
                 Text = Text.Remove(cursorPos, 1);

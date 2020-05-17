@@ -1,11 +1,10 @@
-﻿using System;
+﻿using AlkaronEngine.Assets.TextureFonts;
 using AlkaronEngine.Graphics2D;
-using AlkaronEngine.Gui;
+using AlkaronEngine.Graphics3D;
 using AlkaronEngine.Input;
 using AlkaronEngine.Util;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using System.Numerics;
+using Veldrid;
 
 namespace AlkaronEngine.Gui
 {
@@ -29,7 +28,7 @@ namespace AlkaronEngine.Gui
 
         #region Properties
         public UIButtonStyle ButtonStyle { get; set; }
-        public Color BorderColor { get; set; }
+        public RgbaFloat BorderColor { get; set; }
         public int BorderWidth { get; set; }
 
         public int Padding { get; set; }
@@ -56,22 +55,22 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region ctor
-        public UIButton(IRenderConfiguration setRenderConfig, string setText, SpriteFont setFont, UIButtonStyle setButtonStyle = UIButtonStyle.None)
-           : base(setRenderConfig, setText, setFont)
+        public UIButton(string setText, TextureFont setFont, UIButtonStyle setButtonStyle = UIButtonStyle.None)
+            : base(setText, setFont)
         {
             Padding = 5;
             ButtonStyle = setButtonStyle;
             isPressed = false;
-            BorderColor = Color.Black;
+            BorderColor = RgbaFloat.Black;
             BorderWidth = 1;
             Focusable = true;
         }
         #endregion
 
         #region Draw
-        protected override void Draw()
+        protected override void Draw(RenderContext renderContext)
         {
-            base.Draw();
+            base.Draw(renderContext);
 
             Vector2 screenPos = ScreenPosition;
             RectangleF rect = new RectangleF(screenPos.X, screenPos.Y, Width, Height);
@@ -82,8 +81,8 @@ namespace AlkaronEngine.Gui
                     {
                         if (isPressed)
                         {
-                            Color pressedColor = Color.FromNonPremultiplied(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
-                            Graphics2D.Texture.FillRectangle(renderConfig, rect, pressedColor);
+                            RgbaFloat pressedColor = new RgbaFloat(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
+                            ScreenQuad.FillRectangle(renderContext, rect, pressedColor);
                         }
                     }
                     break;
@@ -96,20 +95,20 @@ namespace AlkaronEngine.Gui
                     {
                         if (isPressed)
                         {
-                            Color pressedColor = Color.FromNonPremultiplied(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
-                            Graphics2D.Texture.FillRectangle(renderConfig, rect, pressedColor);
+                            RgbaFloat pressedColor = new RgbaFloat(new Vector4(Vector3.Zero, 0.3f * CompositeAlpha));
+                            ScreenQuad.FillRectangle(renderContext, rect, pressedColor);
                         }
 
-                        Color borderColor = Color.FromNonPremultiplied(new Vector4(BorderColor.ToVector3(), CompositeAlpha));
-                        Graphics2D.Texture.RenderRectangle(renderConfig, rect, borderColor, BorderWidth);
+                        RgbaFloat borderColor = new RgbaFloat(new Vector4(BorderColor.R, BorderColor.G, BorderColor.B, CompositeAlpha));
+                        ScreenQuad.RenderRectangle(renderContext, rect, borderColor, BorderWidth);
                     }
                     break;
             }
         }
         #endregion
 
-        #region MouseDown
-        protected internal override bool PointerDown(Vector2 position, PointerType pointerType, GameTime gameTime)
+        #region MouseDown/MouseUp
+        protected internal override bool PointerDown(Vector2 position, PointerType pointerType, double gameTime)
         {
             if (base.PointerDown(position, pointerType, gameTime))
             {
@@ -123,10 +122,8 @@ namespace AlkaronEngine.Gui
 
             return true;
         }
-        #endregion
 
-        #region MouseUp
-        protected internal override bool PointerUp(Vector2 position, PointerType pointerType, GameTime gameTime)
+        protected internal override bool PointerUp(Vector2 position, PointerType pointerType, double gameTime)
         {
             if (base.PointerUp(position, pointerType, gameTime))
             {
@@ -149,14 +146,15 @@ namespace AlkaronEngine.Gui
         }
         #endregion
 
-        protected internal override bool KeyPressed(Keys key, GameTime gameTime)
+        #region KeyPressed/KeyReleased
+        protected internal override bool KeyPressed(Key key, double gameTime)
         {
             if (base.KeyPressed(key, gameTime) == true)
             {
                 return true;
             }
 
-            if (key == Keys.Enter)
+            if (key == Key.Enter)
             {
                 isPressed = true;
             }
@@ -164,14 +162,14 @@ namespace AlkaronEngine.Gui
             return true;
         }
 
-        protected internal override bool KeyReleased(Keys key, GameTime gameTime)
+        protected internal override bool KeyReleased(Key key, double gameTime)
         {
             if (base.KeyReleased(key, gameTime) == true)
             {
                 return true;
             }
 
-            if (key == Keys.Enter)
+            if (key == Key.Enter)
             {
                 isPressed = false;
                 OnPointerUpInside?.Invoke(this, Vector2.Zero, gameTime);
@@ -179,5 +177,6 @@ namespace AlkaronEngine.Gui
 
             return true;
         }
+        #endregion
     }
 }
