@@ -31,7 +31,12 @@ namespace AlkaronEngine.Gui
             get
             {
                 Vector2 resultSize = base.PreferredSize;
-                Vector2 textSize = (Font != null ? (Vector2)Font.MeasureString(Text) : Vector2.Zero);
+                string textToMeasure = Text;
+                if (string.IsNullOrEmpty(textToMeasure) == true)
+                {
+                    textToMeasure = "0";
+                }
+                Vector2 textSize = (Font != null ? (Vector2)Font.MeasureString(textToMeasure) : Vector2.Zero);
                 if (textSize.X > resultSize.X)
                 {
                     resultSize.X = textSize.X;
@@ -52,6 +57,10 @@ namespace AlkaronEngine.Gui
             Font = setFont ?? AlkaronCoreGame.Core.DefaultFont;
             TextAlignHorizontal = UITextAlignHorizontal.Center;
             TextAlignVertical = UITextAlignVertical.Center;
+
+            Width = 100;
+            Height = PreferredSize.Y;
+
             AutoScaleFont = false;
         }
         #endregion

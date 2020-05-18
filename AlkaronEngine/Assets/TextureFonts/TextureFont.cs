@@ -72,7 +72,38 @@ namespace AlkaronEngine.Assets.TextureFonts
 
         internal Vector2 MeasureString(string text)
         {
-            return Vector2.One;
+            if (text == null)
+            {
+                text = string.Empty;
+            }
+
+            float maxWidth = 0.0f;
+            float rowWidth = 0.0f;
+
+            int rowCount = 1;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char chr = text[i];
+
+                if (chr == '\n')
+                {
+                    rowWidth = 0.0f;
+                    rowCount++;
+                    continue;
+                }
+
+                var def = CharacterDefinitionForGlyph(chr);
+                rowWidth += def.Width;
+                if (rowWidth > maxWidth)
+                {
+                    maxWidth = rowWidth;
+                }
+            }
+
+            Vector2 result = new Vector2();
+            result.X = maxWidth;
+            result.Y = FontDefinition.Size * rowCount;
+            return result;
         }
     }
 }

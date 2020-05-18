@@ -10,18 +10,21 @@ namespace AlkaronEngine.Gui
     {
         private static object lockObj = new object();
 
-        private static List<UIWindow> windows;
+        private static List<UIWindow> modalWindowStack = new List<UIWindow>();
+        private static List<UIWindow> windows = new List<UIWindow>();
 
-        internal static UIBaseComponent HoverComponent { get; private set; }
-        internal static UIBaseComponent CapturedComponent { get; private set; }
-        internal static UIBaseComponent CapturedKeyboardComponent { get; private set; }
+        internal static UIWindow? ModalWindow => modalWindowStack.Count == 0 ? null : modalWindowStack[modalWindowStack.Count - 1];
+
+        internal static UIBaseComponent? HoverComponent { get; private set; } = null;
+        internal static UIBaseComponent? CapturedComponent { get; private set; } = null;
+        internal static UIBaseComponent? CapturedKeyboardComponent { get; private set; } = null;
 
         static UIWindowManager()
         {
-            windows = new List<UIWindow>();
+            //
         }
 
-        internal static bool AddWindow(UIWindow window)
+        internal static bool AddWindow(UIWindow window, bool isModal)
         {
             if (window == null ||
                 windows.Contains(window))
@@ -30,6 +33,12 @@ namespace AlkaronEngine.Gui
             }
 
             windows.Add(window);
+
+            if (isModal)
+            {
+                modalWindowStack.Add(window);
+            }
+
             return true;
         }
 
@@ -42,6 +51,12 @@ namespace AlkaronEngine.Gui
             }
 
             windows.Remove(window);
+
+            if (modalWindowStack.Contains(window))
+            {
+                modalWindowStack.Remove(window);
+            }
+
             return true;
         }
 
@@ -97,6 +112,17 @@ namespace AlkaronEngine.Gui
 
         internal static bool PointerDown(Vector2 position, PointerType pointerType, double deltaTime)
         {
+            var modalWindow = ModalWindow;
+            if (modalWindow != null)
+            {
+                Vector2 localPosition = new Vector2(position.X - modalWindow.RelativeX, position.Y - modalWindow.RelativeY);
+                if (modalWindow.HitTest(localPosition) == false)
+                {
+                    return false;
+                }
+                return modalWindow.PointerDown(localPosition, pointerType, deltaTime);
+            }
+
             for (int i = windows.Count - 1; i >= 0; i--)
             {
                 Vector2 localPosition = new Vector2(position.X - windows[i].RelativeX, position.Y - windows[i].RelativeY);
@@ -125,6 +151,17 @@ namespace AlkaronEngine.Gui
                 }
             }
 
+            var modalWindow = ModalWindow;
+            if (modalWindow != null)
+            {
+                Vector2 localPosition = new Vector2(position.X - modalWindow.RelativeX, position.Y - modalWindow.RelativeY);
+                if (modalWindow.HitTest(localPosition) == false)
+                {
+                    return false;
+                }
+                return modalWindow.PointerUp(localPosition, pointerType, deltaTime);
+            }
+
             for (int i = windows.Count - 1; i >= 0; i--)
             {
                 Vector2 localPosition = new Vector2(position.X - windows[i].RelativeX, position.Y - windows[i].RelativeY);
@@ -151,6 +188,17 @@ namespace AlkaronEngine.Gui
                     Vector2 relPosition = position - CapturedComponent.ScreenPosition;
                     return CapturedComponent.PointerMoved(relPosition, deltaTime);
                 }
+            }
+
+            var modalWindow = ModalWindow;
+            if (modalWindow != null)
+            {
+                Vector2 localPosition = new Vector2(position.X - modalWindow.RelativeX, position.Y - modalWindow.RelativeY);
+                if (modalWindow.HitTest(localPosition) == false)
+                {
+                    return false;
+                }
+                return modalWindow.PointerMoved(localPosition, deltaTime);
             }
 
             for (int i = windows.Count - 1; i >= 0; i--)

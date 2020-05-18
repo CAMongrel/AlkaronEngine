@@ -33,7 +33,7 @@ namespace AlkaronEngine
             return assetName;
         }
 
-        private string FindContentFile(string assetName)
+        public string GetContentFileFullFilename(string assetName)
         {
             string fullname = Path.Combine(AlkaronCoreGame.Core.ContentDirectory, assetName);
             if (File.Exists(fullname) == false)
@@ -103,7 +103,7 @@ namespace AlkaronEngine
         /// </summary>
         public Stream OpenContentStream(string contentFile)
         {
-            var fullName = FindContentFile(contentFile);
+            var fullName = GetContentFileFullFilename(contentFile);
             if (fullName == null)
             {
                 return null;

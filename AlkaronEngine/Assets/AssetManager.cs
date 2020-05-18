@@ -7,17 +7,22 @@ namespace AlkaronEngine.Assets
 {
     public class AssetSettings
     {
-        public GraphicsDevice GraphicsDevice = null;
-        public bool ReadOnlyAssets = true;
+        public GraphicsDevice GraphicsDevice { get; private set; }
+        public bool ReadOnlyAssets { get; set; } = true;
+
+		public AssetSettings(GraphicsDevice graphicsDevice)
+		{
+			GraphicsDevice = graphicsDevice;
+		}
     }
 
 	public class AssetManager
 	{
         public AssetSettings AssetSettings { get; private set; }
 
-        public AssetManager()
+        public AssetManager(GraphicsDevice graphicsDevice)
         {
-            AssetSettings = new AssetSettings();
+			AssetSettings = new AssetSettings(graphicsDevice);
         }
 
         #region Load<T>

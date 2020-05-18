@@ -86,14 +86,32 @@ namespace AlkaronEngine.Graphics2D
             return res;
         }
 
-        internal static void RenderText(RenderContext renderContext, string text, float x, float y, RgbaFloat color, TextureFont font)
+        internal static void RenderText(RenderContext renderContext, string? text, float x, float y, RgbaFloat color, TextureFont font)
         {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
             ScreenQuadVertex[] vertices = new ScreenQuadVertex[text.Length * 6];
+
+            float rowHeight = font.FontDefinition.Size;
 
             float xPos = x;
             for (int i = 0; i < text.Length; i++)
             {
+                if (text[i] == '\n')
+                {
+                    xPos = x;
+                    y += rowHeight;
+                    continue;
+                }
+
                 var def = font.CharacterDefinitionForGlyph(text[i]);
+                if (def == null)
+                {
+                    continue;
+                }
                 font.TexCoordsForCharacterDefinition(def, out Vector2 texCoordStart, out Vector2 texCoordSize);
 
                 Vector2 screenSpacePosition = ConvertScreenPosToDevicePos(xPos - def.OriginX, y - def.OriginY + (font.FontDefinition.Size / 2));

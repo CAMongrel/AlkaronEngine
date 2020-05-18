@@ -154,7 +154,7 @@ namespace AlkaronEngine.Input
             {
                 return new List<Key>();
             }
-
+            
             return (from k in snapshot.KeyEvents
                     where k.Down
                     select k.Key).ToList();
@@ -234,6 +234,20 @@ namespace AlkaronEngine.Input
         public bool IsAnyKeyPressed()
         {
             return GetPressedKeys(curInputSnapshot).Count > 0;
+        }
+
+        public static char GetCharForKey(Key key)
+        {
+            if (key >= Key.A && key <= Key.Z)
+            {
+                return (char)(key - 18);
+            }
+            if (key >= Key.Number0 && key <= Key.Number9)
+            {
+                return (char)(key - 61);
+            }
+
+            return (char)0;
         }
     }
 }

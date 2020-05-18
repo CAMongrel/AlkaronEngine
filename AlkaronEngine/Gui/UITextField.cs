@@ -10,23 +10,46 @@ namespace AlkaronEngine.Gui
 {
     public class UITextField : UIBaseComponent
     {
-        private double blinkTimeStartTotalSeconds;
+        private double blinkTimeStartTotalSeconds = 0.0;
 
         public TextureFont Font { get; set; }
 
-        public RgbaFloat BorderColor { get; set; }
-        public int BorderWidth { get; set; }
+        public RgbaFloat BorderColor { get; set; } = RgbaFloat.Black;
+        public int BorderWidth { get; set; } = 1;
 
-        public int Padding { get; set; }
+        public int Padding { get; set; } = 0;
 
-        public string ShadowText { get; set; }
-        public string Text { get; set; }
+        public string ShadowText { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
 
         private int cursorPos;
         private bool renderCursor;
         private bool firstKeyRepeat;
         private Key lastPressedKey;
         private double lastPressedKeyTimestamp;
+
+        public override Vector2 PreferredSize
+        {
+            get
+            {
+                Vector2 resultSize = base.PreferredSize;
+                string textToMeasure = Text;
+                if (string.IsNullOrEmpty(textToMeasure) == true)
+                {
+                    textToMeasure = "0";
+                }
+                Vector2 textSize = (Font != null ? (Vector2)Font.MeasureString(textToMeasure) : Vector2.Zero);
+                if (textSize.X > resultSize.X)
+                {
+                    resultSize.X = textSize.X;
+                }
+                if (textSize.Y > resultSize.Y)
+                {
+                    resultSize.Y = textSize.Y;
+                }
+                return resultSize;
+            }
+        }
 
         public UITextField(string setText = "", TextureFont? setFont = null)
         {
@@ -39,6 +62,9 @@ namespace AlkaronEngine.Gui
             Font = setFont ?? AlkaronCoreGame.Core.DefaultFont;
             Padding = 10;
             renderCursor = false;
+
+            Width = 100;
+            Height = PreferredSize.Y;
 
             Focusable = true;
 
@@ -232,7 +258,7 @@ namespace AlkaronEngine.Gui
                 }
             }
 
-            char keyCode = (char)key;
+            char keyCode = InputManager.GetCharForKey(key);
             char specialChar = GetSpecialChar(key);
             if (char.IsLetterOrDigit(keyCode))
             {

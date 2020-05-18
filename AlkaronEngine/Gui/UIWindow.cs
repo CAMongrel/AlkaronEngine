@@ -17,9 +17,9 @@ namespace AlkaronEngine.Gui
         #endregion
 
         #region Show
-        public void Show()
+        public void Show(bool isModal)
         {
-            if (UIWindowManager.AddWindow(this))
+            if (UIWindowManager.AddWindow(this, isModal))
             {
                 DidShow();
             }

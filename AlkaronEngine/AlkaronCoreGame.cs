@@ -61,9 +61,16 @@ namespace AlkaronEngine
             Performance.TimeProvider = this;
             Log.LogWriter = this;
 
-            ContentDirectory = Path.Combine(
-                Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
-                EngineConfiguration.ContentFolder);
+            if (Path.IsPathRooted(EngineConfiguration.ContentFolder))
+            {
+                ContentDirectory = EngineConfiguration.ContentFolder;
+            }
+            else
+            {
+                ContentDirectory = Path.Combine(
+                    Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
+                    EngineConfiguration.ContentFolder);
+            }
 
             if (Directory.Exists(ContentDirectory) == false)
             {
@@ -94,8 +101,7 @@ namespace AlkaronEngine
         {
             SceneManager = new SceneManager();
 
-            AssetManager = new AssetManager();
-            AssetManager.AssetSettings.GraphicsDevice = GraphicsDevice;
+            AssetManager = new AssetManager(GraphicsDevice);
 
             PackageManager = new PackageManager();
             // "AlkaronContent" must be initialized before calling this, because

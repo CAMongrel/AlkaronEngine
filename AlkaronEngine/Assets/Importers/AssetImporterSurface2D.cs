@@ -74,7 +74,7 @@ namespace AlkaronEngine.Assets.Importers
             string setAssetName,
             string setPackageName,
             string originalInputFile,
-            AssetSettings assetSettings,
+            AssetSettings? assetSettings,
             out Surface2D? importedAsset)
         {
             if (originalInputFile == null)
@@ -127,6 +127,11 @@ namespace AlkaronEngine.Assets.Importers
             {
                 Log.Status("Unable to create or find the package for this asset");
                 return false;
+            }
+
+            if (assetSettings == null)
+            {
+                assetSettings = AlkaronCoreGame.Core.AssetManager.AssetSettings;
             }
 
             try

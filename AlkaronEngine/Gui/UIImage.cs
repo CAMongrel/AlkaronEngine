@@ -74,7 +74,7 @@ namespace AlkaronEngine.Gui
 
         public Vector2 ImageSize => Image != null ? new Vector2(Image.Width, Image.Height) : Vector2.Zero;
 
-        public float AspectRatio => Image != null ? (float)Image.Width / (float)Image.Height : 1.0f;
+        public float ImageAspectRatio => Image != null ? (float)Image.Width / (float)Image.Height : 1.0f;
 
         private bool resizeImageToFill;
         /// <summary>
@@ -96,13 +96,17 @@ namespace AlkaronEngine.Gui
             get
             {
                 Vector2 resultSize = base.PreferredSize;
+                if (ResizeImageToFill == false)
+                {
+                    return resultSize;
+                }
 
                 Vector2 tmp = Vector2.Zero;
                 float width = 0;
                 float height = 0;
-                MeasurePositionAndSize(ref tmp, ref width, ref height);
+                MeasureImagePositionAndSize(ref tmp, ref width, ref height);
 
-                if (ResizeImageToFill == false || ImageScaleMode == UIImageContentScaleMode.None || ImageScaleMode == UIImageContentScaleMode.Stretch)
+                if (ImageScaleMode == UIImageContentScaleMode.None || ImageScaleMode == UIImageContentScaleMode.Stretch)
                 {
                     if (width > resultSize.X)
                     {
@@ -150,7 +154,7 @@ namespace AlkaronEngine.Gui
                 float renderWidth = 0;
                 float renderHeight = 0;
 
-                MeasurePositionAndSize(ref screenPosOffset, ref renderWidth, ref renderHeight);
+                MeasureImagePositionAndSize(ref screenPosOffset, ref renderWidth, ref renderHeight);
 
                 ScreenQuad.RenderQuad(renderContext,
                                       new Vector2(screenPos.X + screenPosOffset.X, screenPos.Y + screenPosOffset.Y),
@@ -170,9 +174,10 @@ namespace AlkaronEngine.Gui
             Height = prefSize.Y;
         }
 
-        private void MeasurePositionAndSize(ref Vector2 position, ref float width, ref float height)
+        private void MeasureImagePositionAndSize(ref Vector2 position, ref float width, ref float height)
         {
-            float aspectRatio = AspectRatio;
+            float controlAspectRatio = this.Width / this.Height;
+            float aspectRatio = ImageAspectRatio;
 
             switch (ImageScaleMode)
             {
@@ -188,7 +193,7 @@ namespace AlkaronEngine.Gui
 
                 case UIImageContentScaleMode.AspectFit:
                     {
-                        if (Width >= Height)
+                        if (aspectRatio < controlAspectRatio)
                         {
                             height = Height;
                             width = height / aspectRatio;

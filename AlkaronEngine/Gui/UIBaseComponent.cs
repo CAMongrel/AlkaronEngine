@@ -49,7 +49,11 @@ namespace AlkaronEngine.Gui
         /// <summary>
         /// Stretch or shrink the size to match the parent size.
         /// </summary>
-        Fit
+        Fit,
+        /// <summary>
+        /// Stretch or shrink to match the total size of subcomponents
+        /// </summary>
+        WrapContent,
     }
 
     public delegate void OnPointerDownInside(UIBaseComponent sender, Vector2 position, double deltaTime);
@@ -81,13 +85,13 @@ namespace AlkaronEngine.Gui
             set { height = value; PerformLayout(); }
         }
 
-        private UISizeMode widthSizeMode;
+        private UISizeMode widthSizeMode = UISizeMode.Fixed;
         public UISizeMode WidthSizeMode
         {
             get { return widthSizeMode; }
             set { if (widthSizeMode != value) { widthSizeMode = value; PerformLayout(); } }
         }
-        private UISizeMode heightSizeMode;
+        private UISizeMode heightSizeMode = UISizeMode.Fixed;
         public UISizeMode HeightSizeMode
         {
             get { return heightSizeMode; }
@@ -302,8 +306,6 @@ namespace AlkaronEngine.Gui
         #region ctor
         public UIBaseComponent()
         {
-            widthSizeMode = UISizeMode.Fixed;
-            heightSizeMode = UISizeMode.Fixed;
             isPerformingLayout = false;
             suppressPerformLayout = false;
             customLayoutHooks = new Dictionary<string, ModifyLayout>();
@@ -705,7 +707,7 @@ namespace AlkaronEngine.Gui
 
                 RgbaFloat focusColor = new RgbaFloat(new Vector4(new Vector3(0.3f), 0.7f));
                 RectangleF focusRect = rect;
-                int focusInset = 4;
+                int focusInset = 2;
 
                 focusRect.X += focusInset;
                 focusRect.Y += focusInset;
