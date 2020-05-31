@@ -24,6 +24,8 @@ namespace AlkaronEngine
         public WindowState WindowState { get; set; } = WindowState.BorderlessFullScreen;
         public string WindowTitle { get; set; } = "AlkaronEngine";
         public string ContentFolder { get; set; } = "Content";
+
+        public IntPtr WindowHandle { get; set; } = IntPtr.Zero;
     }
 
     /// <summary>
@@ -77,16 +79,24 @@ namespace AlkaronEngine
                 Directory.CreateDirectory(ContentDirectory); 
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            if (EngineConfiguration.WindowHandle != IntPtr.Zero)
             {
-                X = EngineConfiguration.X,
-                Y = EngineConfiguration.Y,
-                WindowWidth = EngineConfiguration.WindowWidth,
-                WindowHeight = EngineConfiguration.WindowHeight,
-                WindowTitle = EngineConfiguration.WindowTitle,
-                WindowInitialState = EngineConfiguration.WindowState
-            };
-            Window = VeldridStartup.CreateWindow(ref wci);
+                Window = new Sdl2Window(EngineConfiguration.WindowHandle, true);
+            }
+            else
+            {
+                WindowCreateInfo wci = new WindowCreateInfo
+                {
+                    X = EngineConfiguration.X,
+                    Y = EngineConfiguration.Y,
+                    WindowWidth = EngineConfiguration.WindowWidth,
+                    WindowHeight = EngineConfiguration.WindowHeight,
+                    WindowTitle = EngineConfiguration.WindowTitle,
+                    WindowInitialState = EngineConfiguration.WindowState,
+                };
+
+                Window = VeldridStartup.CreateWindow(ref wci);
+            }            
 
             AlkaronContent = new AlkaronContentManager();
         }
@@ -136,7 +146,7 @@ namespace AlkaronEngine
         /// </summary>
         protected virtual void LoadContent()
         {
-            DefaultFont = AssetManager.Load<TextureFont>("EngineDefaults", "DefaultFont.textureFont");
+            DefaultFont = AssetManager?.Load<TextureFont>("EngineDefaults", "DefaultFont.textureFont");
 
             /*AssetManager.AssetSettings.ReadOnlyAssets = false;
 
@@ -154,19 +164,41 @@ namespace AlkaronEngine
         /// </summary>
         public void Run()
         {
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                debug: false,
-                swapchainDepthFormat: PixelFormat.R32_Float,
-                syncToVerticalBlank: true,
-                resourceBindingModel: ResourceBindingModel.Improved,
-                preferDepthRangeZeroToOne: true,
-                preferStandardClipSpaceYDirection: true);
+            if (EngineConfiguration.WindowHandle != IntPtr.Zero)
+            {
+                GraphicsDeviceOptions options = new GraphicsDeviceOptions(
+                    debug: false,
+                    swapchainDepthFormat: null,
+                    syncToVerticalBlank: false,
+                    resourceBindingModel: ResourceBindingModel.Improved,
+                    preferDepthRangeZeroToOne: true,
+                    preferStandardClipSpaceYDirection: true);
+
+                var swapChainSource = SwapchainSource.CreateWin32(EngineConfiguration.WindowHandle, IntPtr.Zero);
+                var swapchainDesc = new SwapchainDescription(
+                    swapChainSource,
+                    (uint)Window.Width, (uint)Window.Height,
+                    options.SwapchainDepthFormat,
+                    options.SyncToVerticalBlank,
+                    options.SwapchainSrgbFormat);
+
+                GraphicsDevice = GraphicsDevice.CreateD3D11(options);
+            }
+            else
+            {
+                GraphicsDeviceOptions options = new GraphicsDeviceOptions(
+                    debug: false,
+                    swapchainDepthFormat: PixelFormat.R32_Float,
+                    syncToVerticalBlank: true,
+                    resourceBindingModel: ResourceBindingModel.Improved,
+                    preferDepthRangeZeroToOne: true,
+                    preferStandardClipSpaceYDirection: true);
 #if DEBUG
-            options.Debug = true;
+                options.Debug = true;
 #endif
-            GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Window, options);
-            //factory = new DisposeCollectorResourceFactory(gd.ResourceFactory);
-            //GraphicsDeviceCreated?.Invoke(gd, factory, gd.MainSwapchain);
+
+                GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Window, options);
+            }
 
             Initialize();
             LoadContent();
@@ -180,7 +212,7 @@ namespace AlkaronEngine
                 float deltaSeconds = (float)(newElapsed - previousElapsed);
 
                 InputSnapshot inputSnapshot = Window.PumpEvents();
-                SceneManager.UpdateFrameInput(inputSnapshot, deltaSeconds);
+                SceneManager?.UpdateFrameInput(inputSnapshot, deltaSeconds);
 
                 if (Window.Exists)
                 {
@@ -199,9 +231,9 @@ namespace AlkaronEngine
 
             Shutdown();
 
-            GraphicsDevice.WaitForIdle();
+            GraphicsDevice?.WaitForIdle();
             //factory.DisposeCollector.DisposeAll();
-            GraphicsDevice.Dispose();
+            GraphicsDevice?.Dispose();
             //GraphicsDeviceDestroyed?.Invoke();
         }
 
@@ -212,7 +244,7 @@ namespace AlkaronEngine
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected virtual void Update(double deltaTime)
         {
-            SceneManager.Update(deltaTime);
+            SceneManager?.Update(deltaTime);
         }
 
         /// <summary>
@@ -221,7 +253,7 @@ namespace AlkaronEngine
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected virtual void Draw(double deltaTime)
         {
-            SceneManager.Draw(GraphicsDevice, deltaTime);
+            SceneManager?.Draw(GraphicsDevice, deltaTime);
         }
 
         public long GetTimestamp()

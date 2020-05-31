@@ -27,7 +27,7 @@ namespace AlkaronEngine.Assets.Importers
             internal string BaseFolder;
             internal string FullFilename;
             internal string BaseAssetName;
-            internal Package PackageToSaveIn = null;
+            internal Package? PackageToSaveIn = null;
 
             internal List<Surface2D> ImportedSurfaces = new List<Surface2D>();
             internal List<Materials.Material> ImportedMaterials = new List<Materials.Material>();
@@ -44,7 +44,7 @@ namespace AlkaronEngine.Assets.Importers
 
             internal List<RuntimeBone[]> BonesList = new List<RuntimeBone[]>();
 
-            internal Action<AssetImporterGltfMeshProgress> ProgressCallback;
+            internal Action<AssetImporterGltfMeshProgress>? ProgressCallback;
         }
 
         private static readonly string[] allowedExtensions = new string[] { ".gltf", ".glb" };
@@ -53,11 +53,16 @@ namespace AlkaronEngine.Assets.Importers
             string setBaseAssetName,
             string setPackageName,
             bool importStaticMeshOnly,
-            Action<AssetImporterGltfMeshProgress> progressCallback,
-            AssetSettings assetSettings,
+            Action<AssetImporterGltfMeshProgress>? progressCallback,
+            AssetSettings? assetSettings,
             out List<Asset> importedAssets)
         {
             importedAssets = new List<Asset>();
+
+            if (assetSettings == null)
+            {
+                assetSettings = AlkaronCoreGame.Core.AssetManager.AssetSettings;
+            }
 
             // Remember input filename
             string inputFile = fullFilename;
@@ -94,16 +99,24 @@ namespace AlkaronEngine.Assets.Importers
 
             string packageName = setPackageName;
 
-            if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
+            context.PackageToSaveIn = null;
+            if (packageName != null)
             {
-                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false, assetSettings);
+                if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
+                {
+                    context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(packageName, false, assetSettings);
+                }
+                else
+                {
+                    context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(
+                        packageName,
+                        Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName),
+                        assetSettings);
+                }
             }
             else
             {
-                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.CreatePackage(
-                    packageName,
-                    Path.Combine(AlkaronCoreGame.Core.ContentDirectory, packageName), 
-                    assetSettings);
+                context.PackageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(PackageManager.VolatilePackageName, false, assetSettings);
             }
 
             if (context.PackageToSaveIn == null)

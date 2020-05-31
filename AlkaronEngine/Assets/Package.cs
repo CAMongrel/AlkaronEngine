@@ -51,9 +51,7 @@ namespace AlkaronEngine.Assets
         /// </summary>
         private bool isVolatile;
 		
-		public const int MaxPackageVersion = 1;
-
-        public static readonly string VolatilePackageName = "Volatile";
+		public const int MaxPackageVersion = 1;        
 
         public string PackageName
 		{
@@ -61,7 +59,7 @@ namespace AlkaronEngine.Assets
 			{
 				if (isVolatile)
                 {
-                    return VolatilePackageName;
+                    return PackageManager.VolatilePackageName;
                 }
 
                 return Path.GetFileName(fullFilename);
@@ -74,7 +72,7 @@ namespace AlkaronEngine.Assets
 			{
 				if (isVolatile)
                 {
-                    return VolatilePackageName;
+                    return PackageManager.VolatilePackageName;
                 }
 
                 return Path.GetFileNameWithoutExtension(fullFilename);

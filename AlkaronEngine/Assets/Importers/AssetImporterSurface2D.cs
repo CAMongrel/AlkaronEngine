@@ -88,8 +88,6 @@ namespace AlkaronEngine.Assets.Importers
             string assetName = setAssetName;
             string packageName = setPackageName;
 
-            Package? packageToSaveIn = null;
-
             if (string.IsNullOrWhiteSpace(assetName))
             {
                 assetName = "temporarySurface2D";
@@ -104,6 +102,7 @@ namespace AlkaronEngine.Assets.Importers
 
             assetName = Path.ChangeExtension(assetName, ".surface2d");
 
+            Package? packageToSaveIn = null;
             if (packageName != null)
             {
                 if (AlkaronCoreGame.Core.PackageManager.DoesPackageExist(packageName))
@@ -120,7 +119,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             else
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(Package.VolatilePackageName, false, assetSettings);
+                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(PackageManager.VolatilePackageName, false, assetSettings);
             }
 
             if (packageToSaveIn == null)

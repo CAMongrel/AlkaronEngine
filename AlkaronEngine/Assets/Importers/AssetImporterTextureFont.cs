@@ -81,7 +81,7 @@ namespace AlkaronEngine.Assets.Importers
             }
             else
             {
-                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(Package.VolatilePackageName, false, assetSettings);
+                packageToSaveIn = AlkaronCoreGame.Core.PackageManager.LoadPackage(PackageManager.VolatilePackageName, false, assetSettings);
             }
 
             if (packageToSaveIn == null)

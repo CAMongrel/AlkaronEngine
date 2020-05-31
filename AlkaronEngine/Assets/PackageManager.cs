@@ -10,6 +10,8 @@ namespace AlkaronEngine.Assets
 	/// </summary>
 	public class PackageManager
 	{
+		public static readonly string VolatilePackageName = "Volatile";
+
 		/// <summary>
 		/// The PackageMap contains a list of ALL packages on the hard disk
 		/// inside the package directory. These packages are not neccessarily
@@ -28,7 +30,8 @@ namespace AlkaronEngine.Assets
 			LoadedPackages = new Dictionary<string, Package>();
 			
 			Package volatilePkg = Package.CreateVolatile();
-			LoadedPackages.Add(Package.VolatilePackageName + ".package", volatilePkg);
+			LoadedPackages.Add(PackageManager.VolatilePackageName + ".package", volatilePkg);
+			PackageMap.Add(PackageManager.VolatilePackageName + ".package", string.Empty);
 		}
 		#endregion
 		

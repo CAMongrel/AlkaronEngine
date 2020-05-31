@@ -178,9 +178,9 @@ namespace AlkaronViewer
             base.InitUI();
 
             UIWindow window = new UIWindow();
-            window.Show();
+            window.Show(false);
 
-            AssetImporterSurface2D.Import("d:\\temp\\image.jpg", null, null, MainGame.Instance.AssetManager.AssetSettings, out var tex);
+            AssetImporterSurface2D.Import("d:\\temp\\image.jpg", null, null, null, out var tex);
 
             UIImage image = new UIImage(tex);
             image.X = 50;
